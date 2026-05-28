@@ -9,20 +9,36 @@ from __future__ import annotations
 
 import asyncio
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from google.cloud import bigquery
 
 from bq_inspect.bigquery.errors.google_api_errors import map_google_error_to_bq_inspect_failure
 from bq_inspect.core.shared.api_error_hints import ApiErrorHintContext
 
+_T = TypeVar("_T")
+
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from google.auth.credentials import Credentials
     from google.cloud.bigquery.client import Client
 
     from bq_inspect.bigquery.types.list_jobs import ListJobsPage, ListJobsRequest
     from bq_inspect.bigquery.types.refs import DatasetRef, TableRef
     from bq_inspect.core.shared.types import JobRef
+
+
+async def _invoke_sync(
+    fn: Callable[..., _T],
+    *,
+    api: str,
+    context: ApiErrorHintContext | None = None,
+) -> _T:
+    try:
+        return await asyncio.to_thread(fn)
+    except Exception as error:
+        raise map_google_error_to_bq_inspect_failure(error, api, context) from error
 
 
 def _millis_to_datetime(millis: int) -> datetime:
@@ -51,14 +67,11 @@ class SdkBigQueryClient:
         return client
 
     async def get_job(self, ref: JobRef) -> object:
-        try:
-            return await asyncio.to_thread(self._get_job_sync, ref)
-        except Exception as error:
-            raise map_google_error_to_bq_inspect_failure(
-                error,
-                "bigquery.jobs.get",
-                ApiErrorHintContext(job_ref=ref),
-            ) from error
+        return await _invoke_sync(
+            lambda: self._get_job_sync(ref),
+            api="bigquery.jobs.get",
+            context=ApiErrorHintContext(job_ref=ref),
+        )
 
     def _get_job_sync(self, ref: JobRef) -> object:
         bq = self._get_bigquery(ref["projectId"])
@@ -75,10 +88,10 @@ class SdkBigQueryClient:
         return job.to_api_repr()
 
     async def list_jobs(self, request: ListJobsRequest) -> ListJobsPage:
-        try:
-            return await asyncio.to_thread(self._list_jobs_sync, request)
-        except Exception as error:
-            raise map_google_error_to_bq_inspect_failure(error, "bigquery.jobs.list") from error
+        return await _invoke_sync(
+            lambda: self._list_jobs_sync(request),
+            api="bigquery.jobs.list",
+        )
 
     def _list_jobs_sync(self, request: ListJobsRequest) -> ListJobsPage:  # noqa: PLR0912
         bq = self._get_bigquery(request["projectId"])
@@ -122,13 +135,10 @@ class SdkBigQueryClient:
         return result
 
     async def get_dataset(self, ref: DatasetRef) -> object:
-        try:
-            return await asyncio.to_thread(self._get_dataset_sync, ref)
-        except Exception as error:
-            raise map_google_error_to_bq_inspect_failure(
-                error,
-                "bigquery.datasets.get",
-            ) from error
+        return await _invoke_sync(
+            lambda: self._get_dataset_sync(ref),
+            api="bigquery.datasets.get",
+        )
 
     def _get_dataset_sync(self, ref: DatasetRef) -> object:
         bq = self._get_bigquery(ref["projectId"])
@@ -138,10 +148,10 @@ class SdkBigQueryClient:
         return dataset.to_api_repr()
 
     async def list_tables(self, ref: DatasetRef) -> list[object]:
-        try:
-            return await asyncio.to_thread(self._list_tables_sync, ref)
-        except Exception as error:
-            raise map_google_error_to_bq_inspect_failure(error, "bigquery.tables.list") from error
+        return await _invoke_sync(
+            lambda: self._list_tables_sync(ref),
+            api="bigquery.tables.list",
+        )
 
     def _list_tables_sync(self, ref: DatasetRef) -> list[object]:
         bq = self._get_bigquery(ref["projectId"])
@@ -151,10 +161,10 @@ class SdkBigQueryClient:
         return [table.to_api_repr() for table in tables]
 
     async def get_table(self, ref: TableRef) -> object:
-        try:
-            return await asyncio.to_thread(self._get_table_sync, ref)
-        except Exception as error:
-            raise map_google_error_to_bq_inspect_failure(error, "bigquery.tables.get") from error
+        return await _invoke_sync(
+            lambda: self._get_table_sync(ref),
+            api="bigquery.tables.get",
+        )
 
     def _get_table_sync(self, ref: TableRef) -> object:
         bq = self._get_bigquery(ref["projectId"])

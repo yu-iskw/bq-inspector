@@ -9,7 +9,6 @@ from bq_inspect.cli.input.map_input import (
     map_jobs_list_input,
     map_jobs_view_input,
 )
-from bq_inspect.schemas.command_schemas import CommandId, JobsViewCommandId
 from bq_inspect.schemas.validate_input import validate_input
 
 if TYPE_CHECKING:
@@ -18,8 +17,7 @@ if TYPE_CHECKING:
         ParsedJobsListInput,
         ParsedJobsViewInput,
     )
-
-CatalogCommandId = CommandId  # narrowed at call sites
+    from bq_inspect.schemas.command_schemas import JobsViewCommandId
 
 
 def parse_jobs_get_input(raw: Any) -> ParsedJobsViewInput:

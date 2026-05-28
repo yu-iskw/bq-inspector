@@ -49,8 +49,6 @@ QUERY_QUERY_VIEW_KEYS = (
     "totalSlotMs",
 )
 
-ProjectedJobView = str
-
 
 def _omit_keys(source: dict[str, Any], keys: tuple[str, ...]) -> dict[str, Any]:
     output = dict(source)

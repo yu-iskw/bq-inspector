@@ -84,11 +84,10 @@ def filter_job_summaries(jobs: list[object], filters: JobFilters) -> list[object
     if not _has_active_job_filters(filters):
         return jobs
 
-    labels_filter_active = filters.labels is not None and len(filters.labels) > 0
-    return [job for job in jobs if _matches_filters(job, filters, labels_filter_active)]
+    return [job for job in jobs if _matches_filters(job, filters)]
 
 
-def _matches_filters(job: object, filters: JobFilters, labels_filter_active: bool) -> bool:  # noqa: PLR0911, PLR0912
+def _matches_filters(job: object, filters: JobFilters) -> bool:  # noqa: PLR0911, PLR0912
     if filters.min_slot_ms is not None:
         slot = _total_slot_ms(job)
         if slot is None or slot < filters.min_slot_ms:
@@ -99,7 +98,7 @@ def _matches_filters(job: object, filters: JobFilters, labels_filter_active: boo
         if billed is None or billed < filters.min_bytes_billed:
             return False
 
-    if labels_filter_active and filters.labels is not None:
+    if filters.labels:
         job_labels = _read_labels(job) or {}
         for key, value in filters.labels.items():
             if job_labels.get(key) != value:

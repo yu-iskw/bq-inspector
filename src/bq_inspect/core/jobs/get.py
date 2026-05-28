@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from bq_inspect.core.jobs.project_job import project_job
+from bq_inspect.core.shared.envelope import build_tool_envelope
 from bq_inspect.core.shared.errors import BqInspectFailure, create_bq_inspect_error
 from bq_inspect.core.shared.impersonation_fields import impersonation_request_fields
 from bq_inspect.core.shared.job_ref import normalize_job_ref
@@ -16,7 +17,6 @@ if TYPE_CHECKING:
     from bq_inspect.bigquery.port.inspection_client import BigQueryJobClient
     from bq_inspect.core.shared.types import (
         BqInspectError,
-        BqInspectSchemaVersion,
         BqInspectWarning,
         InspectedJob,
         InspectJobRequest,
@@ -26,7 +26,6 @@ if TYPE_CHECKING:
         JobView,
     )
 
-_RESPONSE_SCHEMA_VERSION: BqInspectSchemaVersion = "bq-inspect.v1"
 _JOBS_GET_API = "bigquery.jobs.get"
 
 
@@ -80,13 +79,11 @@ async def inspect_jobs(
         error for job in inspected_jobs for error in job.get("errors", [])
     ]
 
+    envelope = build_tool_envelope(options.tool_version)
+
     return {
-        "schemaVersion": _RESPONSE_SCHEMA_VERSION,
-        "tool": {
-            "name": "bq-inspect",
-            "version": options.tool_version,
-            "readOnly": True,
-        },
+        "schemaVersion": envelope["schemaVersion"],
+        "tool": envelope["tool"],
         "request": _build_request_echo(request, view),
         "jobs": inspected_jobs,
         "warnings": global_warnings,
