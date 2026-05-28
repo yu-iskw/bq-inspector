@@ -12,4 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for your_package (colocated under the source tree)."""
+"""CLI entry shim — dispatches through the ``cli`` package (``cli/dispatch.py``)."""
+
+from bq_inspect.cli.dispatch import main
+
+__all__ = ["main"]
+
+if __name__ == "__main__":
+    main()

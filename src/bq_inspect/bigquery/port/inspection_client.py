@@ -1,0 +1,36 @@
+"""BigQuery inspection client protocol."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Protocol
+
+if TYPE_CHECKING:
+    from bq_inspect.bigquery.types.list_jobs import ListJobsPage, ListJobsRequest
+    from bq_inspect.bigquery.types.refs import DatasetRef, TableRef
+    from bq_inspect.core.shared.types import JobRef
+
+
+class BigQueryInspectionClient(Protocol):
+    """Port for read-only BigQuery metadata and job inspection."""
+
+    async def get_job(self, ref: JobRef) -> object:
+        """Fetch a single job by reference."""
+
+    async def list_jobs(self, request: ListJobsRequest) -> ListJobsPage:
+        """List jobs for a project."""
+
+    async def get_dataset(self, ref: DatasetRef) -> object:
+        """Fetch dataset metadata."""
+
+    async def list_tables(self, ref: DatasetRef) -> list[object]:
+        """List tables in a dataset."""
+
+    async def get_table(self, ref: TableRef) -> object:
+        """Fetch table metadata."""
+
+
+class BigQueryJobClient(Protocol):
+    """Subset of BigQueryInspectionClient for job get operations."""
+
+    async def get_job(self, ref: JobRef) -> object:
+        """Fetch a single job by reference."""

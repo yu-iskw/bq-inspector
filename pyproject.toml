@@ -13,16 +13,16 @@ exclude = [
   ".github",
   ".trunk",
   "dev",
-  "src/your_package/tests",
+  "src/bq_inspect/tests",
   "dist",
   ".python-version",
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/your_package"]
+packages = ["src/bq_inspect"]
 
 [project]
-name = "your-package"
+name = "bq-inspect"
 version = "0.1.0"
 authors = [{ name = "yu-iskw" }]
 readme = "README.md"
@@ -45,18 +45,25 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Typing :: Typed",
 ]
-description = "A dbt artifacts parser in python"
-dependencies = []
+description = "Read-only BigQuery job inspection CLI for AI agents"
+dependencies = [
+  "google-cloud-bigquery",
+  "google-auth",
+  "jsonschema",
+]
 
 [project.scripts]
+bq-inspect = "bq_inspect.cli:main"
 
 [tool.pytest.ini_options]
-testpaths = ["src/your_package/tests"]
+testpaths = ["src/bq_inspect/tests"]
+asyncio_mode = "auto"
 
 [dependency-groups]
 dev = [
   "xenon>=0.9.3",
   "pytest>=8.3.5",
+  "pytest-asyncio>=0.25.0",
   "pytest-cov>=6.0",
   "bandit>=1.8.3",
   "ruff>=0.15.0",
@@ -77,12 +84,12 @@ reportMissingImports = true
 reportMissingTypeStubs = "warning"
 
 [tool.vulture]
-paths = ["src/your_package"]
+paths = ["src/bq_inspect"]
 min_confidence = 80
 
 [tool.coverage.run]
 branch = true
-source = ["src/your_package"]
+source = ["src/bq_inspect"]
 
 [tool.coverage.report]
 show_missing = true

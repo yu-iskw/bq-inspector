@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Template tests."""
+"""Allow `python -m bq_inspect` for publish smoke tests."""
 
+from bq_inspect.cli import main
 
-def test_dummy() -> None:
-    """Placeholder test; replace with real cases when the package grows."""
-    assert True
+if __name__ == "__main__":
+    main()

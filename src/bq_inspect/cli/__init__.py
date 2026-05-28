@@ -11,3 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+"""CLI entry point for bq-inspect (package; see cli/dispatch.py)."""
+
+from bq_inspect.cli.dispatch import main
+
+__all__ = ["main"]
