@@ -102,7 +102,7 @@ async def _inspect_one_job(
 ) -> InspectedJob:
     warnings: list[BqInspectWarning] = []
     errors: list[BqInspectError] = []
-    fetched_at = now().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+    fetched_at = now().astimezone(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
     try:
         job_ref = normalize_job_ref(input_ref)

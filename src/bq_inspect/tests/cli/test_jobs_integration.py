@@ -9,9 +9,14 @@ from pathlib import Path
 import pytest
 
 from bq_inspect.commands.command_shared import InspectionCommandOptions
+from bq_inspect.commands.jobs.list import run_jobs_list
 from bq_inspect.commands.jobs.run_jobs_view import run_jobs_summary
 from bq_inspect.core.jobs.get import InspectJobOptions, inspect_jobs
-from bq_inspect.tests.test_support.fixture_job_client import FixtureJobClient
+from bq_inspect.tests.test_support.fixture_job_client import (
+    FixtureBigQueryClient,
+    FixtureBigQueryInput,
+    FixtureJobClient,
+)
 
 _FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
 
@@ -48,6 +53,35 @@ async def test_run_jobs_summary_with_fixture_client() -> None:
     assert response["tool"] == {"name": "bq-inspect", "version": "0.1.0", "readOnly": True}
     assert len(response["jobs"]) == 1
     assert response["jobs"][0]["jobRef"]["jobId"] == "job_123"
+    assert response["errors"] == []
+
+
+@pytest.mark.asyncio
+async def test_run_jobs_list_with_fixture_client() -> None:
+    job = _load_fixture()
+    client = FixtureBigQueryClient(
+        FixtureBigQueryInput(list_jobs_page={"jobs": [job], "nextPageToken": "next"})
+    )
+
+    response = await run_jobs_list(
+        [
+            "--params",
+            json.dumps(
+                {
+                    "projectId": "analytics-prod",
+                    "allUsers": True,
+                    "minCreationTime": "2026-05-17T00:00:00Z",
+                }
+            ),
+        ],
+        InspectionCommandOptions(client=client, tool_version="0.1.0"),
+    )
+
+    assert response["schemaVersion"] == "bq-inspect.v1"
+    assert len(response["jobs"]) == 1
+    assert response["request"]["projectId"] == "analytics-prod"
+    assert response["request"]["allUsers"] is True
+    assert response["page"]["nextPageToken"] == "next"
     assert response["errors"] == []
 
 

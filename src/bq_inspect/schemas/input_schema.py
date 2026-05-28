@@ -67,12 +67,18 @@ JOBS_LIST_INPUT_SCHEMA: dict[str, Any] = {
         "minCreationTime": {
             "type": "string",
             "format": "date-time",
-            "description": "Forwarded to jobs.list minCreationTime (API).",
+            "description": (
+                "Forwarded to jobs.list minCreationTime (API). Must include a timezone "
+                "(Z or numeric offset, for example 2026-05-17T00:00:00Z)."
+            ),
         },
         "maxCreationTime": {
             "type": "string",
             "format": "date-time",
-            "description": "Forwarded to jobs.list maxCreationTime (API).",
+            "description": (
+                "Forwarded to jobs.list maxCreationTime (API). Must include a timezone "
+                "(Z or numeric offset, for example 2026-05-18T00:00:00Z)."
+            ),
         },
         "pageToken": {
             "type": "string",

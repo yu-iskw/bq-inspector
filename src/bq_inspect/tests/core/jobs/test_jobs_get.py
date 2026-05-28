@@ -86,6 +86,43 @@ async def test_supports_multiple_job_ids() -> None:
 
 
 @pytest.mark.asyncio
+async def test_parallel_fetch_records_per_job_errors_without_aborting_siblings() -> None:
+    job_a = _load_fixture()
+
+    class MixedOutcomeClient:
+        async def get_job(self, ref: dict[str, str]) -> object:
+            if ref["jobId"] == "job_a":
+                return job_a
+            raise BqInspectFailure(
+                create_bq_inspect_error(
+                    code="BQINSPECT_JOB_NOT_FOUND",
+                    message="Missing job.",
+                    source={"api": "bigquery.jobs.get", "status": 404},
+                )
+            )
+
+    response = await inspect_jobs(
+        {
+            "jobs": [
+                {"projectId": "analytics-prod", "jobId": "job_a"},
+                {"projectId": "analytics-prod", "jobId": "job_b"},
+            ]
+        },
+        InspectJobOptions(
+            client=MixedOutcomeClient(),
+            tool_version="0.1.0",
+            now=lambda: datetime(2020, 1, 1, tzinfo=UTC),
+        ),
+    )
+
+    assert len(response["jobs"]) == 2
+    assert response["jobs"][0]["errors"] == []
+    assert response["jobs"][0]["job"] is not None
+    assert response["jobs"][1]["errors"][0]["code"] == "BQINSPECT_JOB_NOT_FOUND"
+    assert len(response["errors"]) == 1
+
+
+@pytest.mark.asyncio
 async def test_returns_full_job_payload_when_view_is_full() -> None:
     job = _load_fixture()
     client = FixtureJobClient({"job_123": job})

@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
+
+if TYPE_CHECKING:
+    from bq_inspect.bigquery.auth.create_auth_client import AuthClientOptions
 
 
 class ImpersonationFields(TypedDict, total=False):
@@ -22,3 +25,15 @@ def impersonation_request_fields(
     if delegates is not None and delegates:
         output["impersonateDelegates"] = delegates
     return output
+
+
+def auth_client_options_from_impersonation(fields: ImpersonationFields) -> AuthClientOptions:
+    """Build auth client options from parsed impersonation params."""
+    options: AuthClientOptions = {}
+    service_account = fields.get("impersonateServiceAccount")
+    if service_account is not None:
+        options["impersonateServiceAccount"] = service_account
+    delegates = fields.get("impersonateDelegates")
+    if delegates is not None:
+        options["impersonateDelegates"] = delegates
+    return options

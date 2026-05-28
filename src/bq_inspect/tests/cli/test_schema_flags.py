@@ -4,13 +4,7 @@ import json
 
 import pytest
 
-from bq_inspect.commands.command_shared import (
-    DatasetsGetCommandOptions,
-    JobsListCommandOptions,
-    JobsViewCommandOptions,
-    TablesGetCommandOptions,
-    TablesListCommandOptions,
-)
+from bq_inspect.commands.command_shared import InspectionCommandOptions, JobsViewCommandOptions
 from bq_inspect.commands.datasets.get import run_datasets_get
 from bq_inspect.commands.jobs.list import run_jobs_list
 from bq_inspect.commands.jobs.run_jobs_view import (
@@ -103,7 +97,7 @@ async def test_rejects_both_schema_flags_on_jobs_get() -> None:
 
 @pytest.mark.asyncio
 async def test_jobs_list_input_schema() -> None:
-    schema = await run_jobs_list(["--input-schema"], JobsListCommandOptions(tool_version="0.1.0"))
+    schema = await run_jobs_list(["--input-schema"], InspectionCommandOptions(tool_version="0.1.0"))
     assert schema["title"] == "bq-inspect jobs list input"
 
 
@@ -111,7 +105,7 @@ async def test_jobs_list_input_schema() -> None:
 async def test_datasets_get_output_schema() -> None:
     schema = await run_datasets_get(
         ["--output-schema"],
-        DatasetsGetCommandOptions(tool_version="0.1.0"),
+        InspectionCommandOptions(tool_version="0.1.0"),
     )
     assert schema["title"] == "bq-inspect catalog resource output"
 
@@ -120,7 +114,7 @@ async def test_datasets_get_output_schema() -> None:
 async def test_tables_list_output_schema() -> None:
     schema = await run_tables_list(
         ["--output-schema"],
-        TablesListCommandOptions(tool_version="0.1.0"),
+        InspectionCommandOptions(tool_version="0.1.0"),
     )
     assert schema["title"] == "bq-inspect tables list output"
 
@@ -129,7 +123,7 @@ async def test_tables_list_output_schema() -> None:
 async def test_tables_get_input_schema_includes_table_id() -> None:
     schema = await run_tables_get(
         ["--input-schema"],
-        TablesGetCommandOptions(tool_version="0.1.0"),
+        InspectionCommandOptions(tool_version="0.1.0"),
     )
     assert "tableId" in json.dumps(schema)
     assert schema["title"] == "bq-inspect tables get input"
@@ -140,5 +134,5 @@ async def test_mutual_exclusion_is_bq_inspect_failure() -> None:
     with pytest.raises(BqInspectFailure):
         await run_jobs_list(
             ["--input-schema", "--output-schema"],
-            JobsListCommandOptions(tool_version="0.1.0"),
+            InspectionCommandOptions(tool_version="0.1.0"),
         )

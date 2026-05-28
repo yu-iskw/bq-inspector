@@ -5,7 +5,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import pytest
-from google.api_core.exceptions import NotFound
+from google.api_core.exceptions import BadRequest, NotFound
 
 from bq_inspect.bigquery.adapters.google_cloud.sdk_inspection_client import SdkBigQueryClient
 from bq_inspect.core.shared.errors import BqInspectFailure, create_bq_inspect_error
@@ -131,6 +131,20 @@ async def test_list_jobs_returns_empty_page_when_iterator_has_no_pages(
     result = await sdk_client_fx.list_jobs({"projectId": "p"})
 
     assert result == {"jobs": []}
+
+
+@pytest.mark.asyncio
+async def test_list_jobs_maps_bad_request_to_input_invalid(
+    sdk_client_fx: SdkBigQueryClient,
+    bq_client_mock_fx: MagicMock,
+) -> None:
+    bq_client_mock_fx.list_jobs.side_effect = BadRequest("Invalid state filter.")
+
+    with pytest.raises(BqInspectFailure) as exc_info:
+        await sdk_client_fx.list_jobs({"projectId": "p", "state": "INVALID"})
+
+    assert exc_info.value.details["code"] == "BQINSPECT_INPUT_INVALID"
+    assert exc_info.value.details["retriable"] is False
 
 
 @pytest.mark.asyncio

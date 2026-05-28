@@ -5,16 +5,19 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from bq_inspect.bigquery.adapters.google_cloud.sdk_inspection_client import SdkBigQueryClient
-from bq_inspect.bigquery.auth.create_auth_client import AuthClientOptions, create_auth_client
+from bq_inspect.bigquery.auth.create_auth_client import create_auth_client
 from bq_inspect.cli.argv.operational_argv import parse_operational_argv
 from bq_inspect.cli.params.parse_params import resolve_params_value
+from bq_inspect.core.shared.impersonation_fields import (
+    ImpersonationFields,
+    auth_client_options_from_impersonation,
+)
 from bq_inspect.schemas.command_schemas import CommandId, get_command_schema
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
     from bq_inspect.bigquery.port.inspection_client import BigQueryInspectionClient
-    from bq_inspect.core.shared.impersonation_fields import ImpersonationFields
 
 
 class InspectionCommandOptions:
@@ -31,35 +34,24 @@ class InspectionCommandOptions:
 
 
 JobsViewCommandOptions = InspectionCommandOptions
-JobsListCommandOptions = InspectionCommandOptions
-DatasetsGetCommandOptions = InspectionCommandOptions
-TablesListCommandOptions = InspectionCommandOptions
-TablesGetCommandOptions = InspectionCommandOptions
 
 
 async def create_sdk_inspection_client_from_input(
     input_data: ImpersonationFields,
 ) -> SdkBigQueryClient:
     """Create an SDK-backed inspection client from impersonation params."""
-    options: AuthClientOptions = {}
-    service_account = input_data.get("impersonateServiceAccount")
-    if service_account is not None:
-        options["impersonateServiceAccount"] = service_account
-    delegates = input_data.get("impersonateDelegates")
-    if delegates is not None:
-        options["impersonateDelegates"] = delegates
-    auth_client = await create_auth_client(options)
+    auth_client = await create_auth_client(auth_client_options_from_impersonation(input_data))
     return SdkBigQueryClient(auth_client)
 
 
-def create_run_catalog_command(
+def create_run_params_command(
     command_id: CommandId,
-    parse_fn: Callable[[Any], ImpersonationFields],
+    parse_fn: Callable[[Any], Any],
     execute_fn: Callable[[Any, InspectionCommandOptions], Awaitable[Any]],
 ) -> Callable[[list[str], InspectionCommandOptions], Awaitable[Any]]:
-    """Build a catalog command runner with shared schema and params handling."""
+    """Build a params command runner with shared schema and params handling."""
 
-    async def run_catalog_command(
+    async def run_params_command(
         argv: list[str],
         command_options: InspectionCommandOptions,
     ) -> Any:
@@ -75,4 +67,7 @@ def create_run_catalog_command(
         input_data = parse_fn(raw)
         return await execute_fn(input_data, command_options)
 
-    return run_catalog_command
+    return run_params_command
+
+
+create_run_catalog_command = create_run_params_command

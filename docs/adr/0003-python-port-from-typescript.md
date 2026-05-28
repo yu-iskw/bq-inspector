@@ -29,6 +29,12 @@ Implementation phases after bootstrap will port commands, schemas, and fixtures 
 - PyPI and npm publish pipelines remain separate; version numbers may diverge until release automation is unified.
 - Python agents gain a native install path (`pip install bq-inspect`) without Node.
 
+### Contract notes (Python vs TypeScript)
+
+- **HTTP 400 and 422** from BigQuery map to `BQINSPECT_INPUT_INVALID` (non-retriable, exit 2). Other unlisted 4xx statuses map to `BQINSPECT_API_UNAVAILABLE` like the TypeScript CLI.
+- **`jobs list` timestamps** in `--params` must include an explicit timezone (`Z` or numeric offset). Naive ISO strings are rejected at schema validation.
+- **`source.fetchedAt`** on job views uses ISO-8601 UTC with millisecond precision (aligned with JavaScript `Date.toISOString()`).
+
 ## Alternatives considered
 
 - **Keep TypeScript only** — Rejected; explicit user requirement for a Python package and PyPI distribution.

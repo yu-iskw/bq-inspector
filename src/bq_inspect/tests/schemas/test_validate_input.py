@@ -55,6 +55,17 @@ def test_rejects_invalid_date_time_on_jobs_list() -> None:
         )
 
 
+def test_rejects_naive_date_time_without_timezone_on_jobs_list() -> None:
+    with pytest.raises(BqInspectFailure):
+        validate_input(
+            "jobs list",
+            {
+                "projectId": "p",
+                "minCreationTime": "2026-05-17T00:00:00",
+            },
+        )
+
+
 def test_rejects_invalid_min_slot_ms_pattern() -> None:
     with pytest.raises(BqInspectFailure):
         validate_input(

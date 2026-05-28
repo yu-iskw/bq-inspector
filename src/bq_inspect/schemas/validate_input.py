@@ -16,9 +16,16 @@ if TYPE_CHECKING:
 _format_checker = FormatChecker()
 
 
+def _has_explicit_timezone(value: str) -> bool:
+    if value.endswith("Z"):
+        return True
+    tail = value[10:]
+    return "+" in tail or "-" in tail
+
+
 @_format_checker.checks("date-time")
 def _check_date_time(instance: object) -> bool:
-    if not isinstance(instance, str):
+    if not isinstance(instance, str) or not _has_explicit_timezone(instance):
         return False
     candidate = instance[:-1] + "+00:00" if instance.endswith("Z") else instance
     try:

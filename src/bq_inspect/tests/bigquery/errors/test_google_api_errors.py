@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from google.api_core.exceptions import BadRequest, NotFound
 
 from bq_inspect.bigquery.errors.google_api_errors import (
     extract_google_error_message,
@@ -14,6 +15,14 @@ from bq_inspect.core.shared.api_error_hints import ApiErrorHintContext
 from bq_inspect.core.shared.errors import BqInspectFailure
 
 
+def test_resolve_http_status_reads_google_api_call_error_code() -> None:
+    assert resolve_http_status(NotFound("Missing.")) == 404
+
+
+def test_resolve_http_status_reads_bad_request_code() -> None:
+    assert resolve_http_status(BadRequest("Invalid.")) == 400
+
+
 @pytest.mark.parametrize(
     ("status", "code"),
     [
@@ -23,7 +32,8 @@ from bq_inspect.core.shared.errors import BqInspectFailure
         (429, "BQINSPECT_API_RATE_LIMITED"),
         (500, "BQINSPECT_API_UNAVAILABLE"),
         (400, "BQINSPECT_INPUT_INVALID"),
-        (418, "BQINSPECT_INPUT_INVALID"),
+        (422, "BQINSPECT_INPUT_INVALID"),
+        (418, "BQINSPECT_API_UNAVAILABLE"),
     ],
 )
 def test_map_http_status_to_error_code(status: int, code: str) -> None:
