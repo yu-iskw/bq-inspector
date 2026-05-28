@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Literal, cast
 
 from bq_inspect.core.shared.impersonation_fields import impersonation_request_fields
@@ -21,13 +21,13 @@ def parse_iso_timestamp_to_millis(value: str) -> int:
     candidate = value[:-1] + "+00:00" if value.endswith("Z") else value
     parsed = datetime.fromisoformat(candidate)
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=UTC)
+        parsed = parsed.replace(tzinfo=timezone.utc)
     return int(parsed.timestamp() * 1000)
 
 
 def millis_to_datetime(millis: int) -> datetime:
     """Convert epoch milliseconds to a timezone-aware datetime."""
-    return datetime.fromtimestamp(millis / 1000.0, tz=UTC)
+    return datetime.fromtimestamp(millis / 1000.0, tz=timezone.utc)
 
 
 def _millis_to_datetime_value(value: object) -> datetime:

@@ -1,6 +1,6 @@
 """Tests for jobs.list request field mapping helpers."""
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from bq_inspect.core.jobs.list_request_fields import (
     apply_list_request_optionals_to_mapping,
@@ -19,7 +19,7 @@ def test_parse_iso_timestamp_to_millis_treats_naive_values_as_utc() -> None:
     assert parse_iso_timestamp_to_millis(naive) == parse_iso_timestamp_to_millis(with_offset)
     assert parse_iso_timestamp_to_millis(naive) == parse_iso_timestamp_to_millis(with_z)
     assert parse_iso_timestamp_to_millis(naive) == int(
-        datetime(2026, 5, 17, tzinfo=UTC).timestamp() * 1000
+        datetime(2026, 5, 17, tzinfo=timezone.utc).timestamp() * 1000
     )
 
 
@@ -70,8 +70,8 @@ def test_list_request_to_sdk_kwargs_maps_snake_case_fields() -> None:
     assert kwargs["max_results"] == 10
     assert kwargs["state_filter"] == "done"
     assert kwargs["parent_job"] == "parent"
-    assert kwargs["min_creation_time"].tzinfo == UTC
-    assert kwargs["max_creation_time"].tzinfo == UTC
+    assert kwargs["min_creation_time"].tzinfo == timezone.utc
+    assert kwargs["max_creation_time"].tzinfo == timezone.utc
 
 
 def test_apply_list_request_optionals_to_mapping_skips_empty_strings() -> None:

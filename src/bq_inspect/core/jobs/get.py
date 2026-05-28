@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 from bq_inspect.core.jobs.project_job import project_job
@@ -42,7 +42,7 @@ class InspectJobOptions:
     ) -> None:
         self.client = client
         self.tool_version = tool_version
-        self.now = now or (lambda: datetime.now(UTC))
+        self.now = now or (lambda: datetime.now(timezone.utc))
 
 
 def _build_request_echo(
@@ -102,7 +102,9 @@ async def _inspect_one_job(
 ) -> InspectedJob:
     warnings: list[BqInspectWarning] = []
     errors: list[BqInspectError] = []
-    fetched_at = now().astimezone(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    fetched_at = (
+        now().astimezone(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    )
 
     try:
         job_ref = normalize_job_ref(input_ref)

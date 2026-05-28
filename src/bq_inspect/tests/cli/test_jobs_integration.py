@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -92,7 +92,7 @@ async def test_inspect_jobs_fixture_matches_command_path() -> None:
     client = FixtureJobClient({"job_123": job})
 
     def fixed_now() -> datetime:
-        return datetime(2020, 1, 1, tzinfo=UTC)
+        return datetime(2020, 1, 1, tzinfo=timezone.utc)
 
     direct = await inspect_jobs(
         {"jobs": [{"projectId": "analytics-prod", "location": "US", "jobId": "job_123"}]},

@@ -46,7 +46,12 @@ classifiers = [
   "Typing :: Typed",
 ]
 description = "Read-only BigQuery job inspection CLI for AI agents"
-dependencies = ["google-cloud-bigquery", "google-auth", "jsonschema"]
+dependencies = [
+  "google-cloud-bigquery",
+  "google-auth",
+  "jsonschema",
+  "typing_extensions",
+]
 
 [project.scripts]
 bq-inspect = "bq_inspect.cli:main"

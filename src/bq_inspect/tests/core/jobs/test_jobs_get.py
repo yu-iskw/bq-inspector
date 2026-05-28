@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -26,7 +26,7 @@ async def test_produces_envelope_shape_for_single_job_summary_view() -> None:
     client = FixtureJobClient({"job_123": job})
 
     def fixed_now() -> datetime:
-        return datetime(2020, 1, 1, tzinfo=UTC)
+        return datetime(2020, 1, 1, tzinfo=timezone.utc)
 
     response = await inspect_jobs(
         {"jobs": [{"projectId": "analytics-prod", "location": "US", "jobId": "job_123"}]},
@@ -76,7 +76,7 @@ async def test_supports_multiple_job_ids() -> None:
         InspectJobOptions(
             client=client,
             tool_version="0.1.0",
-            now=lambda: datetime(2020, 1, 1, tzinfo=UTC),
+            now=lambda: datetime(2020, 1, 1, tzinfo=timezone.utc),
         ),
     )
 
@@ -111,7 +111,7 @@ async def test_parallel_fetch_records_per_job_errors_without_aborting_siblings()
         InspectJobOptions(
             client=MixedOutcomeClient(),
             tool_version="0.1.0",
-            now=lambda: datetime(2020, 1, 1, tzinfo=UTC),
+            now=lambda: datetime(2020, 1, 1, tzinfo=timezone.utc),
         ),
     )
 
@@ -135,7 +135,7 @@ async def test_returns_full_job_payload_when_view_is_full() -> None:
         InspectJobOptions(
             client=client,
             tool_version="0.1.0",
-            now=lambda: datetime(2020, 1, 1, tzinfo=UTC),
+            now=lambda: datetime(2020, 1, 1, tzinfo=timezone.utc),
         ),
     )
 
@@ -155,7 +155,7 @@ async def test_records_validation_errors_for_invalid_job_references() -> None:
         InspectJobOptions(
             client=client,
             tool_version="0.1.0",
-            now=lambda: datetime(2020, 1, 1, tzinfo=UTC),
+            now=lambda: datetime(2020, 1, 1, tzinfo=timezone.utc),
         ),
     )
 
@@ -172,7 +172,7 @@ async def test_uses_fallback_job_ref_with_location_when_validation_fails() -> No
         InspectJobOptions(
             client=client,
             tool_version="0.1.0",
-            now=lambda: datetime(2020, 1, 1, tzinfo=UTC),
+            now=lambda: datetime(2020, 1, 1, tzinfo=timezone.utc),
         ),
     )
 
@@ -203,7 +203,7 @@ async def test_records_bq_inspect_failure_from_get_job() -> None:
         InspectJobOptions(
             client=DenyClient(),
             tool_version="0.1.0",
-            now=lambda: datetime(2020, 1, 1, tzinfo=UTC),
+            now=lambda: datetime(2020, 1, 1, tzinfo=timezone.utc),
         ),
     )
 
@@ -222,7 +222,7 @@ async def test_maps_unexpected_get_job_errors_to_internal_errors() -> None:
         InspectJobOptions(
             client=NetworkClient(),
             tool_version="0.1.0",
-            now=lambda: datetime(2020, 1, 1, tzinfo=UTC),
+            now=lambda: datetime(2020, 1, 1, tzinfo=timezone.utc),
         ),
     )
 
@@ -244,7 +244,7 @@ async def test_includes_impersonation_fields_in_request_echo() -> None:
         InspectJobOptions(
             client=client,
             tool_version="0.1.0",
-            now=lambda: datetime(2020, 1, 1, tzinfo=UTC),
+            now=lambda: datetime(2020, 1, 1, tzinfo=timezone.utc),
         ),
     )
 

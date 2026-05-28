@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, NotRequired
+from typing import TYPE_CHECKING
+
+from typing_extensions import NotRequired
 
 from bq_inspect.core.shared.impersonation_fields import ImpersonationFields
 

@@ -63,6 +63,7 @@ dependencies = [
     { name = "google-auth" },
     { name = "google-cloud-bigquery" },
     { name = "jsonschema" },
+    { name = "typing-extensions" },
 ]
 
 [package.dev-dependencies]
@@ -84,6 +85,7 @@ requires-dist = [
     { name = "google-auth" },
     { name = "google-cloud-bigquery" },
     { name = "jsonschema" },
+    { name = "typing-extensions" },
 ]
 
 [package.metadata.requires-dev]
