@@ -47,6 +47,7 @@ classifiers = [
 ]
 description = "Read-only BigQuery job inspection CLI for AI agents"
 dependencies = [
+  "click",
   "google-cloud-bigquery",
   "google-auth",
   "jsonschema",

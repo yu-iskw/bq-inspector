@@ -92,7 +92,8 @@ Operational commands accept only:
 
 Parsing layers:
 
-- [`src/bq_inspect/cli/argv/operational_argv.py`](src/bq_inspect/cli/argv/operational_argv.py) — argv → schema discovery or `--params` string.
+- [`src/bq_inspect/cli/argv/operational_argv.py`](src/bq_inspect/cli/argv/operational_argv.py) — Click-backed operational flags → schema discovery or `--params` string.
+- [`src/bq_inspect/cli/click_cli.py`](src/bq_inspect/cli/click_cli.py) — Click command tree and dispatch.
 - [`src/bq_inspect/cli/params/parse_params.py`](src/bq_inspect/cli/params/parse_params.py) — resolve inline JSON or `@file`.
 - [`src/bq_inspect/schemas/validate_input.py`](src/bq_inspect/schemas/validate_input.py) — `jsonschema` validation against the same JSON Schema as `--input-schema`.
 - [`src/bq_inspect/cli/input/map_input.py`](src/bq_inspect/cli/input/map_input.py) — domain mapping (epoch ms, list filters split, impersonation trim).
