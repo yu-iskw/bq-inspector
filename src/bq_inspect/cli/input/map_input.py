@@ -46,9 +46,8 @@ def _map_jobs_array(raw: Any) -> list[JobRef]:
 
 def map_jobs_view_input(obj: dict[str, Any]) -> ParsedJobsViewInput:
     """Map jobs view command params to domain input."""
-    result: ParsedJobsViewInput = {"jobs": _map_jobs_array(obj.get("jobs"))}
-    result.update(_parse_impersonation_fields(obj))
-    return result
+    impersonation = _parse_impersonation_fields(obj)
+    return {"jobs": _map_jobs_array(obj.get("jobs")), **impersonation}
 
 
 def _parse_iso_timestamp(value: str) -> int:
@@ -109,8 +108,8 @@ def map_jobs_list_input(obj: dict[str, Any]) -> ParsedJobsListInput:  # noqa: C9
     result: ParsedJobsListInput = {
         "listRequest": list_request,
         "filters": filters,
+        **(_parse_impersonation_fields(obj)),
     }
-    result.update(_parse_impersonation_fields(obj))
     return result
 
 
@@ -119,11 +118,11 @@ def map_catalog_input(obj: dict[str, Any]) -> ParsedCatalogInput:
     result: ParsedCatalogInput = {
         "projectId": str(obj["projectId"]).strip(),
         "datasetId": str(obj["datasetId"]).strip(),
+        **(_parse_impersonation_fields(obj)),
     }
 
     table_id = obj.get("tableId")
     if isinstance(table_id, str):
         result["tableId"] = table_id.strip()
 
-    result.update(_parse_impersonation_fields(obj))
     return result

@@ -176,7 +176,7 @@ async def _dispatch(raw_argv: list[str]) -> None:
         raise BqInspectFailure(
             create_bq_inspect_error(
                 code="BQINSPECT_INPUT_INVALID",
-                message=f"Unknown command: {' '.join(argv)}",
+                message="Unknown command: " + " ".join(argv),
             )
         )
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NotRequired
 
 from bq_inspect.core.shared.impersonation_fields import ImpersonationFields
 
@@ -12,16 +12,16 @@ if TYPE_CHECKING:
     from bq_inspect.core.shared.types import JobRef
 
 
-class ParsedJobsViewInput(ImpersonationFields, total=False):
+class ParsedJobsViewInput(ImpersonationFields):
     jobs: list[JobRef]
 
 
-class ParsedJobsListInput(ImpersonationFields, total=False):
+class ParsedJobsListInput(ImpersonationFields):
     listRequest: ListJobsRequest
     filters: JobFilters
 
 
-class ParsedCatalogInput(ImpersonationFields, total=False):
+class ParsedCatalogInput(ImpersonationFields):
     projectId: str
     datasetId: str
-    tableId: str
+    tableId: NotRequired[str]

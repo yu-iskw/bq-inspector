@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from bq_inspect.bigquery.types.list_jobs import ListJobsRequest
     from bq_inspect.core.shared.types import (
         BqInspectError,
+        ListJobsPageBlock,
         ListJobsResponse,
         ListJobsResponseRequest,
     )
@@ -63,17 +64,21 @@ def _build_list_jobs_request_echo(  # noqa: PLR0912
 
     if list_request.get("allUsers") is True:
         request["allUsers"] = True
-    if list_request.get("minCreationTime") is not None:
-        request["minCreationTime"] = list_request["minCreationTime"]
-    if list_request.get("maxCreationTime") is not None:
-        request["maxCreationTime"] = list_request["maxCreationTime"]
+    min_creation_time = list_request.get("minCreationTime")
+    if min_creation_time is not None:
+        request["minCreationTime"] = min_creation_time
+
+    max_creation_time = list_request.get("maxCreationTime")
+    if max_creation_time is not None:
+        request["maxCreationTime"] = max_creation_time
 
     page_token = list_request.get("pageToken")
     if page_token is not None and len(page_token) > 0:
         request["pageToken"] = page_token
 
-    if list_request.get("maxResults") is not None:
-        request["maxResults"] = list_request["maxResults"]
+    max_results = list_request.get("maxResults")
+    if max_results is not None:
+        request["maxResults"] = max_results
 
     state = list_request.get("state")
     if state is not None and len(state) > 0:
@@ -102,7 +107,7 @@ async def list_jobs(input_data: ListJobsOrchestrationInput) -> ListJobsResponse:
         page = await input_data.client.list_jobs(input_data.list_request)
         jobs = filter_job_summaries(page.get("jobs", []), input_data.filters)
 
-        page_block: dict[str, str] = {}
+        page_block: ListJobsPageBlock = {}
         next_page_token = page.get("nextPageToken")
         if next_page_token is not None and len(next_page_token) > 0:
             page_block["nextPageToken"] = next_page_token

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, NotRequired, TypedDict
 
 from bq_inspect.core.shared.errors import BqInspectFailure
 
@@ -15,12 +15,12 @@ if TYPE_CHECKING:
     )
 
 
-class CatalogResourceRequest(TypedDict, total=False):
+class CatalogResourceRequest(TypedDict):
     """Catalog resource identifiers echoed in error responses."""
 
     projectId: str
     datasetId: str
-    tableId: str
+    tableId: NotRequired[str]
 
 
 def catalog_error_envelope(
@@ -42,7 +42,7 @@ def catalog_error_envelope(
         "datasetId": request["datasetId"],
     }
     table_id = request.get("tableId")
-    if table_id is not None and len(table_id) > 0:
+    if table_id is not None and table_id:
         echo_request["tableId"] = table_id
 
     return {

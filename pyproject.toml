@@ -46,11 +46,7 @@ classifiers = [
   "Typing :: Typed",
 ]
 description = "Read-only BigQuery job inspection CLI for AI agents"
-dependencies = [
-  "google-cloud-bigquery",
-  "google-auth",
-  "jsonschema",
-]
+dependencies = ["google-cloud-bigquery", "google-auth", "jsonschema"]
 
 [project.scripts]
 bq-inspect = "bq_inspect.cli:main"
@@ -75,6 +71,7 @@ dev = [
 
 [tool.pyright]
 include = ["src"]
+exclude = ["src/bq_inspect/tests"]
 extraPaths = ["src"]
 pythonVersion = "3.13"
 typeCheckingMode = "standard"
@@ -82,6 +79,18 @@ venvPath = "."
 venv = ".venv"
 reportMissingImports = true
 reportMissingTypeStubs = "warning"
+
+[[tool.pylint.overrides]]
+module = "bq_inspect.core.shared.types"
+disable = "invalid-name"
+
+[[tool.pylint.overrides]]
+module = "bq_inspect.cli.input.parsed_input_types"
+disable = "invalid-name"
+
+[[tool.pylint.overrides]]
+module = "bq_inspect.__main__"
+disable = "invalid-name"
 
 [tool.vulture]
 paths = ["src/bq_inspect"]

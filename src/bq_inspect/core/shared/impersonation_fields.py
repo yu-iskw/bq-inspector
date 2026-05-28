@@ -19,6 +19,6 @@ def impersonation_request_fields(
     if service_account is not None:
         output["impersonateServiceAccount"] = service_account
     delegates = fields.get("impersonateDelegates")
-    if delegates is not None and len(delegates) > 0:
+    if delegates is not None and delegates:
         output["impersonateDelegates"] = delegates
     return output

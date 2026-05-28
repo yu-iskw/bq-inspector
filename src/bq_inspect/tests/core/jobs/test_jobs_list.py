@@ -46,6 +46,8 @@ async def test_returns_filtered_jobs_and_next_page_token() -> None:
 @pytest.mark.asyncio
 async def test_captures_bigquery_failures_in_errors_envelope() -> None:
     class DenyClient:
+        """Client that denies list_jobs requests."""
+
         async def get_job(self, ref: object) -> object:
             del ref
             raise RuntimeError("not used")
@@ -89,6 +91,8 @@ async def test_captures_bigquery_failures_in_errors_envelope() -> None:
 @pytest.mark.asyncio
 async def test_rethrows_non_bq_inspect_failure_errors() -> None:
     class BoomClient:
+        """Client that raises unexpected errors from list_jobs."""
+
         async def get_job(self, ref: object) -> object:
             del ref
             raise RuntimeError("not used")

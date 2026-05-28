@@ -132,7 +132,9 @@ class SdkBigQueryClient:
 
     def _get_dataset_sync(self, ref: DatasetRef) -> object:
         bq = self._get_bigquery(ref["projectId"])
-        dataset = bq.get_dataset(ref["datasetId"], project=ref["projectId"])
+        project_id = ref["projectId"]
+        dataset_id = ref["datasetId"]
+        dataset = bq.get_dataset(f"{project_id}.{dataset_id}")
         return dataset.to_api_repr()
 
     async def list_tables(self, ref: DatasetRef) -> list[object]:
@@ -143,7 +145,9 @@ class SdkBigQueryClient:
 
     def _list_tables_sync(self, ref: DatasetRef) -> list[object]:
         bq = self._get_bigquery(ref["projectId"])
-        tables = list(bq.list_tables(ref["datasetId"], project=ref["projectId"]))
+        project_id = ref["projectId"]
+        dataset_id = ref["datasetId"]
+        tables = list(bq.list_tables(f"{project_id}.{dataset_id}"))
         return [table.to_api_repr() for table in tables]
 
     async def get_table(self, ref: TableRef) -> object:
@@ -154,5 +158,8 @@ class SdkBigQueryClient:
 
     def _get_table_sync(self, ref: TableRef) -> object:
         bq = self._get_bigquery(ref["projectId"])
-        table = bq.get_table(f"{ref['projectId']}.{ref['datasetId']}.{ref['tableId']}")
+        project_id = ref["projectId"]
+        dataset_id = ref["datasetId"]
+        table_id = ref["tableId"]
+        table = bq.get_table(f"{project_id}.{dataset_id}.{table_id}")
         return table.to_api_repr()

@@ -13,6 +13,7 @@ from bq_inspect.schemas.command_schemas import get_command_schema
 
 if TYPE_CHECKING:
     from bq_inspect.bigquery.port.inspection_client import BigQueryInspectionClient
+    from bq_inspect.cli.input.parsed_input_types import ParsedCatalogInput
 
 
 class TablesListCommandOptions:
@@ -48,7 +49,7 @@ async def run_tables_list(
 
 
 async def _execute_tables_list(
-    input_data: dict[str, Any],
+    input_data: ParsedCatalogInput,
     command_options: TablesListCommandOptions,
 ) -> Any:
     client = command_options.client

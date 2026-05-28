@@ -56,12 +56,12 @@ class ToolBlock(TypedDict):
     readOnly: Literal[True]
 
 
-class InspectJobRequest(TypedDict, total=False):
+class InspectJobRequest(TypedDict):
     jobs: list[JobRef]
-    view: JobView
-    schemaVersion: BqInspectSchemaVersion
-    impersonateServiceAccount: str
-    impersonateDelegates: list[str]
+    view: NotRequired[JobView]
+    schemaVersion: NotRequired[BqInspectSchemaVersion]
+    impersonateServiceAccount: NotRequired[str]
+    impersonateDelegates: NotRequired[list[str]]
 
 
 class JobSource(TypedDict):
@@ -77,11 +77,11 @@ class InspectedJob(TypedDict, total=False):
     errors: list[BqInspectError]
 
 
-class InspectJobResponseRequest(TypedDict, total=False):
+class InspectJobResponseRequest(TypedDict):
     jobs: list[JobRef]
     view: JobView
-    impersonateServiceAccount: str
-    impersonateDelegates: list[str]
+    impersonateServiceAccount: NotRequired[str]
+    impersonateDelegates: NotRequired[list[str]]
 
 
 class InspectJobResponse(TypedDict):
@@ -99,22 +99,27 @@ class JobListFiltersEcho(TypedDict, total=False):
     labels: dict[str, str]
 
 
-class ListJobsResponseRequest(TypedDict, total=False):
+class ListJobsResponseRequest(TypedDict):
     projectId: str
-    allUsers: bool
-    minCreationTime: int
-    maxCreationTime: int
-    pageToken: str
-    maxResults: int
-    state: str
-    parentJobId: str
     filters: JobListFiltersEcho
-    impersonateServiceAccount: str
-    impersonateDelegates: list[str]
+    allUsers: NotRequired[bool]
+    minCreationTime: NotRequired[int]
+    maxCreationTime: NotRequired[int]
+    pageToken: NotRequired[str]
+    maxResults: NotRequired[int]
+    state: NotRequired[str]
+    parentJobId: NotRequired[str]
+    impersonateServiceAccount: NotRequired[str]
+    impersonateDelegates: NotRequired[list[str]]
 
 
 class ListJobsPageBlock(TypedDict, total=False):
     nextPageToken: str
+
+
+class ToolEnvelope(TypedDict):
+    schemaVersion: BqInspectSchemaVersion
+    tool: ToolBlock
 
 
 class ListJobsResponse(TypedDict):
@@ -127,13 +132,13 @@ class ListJobsResponse(TypedDict):
     errors: list[BqInspectError]
 
 
-class CatalogResourceResponse(TypedDict, total=False):
+class CatalogResourceResponse(TypedDict):
     schemaVersion: BqInspectSchemaVersion
     tool: ToolBlock
     request: dict[str, str]
-    resource: object
     warnings: list[BqInspectWarning]
     errors: list[BqInspectError]
+    resource: NotRequired[object]
 
 
 class TablesListResponse(TypedDict):

@@ -75,7 +75,7 @@ def extract_google_error_message(error: object) -> str:  # noqa: PLR0911, PLR091
             return message
 
     if hasattr(error, "message"):
-        message = error.message
+        message = getattr(error, "message", None)
         if isinstance(message, str) and message.strip():
             return message
 

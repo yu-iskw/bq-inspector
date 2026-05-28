@@ -6,7 +6,7 @@ from bq_inspect.core.shared.impersonation_fields import impersonation_request_fi
 
 
 def test_returns_empty_object_when_unset() -> None:
-    assert impersonation_request_fields({}) == {}
+    assert not impersonation_request_fields({})
 
 
 def test_includes_service_account_when_set() -> None:

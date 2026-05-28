@@ -47,9 +47,10 @@ class FixtureBigQueryClient:
         jobs = self._input.jobs_by_id
         if jobs is None:
             raise RuntimeError(f"Fixture job not found: {ref['jobId']}")
-        job = jobs.get(ref["jobId"])
+        job_id = ref["jobId"]
+        job = jobs.get(job_id)
         if job is None:
-            raise RuntimeError(f"Fixture job not found: {ref['jobId']}")
+            raise RuntimeError(f"Fixture job not found: {job_id}")
         return job
 
     async def list_jobs(self, request: ListJobsRequest) -> ListJobsPage:

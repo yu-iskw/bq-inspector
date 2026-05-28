@@ -9,14 +9,14 @@ from bq_inspect.cli.input.input_parsers import parse_jobs_view_input_for_command
 from bq_inspect.cli.params.parse_params import resolve_params_value
 from bq_inspect.commands.command_shared import create_sdk_inspection_client_from_input
 from bq_inspect.core.jobs.get import InspectJobOptions, inspect_jobs
-from bq_inspect.core.shared.impersonation_fields import impersonation_request_fields
 from bq_inspect.schemas.command_schemas import JobsViewCommandId, get_command_schema
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
     from bq_inspect.bigquery.port.inspection_client import BigQueryJobClient
-    from bq_inspect.core.shared.types import JobView
+    from bq_inspect.cli.input.parsed_input_types import ParsedJobsViewInput
+    from bq_inspect.core.shared.types import InspectJobRequest, JobView
 
 
 class JobsViewCommandOptions:
@@ -33,7 +33,7 @@ class JobsViewCommandOptions:
 
 
 async def _execute_jobs_view(
-    input_data: dict[str, Any],
+    input_data: ParsedJobsViewInput,
     view: JobView,
     command_options: JobsViewCommandOptions,
 ) -> Any:
@@ -41,14 +41,19 @@ async def _execute_jobs_view(
     if client is None:
         client = await create_sdk_inspection_client_from_input(input_data)
 
-    request: dict[str, Any] = {
+    request: InspectJobRequest = {
         "jobs": input_data["jobs"],
         "view": view,
     }
-    request.update(impersonation_request_fields(input_data))
+    service_account = input_data.get("impersonateServiceAccount")
+    if service_account is not None:
+        request["impersonateServiceAccount"] = service_account
+    delegates = input_data.get("impersonateDelegates")
+    if delegates is not None:
+        request["impersonateDelegates"] = delegates
 
     return await inspect_jobs(
-        request,  # type: ignore[arg-type]
+        request,
         InspectJobOptions(client=client, tool_version=command_options.tool_version),
     )
 
