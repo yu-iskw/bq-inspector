@@ -12,11 +12,11 @@ from bq_inspect.commands.command_shared import (
     create_sdk_inspection_client_from_input,
 )
 from bq_inspect.core.jobs.list import ListJobsOrchestrationInput, list_jobs
-from bq_inspect.core.shared.impersonation_fields import ImpersonationFields
 from bq_inspect.schemas.command_schemas import get_command_schema
 
 if TYPE_CHECKING:
     from bq_inspect.cli.input.parsed_input_types import ParsedJobsListInput
+    from bq_inspect.core.shared.impersonation_fields import ImpersonationFields
 
 
 async def run_jobs_list(
@@ -57,7 +57,7 @@ async def _execute_jobs_list(
 
 
 def _impersonation_from_parsed_input(input_data: ParsedJobsListInput) -> ImpersonationFields:
-    impersonation = cast(ImpersonationFields, {})
+    impersonation = cast("ImpersonationFields", {})
     service_account = input_data.get("impersonateServiceAccount")
     if service_account is not None:
         impersonation["impersonateServiceAccount"] = service_account

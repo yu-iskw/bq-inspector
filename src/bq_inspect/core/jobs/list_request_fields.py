@@ -137,6 +137,6 @@ def build_list_jobs_response_echo(
         "projectId": list_request["projectId"],
         "filters": filters,
     }
-    apply_list_request_optionals_to_mapping(cast(dict[str, Any], request), list_request)
+    apply_list_request_optionals_to_mapping(cast("dict[str, Any]", request), list_request)
     request.update(impersonation_request_fields(impersonation))  # type: ignore[arg-type]
     return request

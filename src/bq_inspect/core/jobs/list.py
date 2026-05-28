@@ -9,12 +9,12 @@ from bq_inspect.core.jobs.filter import filter_job_summaries, filters_to_echo
 from bq_inspect.core.jobs.list_request_fields import build_list_jobs_response_echo
 from bq_inspect.core.shared.envelope import build_tool_envelope
 from bq_inspect.core.shared.errors import BqInspectFailure
-from bq_inspect.core.shared.impersonation_fields import ImpersonationFields
 
 if TYPE_CHECKING:
     from bq_inspect.bigquery.port.inspection_client import BigQueryInspectionClient
     from bq_inspect.bigquery.types.list_jobs import ListJobsRequest
     from bq_inspect.core.jobs.filter import JobFilters
+    from bq_inspect.core.shared.impersonation_fields import ImpersonationFields
     from bq_inspect.core.shared.types import (
         BqInspectError,
         ListJobsPageBlock,
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 
 def _empty_impersonation_fields() -> ImpersonationFields:
-    return cast(ImpersonationFields, {})
+    return cast("ImpersonationFields", {})
 
 
 @dataclass
