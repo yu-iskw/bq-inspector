@@ -44,3 +44,21 @@ def test_main_partial_command_is_unknown(monkeypatch: pytest.MonkeyPatch) -> Non
     assert exc_info.value.code == 2
     payload = json.loads(stderr.getvalue())
     assert payload["code"] == "BQINSPECT_INPUT_INVALID"
+
+
+def test_main_jobs_list_missing_params_value_writes_json_only_stderr(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    stderr = StringIO()
+    monkeypatch.setattr("sys.argv", ["bq-inspect", "jobs", "list", "--params"])
+    monkeypatch.setattr("sys.stderr", stderr)
+
+    with pytest.raises(SystemExit) as exc_info:
+        main()
+
+    assert exc_info.value.code == 2
+    output = stderr.getvalue()
+    assert "usage:" not in output
+    payload = json.loads(output)
+    assert payload["code"] == "BQINSPECT_INPUT_INVALID"
+    assert "expected one argument" in payload["message"]

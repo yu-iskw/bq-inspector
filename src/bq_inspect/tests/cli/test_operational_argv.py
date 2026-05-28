@@ -39,3 +39,10 @@ def test_rejects_missing_params_for_run() -> None:
 def test_rejects_unknown_flags() -> None:
     with pytest.raises(BqInspectFailure):
         parse_operational_argv(["--unknown"])
+
+
+def test_rejects_params_flag_without_value() -> None:
+    with pytest.raises(BqInspectFailure) as exc_info:
+        parse_operational_argv(["--params"])
+
+    assert "expected one argument" in exc_info.value.details["message"]

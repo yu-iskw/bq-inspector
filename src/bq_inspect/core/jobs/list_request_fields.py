@@ -16,7 +16,10 @@ if TYPE_CHECKING:
 def parse_iso_timestamp_to_millis(value: str) -> int:
     """Parse an ISO-8601 timestamp string to epoch milliseconds."""
     candidate = value[:-1] + "+00:00" if value.endswith("Z") else value
-    return int(datetime.fromisoformat(candidate).timestamp() * 1000)
+    parsed = datetime.fromisoformat(candidate)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    return int(parsed.timestamp() * 1000)
 
 
 def millis_to_datetime(millis: int) -> datetime:
