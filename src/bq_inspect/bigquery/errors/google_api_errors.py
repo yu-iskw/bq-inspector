@@ -96,6 +96,9 @@ def map_http_status_to_error_code(status: int) -> BqInspectErrorCode:  # noqa: P
     if status >= _HTTP_STATUS_SERVER_ERROR:
         return "BQINSPECT_API_UNAVAILABLE"
 
+    if _HTTP_STATUS_MIN <= status < _HTTP_STATUS_SERVER_ERROR:
+        return "BQINSPECT_INPUT_INVALID"
+
     return "BQINSPECT_API_UNAVAILABLE"
 
 

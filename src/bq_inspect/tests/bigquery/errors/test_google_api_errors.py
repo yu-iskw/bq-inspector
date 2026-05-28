@@ -22,7 +22,8 @@ from bq_inspect.core.shared.errors import BqInspectFailure
         (404, "BQINSPECT_JOB_NOT_FOUND"),
         (429, "BQINSPECT_API_RATE_LIMITED"),
         (500, "BQINSPECT_API_UNAVAILABLE"),
-        (418, "BQINSPECT_API_UNAVAILABLE"),
+        (400, "BQINSPECT_INPUT_INVALID"),
+        (418, "BQINSPECT_INPUT_INVALID"),
     ],
 )
 def test_map_http_status_to_error_code(status: int, code: str) -> None:
@@ -102,6 +103,17 @@ def test_map_google_error_to_bq_inspect_failure_adds_location_guidance_for_jobs_
     assert failure.details["code"] == "BQINSPECT_JOB_NOT_FOUND"
     assert failure.details.get("hint") is not None
     assert "Add location on each job ref" in failure.details["hint"]
+
+
+def test_map_google_error_to_bq_inspect_failure_maps_client_errors_as_non_retriable() -> None:
+    failure = map_google_error_to_bq_inspect_failure(
+        {"code": 400, "message": "Invalid state filter."},
+        "bigquery.jobs.list",
+    )
+
+    assert failure.details["code"] == "BQINSPECT_INPUT_INVALID"
+    assert failure.details["retriable"] is False
+    assert failure.details["source"] == {"api": "bigquery.jobs.list", "status": 400}
 
 
 def test_map_google_error_to_bq_inspect_failure_maps_missing_status_to_internal() -> None:

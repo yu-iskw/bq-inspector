@@ -208,7 +208,7 @@ Errors are JSON on stderr with a `code` field. Schema validation failures includ
 
 | Code                          | Typical cause                                                                                                  |
 | ----------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `BQINSPECT_INPUT_INVALID`     | Bad `--params` or flags; schema validation                                                                     |
+| `BQINSPECT_INPUT_INVALID`     | Bad `--params` or flags; schema validation; HTTP 400 from BigQuery for invalid API params (e.g. bad `state` or `pageToken`) |
 | `BQINSPECT_PERMISSION_DENIED` | IAM or ADC; on `jobs.get`, often missing `location` or wrong job ref (see [Troubleshooting](#troubleshooting)) |
 | `BQINSPECT_JOB_NOT_FOUND`     | Missing job or catalog resource (HTTP 404 from the API)                                                        |
 | `BQINSPECT_LOCATION_REQUIRED` | Reserved; prefer `location` on job refs (see hints on 403)                                                     |
