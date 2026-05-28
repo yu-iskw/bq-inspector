@@ -4,54 +4,22 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from bq_inspect.cli.argv.operational_argv import parse_operational_argv
 from bq_inspect.cli.input.input_parsers import parse_tables_get_input
-from bq_inspect.cli.params.parse_params import resolve_params_value
-from bq_inspect.commands.command_shared import create_sdk_inspection_client_from_input
+from bq_inspect.commands.command_shared import (
+    InspectionCommandOptions,
+    create_run_catalog_command,
+    create_sdk_inspection_client_from_input,
+)
 from bq_inspect.core.shared.errors import create_input_failure
 from bq_inspect.core.tables.get import get_table_metadata
-from bq_inspect.schemas.command_schemas import get_command_schema
 
 if TYPE_CHECKING:
-    from bq_inspect.bigquery.port.inspection_client import BigQueryInspectionClient
     from bq_inspect.cli.input.parsed_input_types import ParsedCatalogInput
-
-
-class TablesGetCommandOptions:
-    """Options for tables get command execution."""
-
-    def __init__(
-        self,
-        *,
-        client: BigQueryInspectionClient | None = None,
-        tool_version: str,
-    ) -> None:
-        self.client = client
-        self.tool_version = tool_version
-
-
-async def run_tables_get(
-    argv: list[str],
-    command_options: TablesGetCommandOptions,
-) -> Any:
-    """Run tables get with schema discovery or params execution."""
-    argv_parsed = parse_operational_argv(argv)
-
-    if argv_parsed["kind"] == "input-schema":
-        return get_command_schema("tables get", "input")
-
-    if argv_parsed["kind"] == "output-schema":
-        return get_command_schema("tables get", "output")
-
-    raw = resolve_params_value(argv_parsed["params"])
-    input_data = parse_tables_get_input(raw)
-
-    return await _execute_tables_get(input_data, command_options)
 
 
 async def _execute_tables_get(
     input_data: ParsedCatalogInput,
-    command_options: TablesGetCommandOptions,
+    command_options: InspectionCommandOptions,
 ) -> Any:
     table_id = input_data.get("tableId")
     if table_id is None:
@@ -70,3 +38,10 @@ async def _execute_tables_get(
         client=client,
         tool_version=command_options.tool_version,
     )
+
+
+run_tables_get = create_run_catalog_command(
+    "tables get",
+    parse_tables_get_input,
+    _execute_tables_get,
+)

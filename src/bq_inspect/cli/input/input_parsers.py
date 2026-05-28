@@ -9,6 +9,7 @@ from bq_inspect.cli.input.map_input import (
     map_jobs_list_input,
     map_jobs_view_input,
 )
+from bq_inspect.schemas.command_schemas import CommandId, JobsViewCommandId
 from bq_inspect.schemas.validate_input import validate_input
 
 if TYPE_CHECKING:
@@ -17,12 +18,21 @@ if TYPE_CHECKING:
         ParsedJobsListInput,
         ParsedJobsViewInput,
     )
-    from bq_inspect.schemas.command_schemas import JobsViewCommandId
+
+CatalogCommandId = CommandId
+
+
+def _parse_catalog_input(command_id: CatalogCommandId, raw: Any) -> ParsedCatalogInput:
+    return map_catalog_input(validate_input(command_id, raw))
+
+
+def _parse_jobs_view_input(command_id: JobsViewCommandId, raw: Any) -> ParsedJobsViewInput:
+    return map_jobs_view_input(validate_input(command_id, raw))
 
 
 def parse_jobs_get_input(raw: Any) -> ParsedJobsViewInput:
     """Parse jobs get params."""
-    return map_jobs_view_input(validate_input("jobs get", raw))
+    return _parse_jobs_view_input("jobs get", raw)
 
 
 def parse_jobs_view_input_for_command(
@@ -30,7 +40,7 @@ def parse_jobs_view_input_for_command(
     raw: Any,
 ) -> ParsedJobsViewInput:
     """Parse jobs view params for a specific view command."""
-    return map_jobs_view_input(validate_input(command_id, raw))
+    return _parse_jobs_view_input(command_id, raw)
 
 
 def parse_jobs_list_input(raw: Any) -> ParsedJobsListInput:
@@ -40,14 +50,14 @@ def parse_jobs_list_input(raw: Any) -> ParsedJobsListInput:
 
 def parse_datasets_get_input(raw: Any) -> ParsedCatalogInput:
     """Parse datasets get params."""
-    return map_catalog_input(validate_input("datasets get", raw))
+    return _parse_catalog_input("datasets get", raw)
 
 
 def parse_tables_list_input(raw: Any) -> ParsedCatalogInput:
     """Parse tables list params."""
-    return map_catalog_input(validate_input("tables list", raw))
+    return _parse_catalog_input("tables list", raw)
 
 
 def parse_tables_get_input(raw: Any) -> ParsedCatalogInput:
     """Parse tables get params."""
-    return map_catalog_input(validate_input("tables get", raw))
+    return _parse_catalog_input("tables get", raw)

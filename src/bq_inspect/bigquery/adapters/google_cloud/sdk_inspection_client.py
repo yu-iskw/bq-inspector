@@ -8,13 +8,14 @@ Google Cloud SDK adapter for read-only BigQuery inspection.
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 from google.cloud import bigquery
 
 from bq_inspect.bigquery.errors.google_api_errors import map_google_error_to_bq_inspect_failure
+from bq_inspect.core.jobs.list_request_fields import list_request_to_sdk_kwargs
 from bq_inspect.core.shared.api_error_hints import ApiErrorHintContext
+from bq_inspect.core.shared.errors import BqInspectFailure
 
 _T = TypeVar("_T")
 
@@ -37,12 +38,10 @@ async def _invoke_sync(
 ) -> _T:
     try:
         return await asyncio.to_thread(fn)
+    except BqInspectFailure:
+        raise
     except Exception as error:
         raise map_google_error_to_bq_inspect_failure(error, api, context) from error
-
-
-def _millis_to_datetime(millis: int) -> datetime:
-    return datetime.fromtimestamp(millis / 1000.0, tz=UTC)
 
 
 def _read_next_page_token(iterator: object) -> str | None:
@@ -93,40 +92,13 @@ class SdkBigQueryClient:
             api="bigquery.jobs.list",
         )
 
-    def _list_jobs_sync(self, request: ListJobsRequest) -> ListJobsPage:  # noqa: PLR0912
+    def _list_jobs_sync(self, request: ListJobsRequest) -> ListJobsPage:
         bq = self._get_bigquery(request["projectId"])
-        list_kwargs: dict[str, Any] = {"project": request["projectId"]}
-
-        if request.get("allUsers") is True:
-            list_kwargs["all_users"] = True
-
-        min_creation_time = request.get("minCreationTime")
-        if min_creation_time is not None:
-            list_kwargs["min_creation_time"] = _millis_to_datetime(min_creation_time)
-
-        max_creation_time = request.get("maxCreationTime")
-        if max_creation_time is not None:
-            list_kwargs["max_creation_time"] = _millis_to_datetime(max_creation_time)
-
-        page_token = request.get("pageToken")
-        if page_token is not None and len(page_token) > 0:
-            list_kwargs["page_token"] = page_token
-
-        max_results = request.get("maxResults")
-        if max_results is not None:
-            list_kwargs["max_results"] = max_results
-
-        state = request.get("state")
-        if state is not None and len(state) > 0:
-            list_kwargs["state_filter"] = state.lower()
-
-        parent_job_id = request.get("parentJobId")
-        if parent_job_id is not None and len(parent_job_id) > 0:
-            list_kwargs["parent_job"] = parent_job_id
+        list_kwargs = list_request_to_sdk_kwargs(request)
 
         iterator = bq.list_jobs(**list_kwargs)
-        page = next(iterator.pages)
-        jobs = [job.to_api_repr() for job in page]
+        page = next(iterator.pages, None)
+        jobs = [job.to_api_repr() for job in page] if page is not None else []
         next_page_token = _read_next_page_token(iterator)
 
         result: ListJobsPage = {"jobs": jobs}

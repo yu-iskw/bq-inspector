@@ -4,18 +4,24 @@ import json
 
 import pytest
 
-from bq_inspect.commands.datasets.get import DatasetsGetCommandOptions, run_datasets_get
-from bq_inspect.commands.jobs.list import JobsListCommandOptions, run_jobs_list
-from bq_inspect.commands.jobs.run_jobs_view import (
+from bq_inspect.commands.command_shared import (
+    DatasetsGetCommandOptions,
+    JobsListCommandOptions,
     JobsViewCommandOptions,
+    TablesGetCommandOptions,
+    TablesListCommandOptions,
+)
+from bq_inspect.commands.datasets.get import run_datasets_get
+from bq_inspect.commands.jobs.list import run_jobs_list
+from bq_inspect.commands.jobs.run_jobs_view import (
     run_jobs_get,
     run_jobs_impact,
     run_jobs_lineage,
     run_jobs_summary,
 )
 from bq_inspect.commands.schema import run_schema_command
-from bq_inspect.commands.tables.get import TablesGetCommandOptions, run_tables_get
-from bq_inspect.commands.tables.list import TablesListCommandOptions, run_tables_list
+from bq_inspect.commands.tables.get import run_tables_get
+from bq_inspect.commands.tables.list import run_tables_list
 from bq_inspect.core.shared.errors import BqInspectFailure
 
 

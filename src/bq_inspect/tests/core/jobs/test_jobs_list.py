@@ -125,6 +125,49 @@ async def test_rethrows_non_bq_inspect_failure_errors() -> None:
 
 
 @pytest.mark.asyncio
+async def test_returns_empty_jobs_and_empty_page_when_api_returns_no_jobs() -> None:
+    client = FixtureBigQueryClient(FixtureBigQueryInput(list_jobs_page={"jobs": []}))
+
+    response = await list_jobs(
+        ListJobsOrchestrationInput(
+            client=client,
+            tool_version="0.1.0",
+            list_request={"projectId": "p"},
+            filters=JobFilters(),
+        )
+    )
+
+    assert response["jobs"] == []
+    assert response["errors"] == []
+    assert response["page"] == {}
+
+
+@pytest.mark.asyncio
+async def test_returns_empty_jobs_when_filters_exclude_all_summaries() -> None:
+    client = FixtureBigQueryClient(
+        FixtureBigQueryInput(
+            list_jobs_page={
+                "jobs": [
+                    {"status": {"state": "DONE"}, "statistics": {"query": {"totalSlotMs": "10"}}},
+                ],
+            }
+        )
+    )
+
+    response = await list_jobs(
+        ListJobsOrchestrationInput(
+            client=client,
+            tool_version="0.1.0",
+            list_request={"projectId": "p"},
+            filters=JobFilters(min_slot_ms=1000),
+        )
+    )
+
+    assert response["jobs"] == []
+    assert response["errors"] == []
+
+
+@pytest.mark.asyncio
 async def test_echoes_list_request_options_and_impersonation() -> None:
     client = FixtureBigQueryClient(FixtureBigQueryInput(list_jobs_page={"jobs": []}))
 
@@ -143,8 +186,10 @@ async def test_echoes_list_request_options_and_impersonation() -> None:
                 "parentJobId": "parent_1",
             },
             filters=JobFilters(labels={"team": "data"}),
-            impersonate_service_account="sa@p.iam.gserviceaccount.com",
-            impersonate_delegates=["d@p.iam.gserviceaccount.com"],
+            impersonation={
+                "impersonateServiceAccount": "sa@p.iam.gserviceaccount.com",
+                "impersonateDelegates": ["d@p.iam.gserviceaccount.com"],
+            },
         )
     )
 

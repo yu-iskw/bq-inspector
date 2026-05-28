@@ -2,36 +2,26 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from bq_inspect.cli.argv.operational_argv import parse_operational_argv
 from bq_inspect.cli.input.input_parsers import parse_jobs_list_input
 from bq_inspect.cli.params.parse_params import resolve_params_value
-from bq_inspect.commands.command_shared import create_sdk_inspection_client_from_input
+from bq_inspect.commands.command_shared import (
+    InspectionCommandOptions,
+    create_sdk_inspection_client_from_input,
+)
 from bq_inspect.core.jobs.list import ListJobsOrchestrationInput, list_jobs
+from bq_inspect.core.shared.impersonation_fields import ImpersonationFields
 from bq_inspect.schemas.command_schemas import get_command_schema
 
 if TYPE_CHECKING:
-    from bq_inspect.bigquery.port.inspection_client import BigQueryInspectionClient
     from bq_inspect.cli.input.parsed_input_types import ParsedJobsListInput
-
-
-class JobsListCommandOptions:
-    """Options for jobs list command execution."""
-
-    def __init__(
-        self,
-        *,
-        client: BigQueryInspectionClient | None = None,
-        tool_version: str,
-    ) -> None:
-        self.client = client
-        self.tool_version = tool_version
 
 
 async def run_jobs_list(
     argv: list[str],
-    command_options: JobsListCommandOptions,
+    command_options: InspectionCommandOptions,
 ) -> Any:
     """Run jobs list with schema discovery or params execution."""
     argv_parsed = parse_operational_argv(argv)
@@ -50,7 +40,7 @@ async def run_jobs_list(
 
 async def _execute_jobs_list(
     input_data: ParsedJobsListInput,
-    command_options: JobsListCommandOptions,
+    command_options: InspectionCommandOptions,
 ) -> Any:
     client = command_options.client
     if client is None:
@@ -61,7 +51,17 @@ async def _execute_jobs_list(
         tool_version=command_options.tool_version,
         list_request=input_data["listRequest"],
         filters=input_data["filters"],
-        impersonate_service_account=input_data.get("impersonateServiceAccount"),
-        impersonate_delegates=input_data.get("impersonateDelegates"),
+        impersonation=_impersonation_from_parsed_input(input_data),
     )
     return await list_jobs(orchestration)
+
+
+def _impersonation_from_parsed_input(input_data: ParsedJobsListInput) -> ImpersonationFields:
+    impersonation = cast(ImpersonationFields, {})
+    service_account = input_data.get("impersonateServiceAccount")
+    if service_account is not None:
+        impersonation["impersonateServiceAccount"] = service_account
+    delegates = input_data.get("impersonateDelegates")
+    if delegates is not None:
+        impersonation["impersonateDelegates"] = delegates
+    return impersonation

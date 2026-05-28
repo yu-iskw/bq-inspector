@@ -19,15 +19,16 @@ from __future__ import annotations
 import asyncio
 import json
 import sys
+from dataclasses import dataclass
 from importlib.metadata import PackageNotFoundError, version
 from typing import TYPE_CHECKING, Any
 
 from bq_inspect.cli.help import resolve_help_text, strip_trailing_help_flags
 from bq_inspect.cli.usage import GLOBAL_USAGE
-from bq_inspect.commands.datasets.get import DatasetsGetCommandOptions, run_datasets_get
-from bq_inspect.commands.jobs.list import JobsListCommandOptions, run_jobs_list
+from bq_inspect.commands.command_shared import InspectionCommandOptions
+from bq_inspect.commands.datasets.get import run_datasets_get
+from bq_inspect.commands.jobs.list import run_jobs_list
 from bq_inspect.commands.jobs.run_jobs_view import (
-    JobsViewCommandOptions,
     run_jobs_get,
     run_jobs_impact,
     run_jobs_lineage,
@@ -36,8 +37,8 @@ from bq_inspect.commands.jobs.run_jobs_view import (
     run_jobs_summary,
 )
 from bq_inspect.commands.schema import run_schema_command
-from bq_inspect.commands.tables.get import TablesGetCommandOptions, run_tables_get
-from bq_inspect.commands.tables.list import TablesListCommandOptions, run_tables_list
+from bq_inspect.commands.tables.get import run_tables_get
+from bq_inspect.commands.tables.list import run_tables_list
 from bq_inspect.core.shared.errors import (
     BqInspectFailure,
     create_bq_inspect_error,
@@ -57,17 +58,43 @@ def _read_tool_version() -> str:
         return "0.0.0"
 
 
-def _to_cli_error(error: BaseException) -> BqInspectError:
+def _to_cli_error(error: Exception) -> BqInspectError:
     if isinstance(error, BqInspectFailure):
         return error.details
 
+    message = error.args[0] if error.args and isinstance(error.args[0], str) else str(error)
     return create_bq_inspect_error(
         code="BQINSPECT_INTERNAL",
-        message=str(error),
+        message=message,
     )
 
 
-_MIN_ROUTE_ARGS = 2
+@dataclass(frozen=True)
+class _RouteSpec:
+    path: tuple[str, ...]
+    run: Callable[[list[str], InspectionCommandOptions], Awaitable[Any]]
+
+
+def _matches_route(argv: list[str], spec: _RouteSpec) -> bool:
+    if len(argv) < len(spec.path):
+        return False
+    return tuple(argv[: len(spec.path)]) == spec.path
+
+
+def _command_routes() -> tuple[_RouteSpec, ...]:
+    return (
+        _RouteSpec(("jobs", "summary"), run_jobs_summary),
+        _RouteSpec(("jobs", "query"), run_jobs_query),
+        _RouteSpec(("jobs", "performance"), run_jobs_performance),
+        _RouteSpec(("jobs", "lineage"), run_jobs_lineage),
+        _RouteSpec(("jobs", "impact"), run_jobs_impact),
+        _RouteSpec(("jobs", "get"), run_jobs_get),
+        _RouteSpec(("jobs", "list"), run_jobs_list),
+        _RouteSpec(("datasets", "get"), run_datasets_get),
+        _RouteSpec(("tables", "list"), run_tables_list),
+        _RouteSpec(("tables", "get"), run_tables_get),
+        _RouteSpec(("schema",), lambda argv, _options: run_schema_command(argv)),
+    )
 
 
 async def _dispatch(raw_argv: list[str]) -> None:
@@ -84,95 +111,10 @@ async def _dispatch(raw_argv: list[str]) -> None:
         return
 
     tool_version = _read_tool_version()
+    options = InspectionCommandOptions(tool_version=tool_version)
+    matched = next((spec for spec in _command_routes() if _matches_route(argv, spec)), None)
 
-    routes: list[tuple[Callable[[list[str]], bool], Callable[[list[str]], Awaitable[Any]]]] = [
-        (
-            lambda args: (
-                len(args) >= _MIN_ROUTE_ARGS and args[0] == "jobs" and args[1] == "summary"
-            ),
-            lambda args: run_jobs_summary(
-                args[2:],
-                JobsViewCommandOptions(tool_version=tool_version),
-            ),
-        ),
-        (
-            lambda args: len(args) >= _MIN_ROUTE_ARGS and args[0] == "jobs" and args[1] == "query",
-            lambda args: run_jobs_query(
-                args[2:],
-                JobsViewCommandOptions(tool_version=tool_version),
-            ),
-        ),
-        (
-            lambda args: (
-                len(args) >= _MIN_ROUTE_ARGS and args[0] == "jobs" and args[1] == "performance"
-            ),
-            lambda args: run_jobs_performance(
-                args[2:],
-                JobsViewCommandOptions(tool_version=tool_version),
-            ),
-        ),
-        (
-            lambda args: (
-                len(args) >= _MIN_ROUTE_ARGS and args[0] == "jobs" and args[1] == "lineage"
-            ),
-            lambda args: run_jobs_lineage(
-                args[2:],
-                JobsViewCommandOptions(tool_version=tool_version),
-            ),
-        ),
-        (
-            lambda args: len(args) >= _MIN_ROUTE_ARGS and args[0] == "jobs" and args[1] == "impact",
-            lambda args: run_jobs_impact(
-                args[2:],
-                JobsViewCommandOptions(tool_version=tool_version),
-            ),
-        ),
-        (
-            lambda args: len(args) >= _MIN_ROUTE_ARGS and args[0] == "jobs" and args[1] == "get",
-            lambda args: run_jobs_get(
-                args[2:],
-                JobsViewCommandOptions(tool_version=tool_version),
-            ),
-        ),
-        (
-            lambda args: len(args) >= _MIN_ROUTE_ARGS and args[0] == "jobs" and args[1] == "list",
-            lambda args: run_jobs_list(
-                args[2:],
-                JobsListCommandOptions(tool_version=tool_version),
-            ),
-        ),
-        (
-            lambda args: (
-                len(args) >= _MIN_ROUTE_ARGS and args[0] == "datasets" and args[1] == "get"
-            ),
-            lambda args: run_datasets_get(
-                args[2:],
-                DatasetsGetCommandOptions(tool_version=tool_version),
-            ),
-        ),
-        (
-            lambda args: len(args) >= _MIN_ROUTE_ARGS and args[0] == "tables" and args[1] == "list",
-            lambda args: run_tables_list(
-                args[2:],
-                TablesListCommandOptions(tool_version=tool_version),
-            ),
-        ),
-        (
-            lambda args: len(args) >= _MIN_ROUTE_ARGS and args[0] == "tables" and args[1] == "get",
-            lambda args: run_tables_get(
-                args[2:],
-                TablesGetCommandOptions(tool_version=tool_version),
-            ),
-        ),
-        (
-            lambda args: len(args) >= 1 and args[0] == "schema",
-            lambda args: run_schema_command(args[1:]),
-        ),
-    ]
-
-    route = next((entry for entry in routes if entry[0](argv)), None)
-
-    if route is None:
+    if matched is None:
         raise BqInspectFailure(
             create_bq_inspect_error(
                 code="BQINSPECT_INPUT_INVALID",
@@ -180,7 +122,7 @@ async def _dispatch(raw_argv: list[str]) -> None:
             )
         )
 
-    response = await route[1](argv)
+    response = await matched.run(argv[len(matched.path) :], options)
     sys.stdout.write(f"{json.dumps(response, indent=2)}\n")
 
 
@@ -188,7 +130,7 @@ def main() -> None:
     """Run the bq-inspect CLI."""
     try:
         asyncio.run(_dispatch(sys.argv[1:]))
-    except BaseException as error:
+    except Exception as error:
         details = _to_cli_error(error)
         sys.stderr.write(f"{json.dumps(details, indent=2)}\n")
         raise SystemExit(get_exit_code(details)) from error

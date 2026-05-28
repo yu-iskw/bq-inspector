@@ -7,7 +7,10 @@ from typing import TYPE_CHECKING, Any
 from bq_inspect.cli.argv.operational_argv import parse_operational_argv
 from bq_inspect.cli.input.input_parsers import parse_jobs_view_input_for_command
 from bq_inspect.cli.params.parse_params import resolve_params_value
-from bq_inspect.commands.command_shared import create_sdk_inspection_client_from_input
+from bq_inspect.commands.command_shared import (
+    InspectionCommandOptions,
+    create_sdk_inspection_client_from_input,
+)
 from bq_inspect.core.jobs.get import InspectJobOptions, inspect_jobs
 from bq_inspect.core.shared.impersonation_fields import impersonation_request_fields
 from bq_inspect.schemas.command_schemas import JobsViewCommandId, get_command_schema
@@ -15,28 +18,14 @@ from bq_inspect.schemas.command_schemas import JobsViewCommandId, get_command_sc
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
-    from bq_inspect.bigquery.port.inspection_client import BigQueryJobClient
     from bq_inspect.cli.input.parsed_input_types import ParsedJobsViewInput
     from bq_inspect.core.shared.types import InspectJobRequest, JobView
-
-
-class JobsViewCommandOptions:
-    """Options for jobs view command execution."""
-
-    def __init__(
-        self,
-        *,
-        client: BigQueryJobClient | None = None,
-        tool_version: str,
-    ) -> None:
-        self.client = client
-        self.tool_version = tool_version
 
 
 async def _execute_jobs_view(
     input_data: ParsedJobsViewInput,
     view: JobView,
-    command_options: JobsViewCommandOptions,
+    command_options: InspectionCommandOptions,
 ) -> Any:
     client = command_options.client
     if client is None:
@@ -57,10 +46,10 @@ async def _execute_jobs_view(
 def _create_run_jobs_view(
     view: JobView,
     command_id: JobsViewCommandId,
-) -> Callable[[list[str], JobsViewCommandOptions], Awaitable[Any]]:
+) -> Callable[[list[str], InspectionCommandOptions], Awaitable[Any]]:
     async def run_jobs_view(
         argv: list[str],
-        command_options: JobsViewCommandOptions,
+        command_options: InspectionCommandOptions,
     ) -> Any:
         argv_parsed = parse_operational_argv(argv)
 

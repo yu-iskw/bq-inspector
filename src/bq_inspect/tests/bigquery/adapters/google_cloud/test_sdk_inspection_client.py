@@ -8,7 +8,7 @@ import pytest
 from google.api_core.exceptions import NotFound
 
 from bq_inspect.bigquery.adapters.google_cloud.sdk_inspection_client import SdkBigQueryClient
-from bq_inspect.core.shared.errors import BqInspectFailure
+from bq_inspect.core.shared.errors import BqInspectFailure, create_bq_inspect_error
 
 
 @pytest.fixture
@@ -116,6 +116,41 @@ async def test_list_jobs_returns_jobs_and_next_page_token(
     assert call_kwargs["max_results"] == 5
     assert call_kwargs["state_filter"] == "done"
     assert call_kwargs["parent_job"] == "parent_1"
+
+
+@pytest.mark.asyncio
+async def test_list_jobs_returns_empty_page_when_iterator_has_no_pages(
+    sdk_client_fx: SdkBigQueryClient,
+    bq_client_mock_fx: MagicMock,
+) -> None:
+    iterator = MagicMock()
+    iterator.pages = iter([])
+    iterator.next_page_token = None
+    bq_client_mock_fx.list_jobs.return_value = iterator
+
+    result = await sdk_client_fx.list_jobs({"projectId": "p"})
+
+    assert result == {"jobs": []}
+
+
+@pytest.mark.asyncio
+async def test_invoke_sync_preserves_bq_inspect_failure(
+    sdk_client_fx: SdkBigQueryClient,
+    bq_client_mock_fx: MagicMock,
+) -> None:
+    structured = BqInspectFailure(
+        create_bq_inspect_error(
+            code="BQINSPECT_JOB_NOT_FOUND",
+            message="Missing.",
+            source={"api": "bigquery.jobs.get", "status": 404},
+        )
+    )
+    bq_client_mock_fx.get_job.side_effect = structured
+
+    with pytest.raises(BqInspectFailure) as exc_info:
+        await sdk_client_fx.get_job({"projectId": "p", "jobId": "j"})
+
+    assert exc_info.value.details["code"] == "BQINSPECT_JOB_NOT_FOUND"
 
 
 @pytest.mark.asyncio

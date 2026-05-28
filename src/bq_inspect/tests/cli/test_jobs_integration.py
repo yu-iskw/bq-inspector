@@ -8,7 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from bq_inspect.commands.jobs.run_jobs_view import JobsViewCommandOptions, run_jobs_summary
+from bq_inspect.commands.command_shared import InspectionCommandOptions
+from bq_inspect.commands.jobs.run_jobs_view import run_jobs_summary
 from bq_inspect.core.jobs.get import InspectJobOptions, inspect_jobs
 from bq_inspect.tests.test_support.fixture_job_client import FixtureJobClient
 
@@ -40,7 +41,7 @@ async def test_run_jobs_summary_with_fixture_client() -> None:
                 }
             ),
         ],
-        JobsViewCommandOptions(client=client, tool_version="0.1.0"),
+        InspectionCommandOptions(client=client, tool_version="0.1.0"),
     )
 
     assert response["schemaVersion"] == "bq-inspect.v1"
@@ -79,7 +80,7 @@ async def test_inspect_jobs_fixture_matches_command_path() -> None:
                 }
             ),
         ],
-        JobsViewCommandOptions(client=client, tool_version="0.1.0"),
+        InspectionCommandOptions(client=client, tool_version="0.1.0"),
     )
 
     assert via_command["schemaVersion"] == direct["schemaVersion"]

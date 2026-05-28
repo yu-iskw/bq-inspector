@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
@@ -62,16 +63,17 @@ async def inspect_jobs(
 ) -> InspectJobResponse:
     """Fetch and project jobs according to the requested view."""
     view: JobView = request.get("view", "summary")
-    inspected_jobs: list[InspectedJob] = []
-    for input_ref in request["jobs"]:
-        inspected_jobs.append(  # noqa: PERF401
-            await _inspect_one_job(
+    inspected_jobs = await asyncio.gather(
+        *[
+            _inspect_one_job(
                 input_ref=input_ref,
                 client=options.client,
                 now=options.now,
                 view=view,
             )
-        )
+            for input_ref in request["jobs"]
+        ]
+    )
 
     global_warnings = [warning for job in inspected_jobs for warning in job.get("warnings", [])]
 
