@@ -18,14 +18,14 @@ class BigQueryInspectionClient(Protocol):
 
     async def list_jobs(self, request: ListJobsRequest) -> ListJobsPage:
         """List jobs for a project."""
-        ...
+        raise NotImplementedError
 
     async def get_dataset(self, ref: DatasetRef) -> object:
         """Fetch dataset metadata."""
 
     async def list_tables(self, ref: DatasetRef) -> list[object]:
         """List tables in a dataset."""
-        ...
+        raise NotImplementedError
 
     async def get_table(self, ref: TableRef) -> object:
         """Fetch table metadata."""
