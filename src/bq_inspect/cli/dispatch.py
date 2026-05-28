@@ -16,13 +16,13 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
 import sys
 from typing import TYPE_CHECKING
 
 import click
 
+from bq_inspect.cli.argv.operational_argv import normalize_click_exception_message
 from bq_inspect.cli.click_cli import invoke
 from bq_inspect.core.shared.errors import (
     BqInspectFailure,
@@ -34,13 +34,6 @@ if TYPE_CHECKING:
     from bq_inspect.core.shared.types import BqInspectError
 
 
-def _click_exception_message(error: click.ClickException) -> str:
-    message = error.format_message()
-    if "requires an argument" in message and "--params" in message:
-        return "expected one argument"
-    return message
-
-
 def _to_cli_error(error: Exception) -> BqInspectError:
     if isinstance(error, BqInspectFailure):
         return error.details
@@ -48,7 +41,7 @@ def _to_cli_error(error: Exception) -> BqInspectError:
     if isinstance(error, click.ClickException):
         return create_bq_inspect_error(
             code="BQINSPECT_INPUT_INVALID",
-            message=_click_exception_message(error),
+            message=normalize_click_exception_message(error),
         )
 
     message = error.args[0] if error.args and isinstance(error.args[0], str) else str(error)
@@ -58,7 +51,7 @@ def _to_cli_error(error: Exception) -> BqInspectError:
     )
 
 
-async def _dispatch(raw_argv: list[str]) -> None:
+def _dispatch(raw_argv: list[str]) -> None:
     """Dispatch argv through the Click CLI (kept for tests)."""
     invoke(raw_argv)
 
@@ -66,7 +59,7 @@ async def _dispatch(raw_argv: list[str]) -> None:
 def main() -> None:
     """Run the bq-inspect CLI."""
     try:
-        asyncio.run(_dispatch(sys.argv[1:]))
+        _dispatch(sys.argv[1:])
     except KeyboardInterrupt:
         raise
     except Exception as error:

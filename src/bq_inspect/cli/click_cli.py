@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+from functools import lru_cache
 from importlib.metadata import PackageNotFoundError, version
 from typing import TYPE_CHECKING, Any
 
@@ -54,20 +55,12 @@ if TYPE_CHECKING:
     from bq_inspect.cli.argv.operational_argv import OperationalArgv
 
 
+@lru_cache(maxsize=1)
 def _read_tool_version() -> str:
     try:
         return version("bq-inspect")
     except PackageNotFoundError:
         return "0.0.0"
-
-
-def operational_to_argv(operational: OperationalArgv) -> list[str]:
-    """Convert parsed operational flags back to argv for existing command runners."""
-    if operational["kind"] == "input-schema":
-        return ["--input-schema"]
-    if operational["kind"] == "output-schema":
-        return ["--output-schema"]
-    return ["--params", operational["params"]]
 
 
 class BqInspectGroup(click.Group):
@@ -80,8 +73,17 @@ class BqInspectGroup(click.Group):
         return command
 
 
-def _partial_group_unknown_command(group_name: str) -> None:
-    raise create_input_failure(f"Unknown command: {group_name}")
+def _partial_group(name: str, doc: str) -> Callable[[], click.Group]:
+    """Create a Click group that rejects bare group invocation."""
+
+    @click.group(name, invoke_without_command=True, add_help_option=False)
+    @click.pass_context
+    def group(ctx: click.Context) -> None:
+        if ctx.invoked_subcommand is None:
+            raise create_input_failure(f"Unknown command: {name}")
+
+    group.__doc__ = doc
+    return group
 
 
 def _register_params_command(
@@ -90,6 +92,8 @@ def _register_params_command(
     usage: str,
     run_command: Callable[[list[str], InspectionCommandOptions], Awaitable[Any]],
 ) -> None:
+    run_operational = run_command.run_operational  # type: ignore[attr-defined]
+
     @group.command(name, add_help_option=False)
     @custom_help_option(usage)
     @operational_options
@@ -100,7 +104,7 @@ def _register_params_command(
         operational: OperationalArgv,
         command_options: InspectionCommandOptions,
     ) -> Any:
-        return await run_command(operational_to_argv(operational), command_options)
+        return await run_operational(operational, command_options)
 
     params_command.__name__ = name.replace(" ", "_")
 
@@ -120,13 +124,8 @@ def cli(ctx: click.Context) -> None:
         sys.stdout.write(f"{GLOBAL_USAGE}\n")
 
 
-@cli.group("jobs", invoke_without_command=True, add_help_option=False)
-@click.pass_context
-def jobs_group(ctx: click.Context) -> None:
-    """Jobs inspection commands."""
-    if ctx.invoked_subcommand is None:
-        _partial_group_unknown_command("jobs")
-
+jobs_group = _partial_group("jobs", "Jobs inspection commands")
+cli.add_command(jobs_group)
 
 _register_params_command(jobs_group, "summary", JOBS_SUMMARY_USAGE, run_jobs_summary)
 _register_params_command(jobs_group, "query", JOBS_QUERY_USAGE, run_jobs_query)
@@ -136,26 +135,12 @@ _register_params_command(jobs_group, "impact", JOBS_IMPACT_USAGE, run_jobs_impac
 _register_params_command(jobs_group, "get", JOBS_GET_USAGE, run_jobs_get)
 _register_params_command(jobs_group, "list", JOBS_LIST_USAGE, run_jobs_list)
 
-
-@cli.group("datasets", invoke_without_command=True, add_help_option=False)
-@click.pass_context
-def datasets_group(ctx: click.Context) -> None:
-    """Dataset metadata commands."""
-    if ctx.invoked_subcommand is None:
-        _partial_group_unknown_command("datasets")
-
-
+datasets_group = _partial_group("datasets", "Dataset metadata commands")
+cli.add_command(datasets_group)
 _register_params_command(datasets_group, "get", DATASETS_GET_USAGE, run_datasets_get)
 
-
-@cli.group("tables", invoke_without_command=True, add_help_option=False)
-@click.pass_context
-def tables_group(ctx: click.Context) -> None:
-    """Table metadata commands."""
-    if ctx.invoked_subcommand is None:
-        _partial_group_unknown_command("tables")
-
-
+tables_group = _partial_group("tables", "Table metadata commands")
+cli.add_command(tables_group)
 _register_params_command(tables_group, "list", TABLES_LIST_USAGE, run_tables_list)
 _register_params_command(tables_group, "get", TABLES_GET_USAGE, run_tables_get)
 
@@ -166,16 +151,21 @@ _register_params_command(tables_group, "get", TABLES_GET_USAGE, run_tables_get)
 def schema_group(ctx: click.Context) -> None:
     """Legacy schema commands."""
     if ctx.invoked_subcommand is None:
-        _partial_group_unknown_command("schema")
+        raise create_input_failure("Unknown command: schema")
 
 
 def _register_schema_command(name: str, usage: str) -> None:
     @schema_group.command(name, add_help_option=False)
     @custom_help_option(usage)
-    @click.option("--format", type=str, required=False)
+    @click.option(
+        "--format",
+        "schema_format",
+        type=click.Choice(["json-schema"], case_sensitive=False),
+        required=True,
+    )
     @async_command
-    async def schema_command(*, format: str | None) -> Any:  # noqa: A002
-        return await run_schema_for_name(name, format)
+    async def schema_command(*, schema_format: str) -> Any:
+        return await run_schema_for_name(name, schema_format)
 
     schema_command.__name__ = f"schema_{name}"
 

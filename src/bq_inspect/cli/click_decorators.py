@@ -10,7 +10,10 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import click
 
-from bq_inspect.cli.argv.operational_argv import operational_argv_from_click
+from bq_inspect.cli.argv.operational_argv import (
+    OPERATIONAL_FLAG_DECORATORS,
+    resolve_operational_argv,
+)
 
 if TYPE_CHECKING:
     from bq_inspect.commands.command_shared import InspectionCommandOptions
@@ -44,10 +47,10 @@ def custom_help_option(usage: str) -> Callable[[F], F]:
 
 def operational_options(command: F) -> F:
     """Attach --params, --input-schema, and --output-schema to a command."""
+    wrapped = command
+    for decorator in reversed(OPERATIONAL_FLAG_DECORATORS):
+        wrapped = decorator(wrapped)
 
-    @click.option("--params", type=str, default=None)
-    @click.option("--input-schema", is_flag=True, default=False)
-    @click.option("--output-schema", is_flag=True, default=False)
     @functools.wraps(command)
     def wrapper(
         *args: Any,
@@ -56,12 +59,12 @@ def operational_options(command: F) -> F:
         output_schema: bool,
         **kwargs: Any,
     ) -> Any:
-        operational = operational_argv_from_click(
+        operational = resolve_operational_argv(
             params=params,
             input_schema=input_schema,
             output_schema=output_schema,
         )
-        return command(*args, operational=operational, **kwargs)
+        return wrapped(*args, operational=operational, **kwargs)
 
     return wrapper  # type: ignore[return-value]
 

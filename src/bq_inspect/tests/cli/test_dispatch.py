@@ -11,7 +11,7 @@ from bq_inspect.cli import main
 
 
 def test_main_keyboard_interrupt_propagates(monkeypatch: pytest.MonkeyPatch) -> None:
-    async def raise_interrupt(argv: list[str]) -> None:
+    def raise_interrupt(argv: list[str]) -> None:
         del argv
         raise KeyboardInterrupt
 

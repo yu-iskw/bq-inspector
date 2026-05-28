@@ -70,11 +70,10 @@ def create_run_params_command(
 ) -> Callable[[list[str], InspectionCommandOptions], Awaitable[Any]]:
     """Build a params command runner with shared schema and params handling."""
 
-    async def run_params_command(
-        argv: list[str],
+    async def run_operational(
+        operational: OperationalArgv,
         command_options: InspectionCommandOptions,
     ) -> Any:
-        operational = parse_operational_argv(argv)
         return await run_from_operational_argv(
             operational,
             command_id,
@@ -83,6 +82,13 @@ def create_run_params_command(
             command_options,
         )
 
+    async def run_params_command(
+        argv: list[str],
+        command_options: InspectionCommandOptions,
+    ) -> Any:
+        return await run_operational(parse_operational_argv(argv), command_options)
+
+    run_params_command.run_operational = run_operational  # type: ignore[attr-defined]
     return run_params_command
 
 
