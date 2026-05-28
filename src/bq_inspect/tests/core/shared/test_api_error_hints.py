@@ -44,5 +44,12 @@ def test_appends_job_ref_verification_when_permission_denied_with_location() -> 
     assert "Add location on each job ref" not in hint
 
 
+def test_returns_catalog_hint_for_dataset_not_found() -> None:
+    hint = hint_for_api_error("BQINSPECT_JOB_NOT_FOUND", "bigquery.datasets.get")
+    assert hint is not None
+    assert "datasetId" in hint
+    assert "source.api" in hint
+
+
 def test_returns_none_for_non_permission_errors_without_job_context() -> None:
     assert hint_for_api_error("BQINSPECT_API_RATE_LIMITED", "bigquery.jobs.get") is None

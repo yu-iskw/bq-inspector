@@ -121,7 +121,7 @@ Keep [README.md](README.md) examples aligned with `cli/usage.py`; end users trea
 
 Layer flow: **`cli/`** → **`commands/`** → **`core/`** → **`bigquery/`** → **`schemas/`**
 
-- **`cli/`** — CLI-facing mechanics: parse pipeline (`argv/`, `params/`, `input/`) plus help (`usage.py`, `help.py`, `dispatch.py`); not split by BigQuery resource. [`cli.py`](src/bq_inspect/cli.py) at the package root is the thin bin dispatcher only.
+- **`cli/`** — CLI package (`cli/__init__.py` exports `main` from `dispatch.py`): parse pipeline (`argv/`, `params/`, `input/`) plus help (`usage.py`, `help.py`, `dispatch.py`); not split by BigQuery resource.
 - **`commands/`** — Thin CLI adapters grouped by resource (`jobs/`, `datasets/`, `tables/`), plus shared `command_shared.py` and meta `schema.py`: parse operational argv, build the BigQuery client, call application functions.
 - **`core/`** — Use cases grouped by resource (`jobs`, `datasets`, `tables`) plus pure helpers (`project_job`, `shared`).
 - **`bigquery/`** — Transport layer (`auth/`, `types/`, `port/`, `errors/`, `adapters/google_cloud/`); not split by REST resource.

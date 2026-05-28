@@ -15,6 +15,7 @@ class BigQueryInspectionClient(Protocol):
 
     async def get_job(self, ref: JobRef) -> object:
         """Fetch a single job by reference."""
+        raise NotImplementedError
 
     async def list_jobs(self, request: ListJobsRequest) -> ListJobsPage:
         """List jobs for a project."""
@@ -22,6 +23,7 @@ class BigQueryInspectionClient(Protocol):
 
     async def get_dataset(self, ref: DatasetRef) -> object:
         """Fetch dataset metadata."""
+        raise NotImplementedError
 
     async def list_tables(self, ref: DatasetRef) -> list[object]:
         """List tables in a dataset."""
@@ -29,6 +31,7 @@ class BigQueryInspectionClient(Protocol):
 
     async def get_table(self, ref: TableRef) -> object:
         """Fetch table metadata."""
+        raise NotImplementedError
 
 
 class BigQueryJobClient(Protocol):
@@ -36,3 +39,4 @@ class BigQueryJobClient(Protocol):
 
     async def get_job(self, ref: JobRef) -> object:
         """Fetch a single job by reference."""
+        raise NotImplementedError

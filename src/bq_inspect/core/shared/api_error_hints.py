@@ -21,6 +21,20 @@ _JOBS_GET_PERMISSION_DENIED_WITH_LOCATION_HINT = (
     "for IAM gaps."
 )
 
+_CATALOG_NOT_FOUND_HINT = (
+    "Confirm projectId, datasetId, and tableId in --params. "
+    "BQINSPECT_JOB_NOT_FOUND is used for all HTTP 404 responses; inspect source.api "
+    "to distinguish jobs from catalog resources."
+)
+
+_CATALOG_APIS = frozenset(
+    {
+        "bigquery.datasets.get",
+        "bigquery.tables.get",
+        "bigquery.tables.list",
+    }
+)
+
 
 class ApiErrorHintContext:
     """Optional context for API error hint generation."""
@@ -66,6 +80,9 @@ def hint_for_api_error(
         and not _is_job_location_missing(job_ref)
     ):
         parts.append(_JOBS_GET_PERMISSION_DENIED_WITH_LOCATION_HINT)
+
+    if code == "BQINSPECT_JOB_NOT_FOUND" and api in _CATALOG_APIS:
+        parts.append(_CATALOG_NOT_FOUND_HINT)
 
     if len(parts) == 0:
         return None

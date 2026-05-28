@@ -168,7 +168,7 @@ Summaries from per-command `--help`; full types and constraints: `bq-inspect <co
 
 - `projectId` (required)
 - **Forwarded to `jobs.list` (API):** `minCreationTime`, `maxCreationTime`, `pageToken`, `maxResults`, `allUsers`, `state`, `parentJobId` (`allUsers: true` is often needed in shared sandboxes)
-- **Post-list (current page only):** `minSlotMs`, `minBytesBilled`, `labels` — paginate with `pageToken` if you need more matches
+- **Post-list (current page only):** `minSlotMs`, `minBytesBilled`, `labels` — paginate with `pageToken` if you need more matches. The Python port matches labels under `configuration.labels` (typical BigQuery shape); the TypeScript port only checks top-level `labels`.
 - Regional jobs: read `jobReference.location` from list output; pass `location` on job view commands, not on `jobs list` (BigQuery does not support a location query param on `jobs.list`)
 
 **Catalog** (`datasets get`, `tables list`, `tables get`):
@@ -210,7 +210,7 @@ Errors are JSON on stderr with a `code` field. Schema validation failures includ
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `BQINSPECT_INPUT_INVALID`     | Bad `--params` or flags; schema validation; HTTP 400/422 from BigQuery for invalid API params (e.g. bad `state` or `pageToken`) |
 | `BQINSPECT_PERMISSION_DENIED` | IAM or ADC; on `jobs.get`, often missing `location` or wrong job ref (see [Troubleshooting](#troubleshooting))                  |
-| `BQINSPECT_JOB_NOT_FOUND`     | Missing job or catalog resource (HTTP 404 from the API)                                                                         |
+| `BQINSPECT_JOB_NOT_FOUND`     | HTTP 404 from the API (jobs or catalog). Inspect `source.api` and any `hint` to distinguish missing jobs vs datasets/tables     |
 | `BQINSPECT_LOCATION_REQUIRED` | Reserved; prefer `location` on job refs (see hints on 403)                                                                      |
 | `BQINSPECT_API_RATE_LIMITED`  | HTTP 429; retryable                                                                                                             |
 | `BQINSPECT_API_UNAVAILABLE`   | Transient API / 5xx; other unlisted 4xx (matches TypeScript port)                                                               |
@@ -233,6 +233,7 @@ Symptom-first checks when JSON looks wrong but the CLI is working:
 **`BQINSPECT_JOB_NOT_FOUND`**
 
 - Typical for a wrong **project** on a job ref, a missing **dataset** or **table**, or catalog APIs returning HTTP 404.
+- The error code matches the TypeScript port for all 404 responses. Use **`source.api`** (`bigquery.jobs.get` vs `bigquery.datasets.get`, etc.) and the stderr **`hint`** to tell jobs from catalog resources apart.
 
 **Post-filters on `jobs list`** (`minSlotMs`, `minBytesBilled`, `labels`)
 
