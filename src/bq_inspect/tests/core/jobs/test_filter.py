@@ -53,6 +53,34 @@ def test_filters_by_labels() -> None:
     assert len(filtered) == 1
 
 
+def test_filters_by_configuration_labels() -> None:
+    base_job = {
+        "status": {"state": "DONE"},
+        "statistics": {
+            "query": {
+                "totalSlotMs": "5000",
+                "totalBytesBilled": "100",
+            },
+        },
+        "configuration": {"labels": {"team": "data-platform", "dbt_invocation_id": "abc"}},
+    }
+    jobs = [base_job, {**base_job, "configuration": {"labels": {"team": "other"}}}]
+    filtered = filter_job_summaries(jobs, JobFilters(labels={"team": "data-platform"}))
+    assert len(filtered) == 1
+    assert filtered[0] == base_job
+
+
+def test_prefers_configuration_labels_over_top_level_labels() -> None:
+    job = {
+        "status": {"state": "DONE"},
+        "statistics": {"query": {"totalSlotMs": "5000", "totalBytesBilled": "100"}},
+        "labels": {"team": "other"},
+        "configuration": {"labels": {"team": "data-platform"}},
+    }
+    filtered = filter_job_summaries([job], JobFilters(labels={"team": "data-platform"}))
+    assert filtered == [job]
+
+
 def test_filters_by_minimum_bytes_billed() -> None:
     base_job = {
         "status": {"state": "DONE"},

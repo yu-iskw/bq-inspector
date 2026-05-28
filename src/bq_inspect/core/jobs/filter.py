@@ -40,14 +40,24 @@ def _read_big_int_path(input_value: object, path: list[str]) -> int | None:  # n
     return None
 
 
-def _read_labels(job: object) -> dict[str, str] | None:
-    if not isinstance(job, dict) or "labels" not in job:
-        return None
-    labels = job["labels"]
+def _normalize_labels_dict(labels: object) -> dict[str, str] | None:
     if not isinstance(labels, dict):
         return None
     out: dict[str, str] = {key: value for key, value in labels.items() if isinstance(value, str)}
     return out if len(out) > 0 else None
+
+
+def _read_labels(job: object) -> dict[str, str] | None:
+    if not isinstance(job, dict):
+        return None
+
+    configuration = job.get("configuration")
+    if isinstance(configuration, dict):
+        config_labels = _normalize_labels_dict(configuration.get("labels"))
+        if config_labels is not None:
+            return config_labels
+
+    return _normalize_labels_dict(job.get("labels"))
 
 
 def _total_slot_ms(job: object) -> int | None:
