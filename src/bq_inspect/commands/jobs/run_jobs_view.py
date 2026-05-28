@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 from bq_inspect.cli.input.input_parsers import parse_jobs_view_input_for_command
 from bq_inspect.commands.command_shared import (
     InspectionCommandOptions,
+    ParamsCommandRunner,
     create_run_params_command,
     create_sdk_inspection_client_from_input,
 )
@@ -14,8 +15,6 @@ from bq_inspect.core.jobs.get import InspectJobOptions, inspect_jobs
 from bq_inspect.core.shared.impersonation_fields import impersonation_request_fields
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable
-
     from bq_inspect.cli.input.parsed_input_types import ParsedJobsViewInput
     from bq_inspect.core.shared.types import InspectJobRequest, JobView
     from bq_inspect.schemas.command_schemas import JobsViewCommandId
@@ -45,7 +44,7 @@ async def _execute_jobs_view(
 def create_run_jobs_view_command(
     view: JobView,
     command_id: JobsViewCommandId,
-) -> Callable[[list[str], InspectionCommandOptions], Awaitable[Any]]:
+) -> ParamsCommandRunner:
     """Build a jobs view command runner via the shared params command factory."""
 
     async def execute(
@@ -60,9 +59,16 @@ def create_run_jobs_view_command(
     return create_run_params_command(command_id, parse, execute)
 
 
-run_jobs_get = create_run_jobs_view_command("full", "jobs get")
-run_jobs_summary = create_run_jobs_view_command("summary", "jobs summary")
-run_jobs_query = create_run_jobs_view_command("query", "jobs query")
-run_jobs_performance = create_run_jobs_view_command("performance", "jobs performance")
-run_jobs_lineage = create_run_jobs_view_command("lineage", "jobs lineage")
-run_jobs_impact = create_run_jobs_view_command("impact", "jobs impact")
+jobs_get_command = create_run_jobs_view_command("full", "jobs get")
+jobs_summary_command = create_run_jobs_view_command("summary", "jobs summary")
+jobs_query_command = create_run_jobs_view_command("query", "jobs query")
+jobs_performance_command = create_run_jobs_view_command("performance", "jobs performance")
+jobs_lineage_command = create_run_jobs_view_command("lineage", "jobs lineage")
+jobs_impact_command = create_run_jobs_view_command("impact", "jobs impact")
+
+run_jobs_get = jobs_get_command.run_argv
+run_jobs_summary = jobs_summary_command.run_argv
+run_jobs_query = jobs_query_command.run_argv
+run_jobs_performance = jobs_performance_command.run_argv
+run_jobs_lineage = jobs_lineage_command.run_argv
+run_jobs_impact = jobs_impact_command.run_argv

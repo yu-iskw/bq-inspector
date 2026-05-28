@@ -92,8 +92,11 @@ Operational commands accept only:
 
 Parsing layers:
 
-- [`src/bq_inspect/cli/argv/operational_argv.py`](src/bq_inspect/cli/argv/operational_argv.py) — Click-backed operational flags → schema discovery or `--params` string.
-- [`src/bq_inspect/cli/click_cli.py`](src/bq_inspect/cli/click_cli.py) — Click command tree and dispatch.
+- [`src/bq_inspect/operational/`](src/bq_inspect/operational/) — shared operational flag types and resolution (used by CLI and commands).
+- [`src/bq_inspect/cli/operational_flags.py`](src/bq_inspect/cli/operational_flags.py) — Click option definitions for operational flags.
+- [`src/bq_inspect/cli/argv/operational_argv.py`](src/bq_inspect/cli/argv/operational_argv.py) — legacy argv parsing for direct command runners and tests.
+- [`src/bq_inspect/cli/command_registry.py`](src/bq_inspect/cli/command_registry.py) — canonical command paths, usage strings, and runners.
+- [`src/bq_inspect/cli/click_cli.py`](src/bq_inspect/cli/click_cli.py) — Click command tree built from the registry.
 - [`src/bq_inspect/cli/params/parse_params.py`](src/bq_inspect/cli/params/parse_params.py) — resolve inline JSON or `@file`.
 - [`src/bq_inspect/schemas/validate_input.py`](src/bq_inspect/schemas/validate_input.py) — `jsonschema` validation against the same JSON Schema as `--input-schema`.
 - [`src/bq_inspect/cli/input/map_input.py`](src/bq_inspect/cli/input/map_input.py) — domain mapping (epoch ms, list filters split, impersonation trim).
@@ -106,8 +109,9 @@ Parsing layers:
 
 Published usage strings live in:
 
-- [`src/bq_inspect/cli/usage.py`](src/bq_inspect/cli/usage.py) — all `*_USAGE` constants (global and per-command).
-- [`src/bq_inspect/cli/help.py`](src/bq_inspect/cli/help.py) — maps argv keys to those strings for `bq-inspect … --help`.
+- [`src/bq_inspect/cli/usage.py`](src/bq_inspect/cli/usage.py) — all `*_USAGE` constants (global, group, and per-command).
+- [`src/bq_inspect/cli/command_registry.py`](src/bq_inspect/cli/command_registry.py) — wires usage strings to command runners (source of truth for paths).
+- [`src/bq_inspect/cli/help.py`](src/bq_inspect/cli/help.py) — resolves argv keys to usage via the registry for `bq-inspect … --help`.
 
 **Rule:** Any new or changed params field must:
 

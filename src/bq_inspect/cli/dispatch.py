@@ -51,15 +51,10 @@ def _to_cli_error(error: Exception) -> BqInspectError:
     )
 
 
-def _dispatch(raw_argv: list[str]) -> None:
-    """Dispatch argv through the Click CLI (kept for tests)."""
-    invoke(raw_argv)
-
-
 def main() -> None:
     """Run the bq-inspect CLI."""
     try:
-        _dispatch(sys.argv[1:])
+        invoke()
     except KeyboardInterrupt:
         raise
     except Exception as error:

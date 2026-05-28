@@ -1,5 +1,7 @@
 """Tests for CLI help resolution."""
 
+import pytest
+
 from bq_inspect.cli.help import resolve_help_text, strip_trailing_help_flags
 from bq_inspect.cli.usage import GLOBAL_USAGE, JOBS_GET_USAGE
 
@@ -23,8 +25,9 @@ def test_strip_trailing_help_flags_leaves_argv_unchanged() -> None:
     )
 
 
-def test_resolve_help_text_returns_none_without_help() -> None:
-    assert resolve_help_text(["jobs", "get"], False) is None
+def test_resolve_help_text_requires_help_flag() -> None:
+    with pytest.raises(ValueError, match="wants_help"):
+        resolve_help_text(["jobs", "get"], False)
 
 
 def test_resolve_help_text_global_usage_for_bare_help() -> None:
@@ -75,6 +78,13 @@ def test_resolve_help_text_schema_variants() -> None:
     schema_output = resolve_help_text(["schema", "output"], True)
     assert schema_output is not None
     assert "schema output" in schema_output
+
+
+def test_resolve_help_text_jobs_group_usage() -> None:
+    text = resolve_help_text(["jobs"], True)
+    assert text is not None
+    assert "summary" in text
+    assert "Subcommands:" in text
 
 
 def test_resolve_help_text_unknown_command() -> None:

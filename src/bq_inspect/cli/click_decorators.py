@@ -10,10 +10,8 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import click
 
-from bq_inspect.cli.argv.operational_argv import (
-    OPERATIONAL_FLAG_DECORATORS,
-    resolve_operational_argv,
-)
+from bq_inspect.cli.operational_flags import operational_flag_decorators
+from bq_inspect.operational.resolve import resolve_operational_argv
 
 if TYPE_CHECKING:
     from bq_inspect.commands.command_shared import InspectionCommandOptions
@@ -48,7 +46,7 @@ def custom_help_option(usage: str) -> Callable[[F], F]:
 def operational_options(command: F) -> F:
     """Attach --params, --input-schema, and --output-schema to a command."""
     wrapped = command
-    for decorator in reversed(OPERATIONAL_FLAG_DECORATORS):
+    for decorator in reversed(operational_flag_decorators()):
         wrapped = decorator(wrapped)
 
     @functools.wraps(command)
@@ -74,10 +72,10 @@ def async_command(command: F) -> F:
 
     @functools.wraps(command)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
-        async def invoke() -> Any:
+        async def run_async() -> Any:
             return await command(*args, **kwargs)
 
-        return asyncio.run(invoke())
+        return asyncio.run(run_async())
 
     return wrapper  # type: ignore[return-value]
 

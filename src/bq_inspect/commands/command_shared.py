@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from bq_inspect.bigquery.adapters.google_cloud.sdk_inspection_client import SdkBigQueryClient
 from bq_inspect.bigquery.auth.create_auth_client import create_auth_client
-from bq_inspect.cli.argv.operational_argv import OperationalArgv, parse_operational_argv
+from bq_inspect.cli.argv.operational_argv import parse_operational_argv
 from bq_inspect.cli.params.parse_params import resolve_params_value
 from bq_inspect.core.shared.impersonation_fields import (
     ImpersonationFields,
@@ -18,6 +19,7 @@ if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
     from bq_inspect.bigquery.port.inspection_client import BigQueryInspectionClient
+    from bq_inspect.operational.types import OperationalArgv
 
 
 class InspectionCommandOptions:
@@ -34,6 +36,14 @@ class InspectionCommandOptions:
 
 
 JobsViewCommandOptions = InspectionCommandOptions
+
+
+@dataclass(frozen=True)
+class ParamsCommandRunner:
+    """Argv and operational entry points for a params-based command."""
+
+    run_argv: Callable[[list[str], InspectionCommandOptions], Awaitable[Any]]
+    run_operational: Callable[[OperationalArgv, InspectionCommandOptions], Awaitable[Any]]
 
 
 async def create_sdk_inspection_client_from_input(
@@ -67,7 +77,7 @@ def create_run_params_command(
     command_id: CommandId,
     parse_fn: Callable[[Any], Any],
     execute_fn: Callable[[Any, InspectionCommandOptions], Awaitable[Any]],
-) -> Callable[[list[str], InspectionCommandOptions], Awaitable[Any]]:
+) -> ParamsCommandRunner:
     """Build a params command runner with shared schema and params handling."""
 
     async def run_operational(
@@ -82,14 +92,13 @@ def create_run_params_command(
             command_options,
         )
 
-    async def run_params_command(
+    async def run_argv(
         argv: list[str],
         command_options: InspectionCommandOptions,
     ) -> Any:
         return await run_operational(parse_operational_argv(argv), command_options)
 
-    run_params_command.run_operational = run_operational  # type: ignore[attr-defined]
-    return run_params_command
+    return ParamsCommandRunner(run_argv=run_argv, run_operational=run_operational)
 
 
 create_run_catalog_command = create_run_params_command

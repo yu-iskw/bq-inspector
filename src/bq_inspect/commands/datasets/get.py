@@ -31,8 +31,9 @@ async def _execute_datasets_get(
     )
 
 
-run_datasets_get = create_run_catalog_command(
+datasets_get_command = create_run_catalog_command(
     "datasets get",
     parse_datasets_get_input,
     _execute_datasets_get,
 )
+run_datasets_get = datasets_get_command.run_argv

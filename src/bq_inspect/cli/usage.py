@@ -188,6 +188,43 @@ Examples:
   bq-inspect tables get --params @./tables-get.json
 """.strip()
 
+JOBS_GROUP_USAGE = """
+Usage:
+  bq-inspect jobs <subcommand> --params '<json>' | --params @file.json [options]
+
+Subcommands:
+  summary      Job status, timing, bytes/slots (default inspection)
+  query        SQL, configuration, and light lineage stats
+  performance  Query plan, timeline, performanceInsights, script/session stats
+  lineage      Referenced tables, routines, datasets, destinations
+  impact       DML stats, load/export/ML/search/spark side-effect stats
+  get          Full BigQuery Job JSON
+  list         List jobs (optional client-side filters in params)
+
+Run bq-inspect jobs <subcommand> --help for params and examples.
+""".strip()
+
+DATASETS_GROUP_USAGE = """
+Usage:
+  bq-inspect datasets get --params '<json>' | --params @file.json [options]
+
+Subcommands:
+  get          Dataset metadata
+
+Run bq-inspect datasets get --help for params and examples.
+""".strip()
+
+TABLES_GROUP_USAGE = """
+Usage:
+  bq-inspect tables <subcommand> --params '<json>' | --params @file.json [options]
+
+Subcommands:
+  list         List tables in a dataset
+  get          Table metadata
+
+Run bq-inspect tables <subcommand> --help for params and examples.
+""".strip()
+
 SCHEMA_USAGE = """
 Usage:
   bq-inspect schema <input|output> --format json-schema

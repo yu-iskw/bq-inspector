@@ -2,39 +2,18 @@
 
 from __future__ import annotations
 
-from typing import Literal, TypedDict
+from typing import TYPE_CHECKING
 
 import click
 
+from bq_inspect.cli.operational_flags import operational_flag_options
 from bq_inspect.core.shared.errors import BqInspectFailure, create_input_failure
+from bq_inspect.operational.resolve import resolve_operational_argv
 
-OPERATIONAL_FLAG_DECORATORS = (
-    click.option("--params", type=str, default=None),
-    click.option("--input-schema", is_flag=True, default=False),
-    click.option("--output-schema", is_flag=True, default=False),
-)
+if TYPE_CHECKING:
+    from bq_inspect.operational.types import OperationalArgv
 
-OPERATIONAL_FLAG_OPTIONS: tuple[click.Option, ...] = (
-    click.Option(["--params"], type=str, default=None),
-    click.Option(["--input-schema"], is_flag=True, default=False),
-    click.Option(["--output-schema"], is_flag=True, default=False),
-)
-
-
-class InputSchemaArgv(TypedDict):
-    kind: Literal["input-schema"]
-
-
-class OutputSchemaArgv(TypedDict):
-    kind: Literal["output-schema"]
-
-
-class RunArgv(TypedDict):
-    kind: Literal["run"]
-    params: str
-
-
-OperationalArgv = InputSchemaArgv | OutputSchemaArgv | RunArgv
+_OPERATIONAL_FLAG_OPTIONS = operational_flag_options()
 
 
 def normalize_click_exception_message(error: click.ClickException) -> str:
@@ -42,37 +21,15 @@ def normalize_click_exception_message(error: click.ClickException) -> str:
     message = error.format_message()
     if "requires an argument" in message and "--params" in message:
         return "expected one argument"
+    if message.startswith("No such command "):
+        command_name = message.removeprefix("No such command ").strip(".'\"")
+        return f"Unknown command: {command_name}"
     return message
 
 
 def click_exception_to_failure(error: click.ClickException) -> BqInspectFailure:
     """Convert a Click exception into a structured input failure."""
     return create_input_failure(normalize_click_exception_message(error))
-
-
-def resolve_operational_argv(
-    *,
-    params: str | None,
-    input_schema: bool,
-    output_schema: bool,
-) -> OperationalArgv:
-    """Resolve operational flags into schema discovery or run mode."""
-    if input_schema and output_schema:
-        raise create_input_failure("Use either --input-schema or --output-schema, not both.")
-
-    if input_schema:
-        return {"kind": "input-schema"}
-
-    if output_schema:
-        return {"kind": "output-schema"}
-
-    if params is None or len(params.strip()) == 0:
-        raise create_input_failure(
-            "--params is required (JSON object or @path to a JSON file).",
-            hint="Use --input-schema to print the expected params shape.",
-        )
-
-    return {"kind": "run", "params": params}
 
 
 def _parse_operational_callback(
@@ -91,7 +48,7 @@ def _parse_operational_callback(
 
 _OPERATIONAL_PARSER = click.Command(
     "operational",
-    params=list(OPERATIONAL_FLAG_OPTIONS),
+    params=list(_OPERATIONAL_FLAG_OPTIONS),
     callback=_parse_operational_callback,
 )
 

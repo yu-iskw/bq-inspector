@@ -40,8 +40,9 @@ async def _execute_tables_get(
     )
 
 
-run_tables_get = create_run_catalog_command(
+tables_get_command = create_run_catalog_command(
     "tables get",
     parse_tables_get_input,
     _execute_tables_get,
 )
+run_tables_get = tables_get_command.run_argv

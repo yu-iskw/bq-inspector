@@ -35,4 +35,7 @@ async def _execute_jobs_list(
     return await list_jobs(orchestration)
 
 
-run_jobs_list = create_run_params_command("jobs list", parse_jobs_list_input, _execute_jobs_list)
+run_jobs_list_command = create_run_params_command(
+    "jobs list", parse_jobs_list_input, _execute_jobs_list
+)
+run_jobs_list = run_jobs_list_command.run_argv

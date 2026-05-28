@@ -19,23 +19,23 @@ async def test_create_run_params_command_runs_schema_and_execute_paths() -> None
         executed.append("run")
         return {"ok": "true"}
 
-    run_command = create_run_params_command(
+    runner = create_run_params_command(
         "datasets get",
         lambda raw: raw,
         execute,
     )
 
-    input_schema = await run_command(
+    input_schema = await runner.run_argv(
         ["--input-schema"], InspectionCommandOptions(tool_version="0.1.0")
     )
     assert input_schema["title"] == "bq-inspect datasets get input"
 
-    output_schema = await run_command(
+    output_schema = await runner.run_argv(
         ["--output-schema"], InspectionCommandOptions(tool_version="0.1.0")
     )
     assert output_schema["title"] == "bq-inspect catalog resource output"
 
-    result = await run_command(
+    result = await runner.run_argv(
         ["--params", '{"projectId":"p","datasetId":"d"}'],
         InspectionCommandOptions(tool_version="0.1.0"),
     )

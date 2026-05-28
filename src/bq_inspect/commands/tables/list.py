@@ -31,8 +31,9 @@ async def _execute_tables_list(
     )
 
 
-run_tables_list = create_run_catalog_command(
+tables_list_command = create_run_catalog_command(
     "tables list",
     parse_tables_list_input,
     _execute_tables_list,
 )
+run_tables_list = tables_list_command.run_argv
