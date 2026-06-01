@@ -208,12 +208,12 @@ Errors are JSON on stderr with a `code` field. Schema validation failures includ
 
 | Code                          | Typical cause                                                                                                                   |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `BQINSPECT_INPUT_INVALID`     | Bad `--params` or flags; schema validation; HTTP 400/422 from BigQuery for invalid API params (e.g. bad `state` or `pageToken`) |
+| `BQINSPECT_INPUT_INVALID`     | Bad `--params` or flags; schema validation; HTTP 4xx from BigQuery for invalid API params (e.g. bad `state` or `pageToken`), except 401/403/404/429 |
 | `BQINSPECT_PERMISSION_DENIED` | IAM or ADC; on `jobs.get`, often missing `location` or wrong job ref (see [Troubleshooting](#troubleshooting))                  |
 | `BQINSPECT_JOB_NOT_FOUND`     | HTTP 404 from the API (jobs or catalog). Inspect `source.api` and any `hint` to distinguish missing jobs vs datasets/tables     |
 | `BQINSPECT_LOCATION_REQUIRED` | Reserved; prefer `location` on job refs (see hints on 403)                                                                      |
 | `BQINSPECT_API_RATE_LIMITED`  | HTTP 429; retryable                                                                                                             |
-| `BQINSPECT_API_UNAVAILABLE`   | Transient API / 5xx; other unlisted 4xx (matches TypeScript port)                                                               |
+| `BQINSPECT_API_UNAVAILABLE`   | Transient API / 5xx                                                                                                             |
 | `BQINSPECT_INTERNAL`          | Unexpected CLI failure                                                                                                          |
 
 ## Troubleshooting

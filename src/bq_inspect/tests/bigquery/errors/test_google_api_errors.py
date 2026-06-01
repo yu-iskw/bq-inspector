@@ -32,8 +32,9 @@ def test_resolve_http_status_reads_bad_request_code() -> None:
         (429, "BQINSPECT_API_RATE_LIMITED"),
         (500, "BQINSPECT_API_UNAVAILABLE"),
         (400, "BQINSPECT_INPUT_INVALID"),
+        (409, "BQINSPECT_INPUT_INVALID"),
         (422, "BQINSPECT_INPUT_INVALID"),
-        (418, "BQINSPECT_API_UNAVAILABLE"),
+        (418, "BQINSPECT_INPUT_INVALID"),
     ],
 )
 def test_map_http_status_to_error_code(status: int, code: str) -> None:
