@@ -55,6 +55,7 @@ jobs:
       - name: Install package
         run: |
           python3 -m pip install -U "${{ env.PYTHON_PACKAGE_NAME}}"
+      # uv is installed only in the publish job; smoke-test the PyPI wheel via pip's python.
       - name: Test package
         run: |
           python -m "${{ env.PYTHON_NAME_SPACE }}"
