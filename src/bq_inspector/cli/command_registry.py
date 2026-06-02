@@ -12,8 +12,6 @@ from bq_inspector.cli.usage_build import (
     build_global_usage,
     build_jobs_group_usage,
     build_params_command_usage,
-    build_schema_group_usage,
-    build_schema_subcommand_usage,
     build_tables_group_usage,
 )
 from bq_inspector.commands.datasets.get import datasets_get_command
@@ -26,14 +24,10 @@ from bq_inspector.commands.jobs.run_jobs_view import (
     jobs_query_command,
     jobs_summary_command,
 )
-from bq_inspector.commands.schema import run_schema_for_name
 from bq_inspector.commands.tables.get import tables_get_command
 from bq_inspector.commands.tables.list import tables_list_command
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable
-    from typing import Any
-
     from bq_inspector.commands.command_shared import ParamsCommandRunner
 
 GLOBAL_USAGE = build_global_usage()
@@ -55,15 +49,6 @@ class ParamsCommandSpec:
     path: tuple[str, ...]
     usage: str
     runner: ParamsCommandRunner
-
-
-@dataclass(frozen=True)
-class SchemaCommandSpec:
-    """Legacy schema subcommand."""
-
-    name: str
-    usage: str
-    runner: Callable[[str, str], Awaitable[Any]]
 
 
 @dataclass(frozen=True)
@@ -199,19 +184,9 @@ GROUP_COMMAND_SPECS: tuple[GroupCommandSpec, ...] = (
     ),
 )
 
-SCHEMA_GROUP_USAGE = build_schema_group_usage()
-
-SCHEMA_COMMAND_SPECS: tuple[SchemaCommandSpec, ...] = (
-    SchemaCommandSpec("input", build_schema_subcommand_usage("input"), run_schema_for_name),
-    SchemaCommandSpec("output", build_schema_subcommand_usage("output"), run_schema_for_name),
-)
-
 
 def _build_help_lookup() -> dict[str, str]:
     lookup = {command_path_key(spec.path): spec.usage for spec in PARAMS_COMMAND_SPECS}
-    for spec in SCHEMA_COMMAND_SPECS:
-        lookup[command_path_key(("schema", spec.name))] = spec.usage
-    lookup["schema"] = SCHEMA_GROUP_USAGE
     for group in GROUP_COMMAND_SPECS:
         lookup[group.name] = group.usage
     lookup[""] = GLOBAL_USAGE

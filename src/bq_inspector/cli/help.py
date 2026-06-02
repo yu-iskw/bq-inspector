@@ -5,6 +5,7 @@ from __future__ import annotations
 import sys
 
 from bq_inspector.cli.command_registry import GLOBAL_USAGE, command_help_for_key
+from bq_inspector.cli.flat_jobs import flat_command_suggestion, flat_help_command_key
 
 
 def strip_trailing_help_flags(argv: list[str]) -> tuple[list[str], bool]:
@@ -24,13 +25,17 @@ def resolve_help_text(argv: list[str], wants_help: bool) -> str:
     if not wants_help:
         raise ValueError("resolve_help_text requires wants_help=True")
 
-    key = " ".join(argv)
+    flat_key = flat_help_command_key(argv)
+    key = flat_key if flat_key is not None else " ".join(argv)
     usage = command_help_for_key(key)
+
     if usage is not None:
         return usage
 
     if argv:
-        return f"{GLOBAL_USAGE}\n\nUnknown command: {key}"
+        suggestion = flat_command_suggestion(argv)
+        suffix = f". Did you mean: {suggestion}?" if suggestion else ""
+        return f"{GLOBAL_USAGE}\n\nUnknown command: {' '.join(argv)}{suffix}"
 
     return GLOBAL_USAGE
 

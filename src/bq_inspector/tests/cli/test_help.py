@@ -34,6 +34,21 @@ def test_resolve_help_text_global_usage_for_bare_help() -> None:
     text = resolve_help_text([], True)
     assert text == GLOBAL_USAGE
     assert "jobs get" in text
+    assert "jobs performance" in text
+
+
+def test_resolve_help_text_flat_jobs_subcommand_redirects() -> None:
+    text = resolve_help_text(["performance"], True)
+    jobs_performance_usage = command_help_for_key("jobs performance")
+    assert jobs_performance_usage is not None
+    assert text == jobs_performance_usage
+
+
+def test_resolve_help_text_unknown_with_suggestion() -> None:
+    text = resolve_help_text(["performance", "extra"], True)
+    assert GLOBAL_USAGE in text
+    assert "Unknown command: performance extra" in text
+    assert "Did you mean: performance (or jobs performance)?" in text
 
 
 def test_resolve_help_text_jobs_get_usage() -> None:
@@ -68,18 +83,6 @@ def test_resolve_help_text_catalog_commands() -> None:
     assert tables_get is not None
     assert "tableId" in tables_get
     assert "--table" not in tables_get
-
-
-def test_resolve_help_text_schema_variants() -> None:
-    schema = resolve_help_text(["schema"], True)
-    assert schema is not None
-    assert "json-schema" in schema
-    schema_input = resolve_help_text(["schema", "input"], True)
-    assert schema_input is not None
-    assert "schema input" in schema_input
-    schema_output = resolve_help_text(["schema", "output"], True)
-    assert schema_output is not None
-    assert "schema output" in schema_output
 
 
 def test_resolve_help_text_jobs_group_usage() -> None:

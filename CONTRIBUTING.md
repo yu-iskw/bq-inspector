@@ -143,7 +143,7 @@ Layer flow: **`cli/`** → **`commands/`** → **`core/`** → **`bigquery/`** �
 - `cli/` — Click app, registry, help resolution
 - `operational/` — operational flags and `--params` resolution
 - `input/` — validate + map + parsed types
-- `commands/` — CLI subcommands (`jobs/`, `datasets/`, `tables/`, plus shared `command_shared.py`, `schema.py`)
+- `commands/` — CLI subcommands (`jobs/`, `datasets/`, `tables/`, plus shared `command_shared.py`)
 - `core/jobs` — `inspect_jobs` with job views (`summary`, `query`, `performance`, `lineage`, `impact`, `full`) and `jobs list` (+ client-side filters)
 - `core/datasets` — `datasets get`
 - `core/tables` — `tables list` and `tables get`

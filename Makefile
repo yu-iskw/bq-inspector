@@ -35,6 +35,7 @@ upgrade-deps:
 # Check all the coding style.
 .PHONY: lint lint-python
 lint:
+	@test -d .venv || (echo "Missing .venv — run 'make setup-python' first." >&2; exit 1)
 	mise run lint
 
 lint-python: lint

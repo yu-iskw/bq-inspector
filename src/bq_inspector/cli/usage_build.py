@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Literal
+
+from bq_inspector.cli.jobs_subcommands import JOBS_SUBCOMMANDS
 
 
 class ParamsBodyKind(Enum):
@@ -71,20 +72,10 @@ Params (see --input-schema):
 """.strip(),
 }
 
-_JOBS_SUBCOMMANDS: tuple[tuple[str, str], ...] = (
-    ("summary", "Job status, timing, bytes/slots (default inspection)"),
-    ("query", "SQL, configuration, and light lineage stats"),
-    ("performance", "Query plan, timeline, performanceInsights, script/session stats"),
-    ("lineage", "Referenced tables, routines, datasets, destinations"),
-    ("impact", "DML stats, load/export/ML/search/spark side-effect stats"),
-    ("get", "Full BigQuery Job JSON"),
-    ("list", "List jobs (optional client-side filters in params)"),
-)
-
 
 def build_global_usage() -> str:
     """Root bq-inspector usage."""
-    subcommand_lines = "\n".join(f"  {name:<14} {desc}" for name, desc in _JOBS_SUBCOMMANDS)
+    subcommand_lines = "\n".join(f"  jobs {name:<12} {desc}" for name, desc in JOBS_SUBCOMMANDS)
     return f"""
 bq-inspector — read-only BigQuery job and metadata inspection (JSON on stdout).
 
@@ -97,14 +88,12 @@ Commands (each supports --input-schema / --output-schema for JSON Schema on stdo
   tables list      List tables in a dataset
   tables get       Table metadata
 
-Legacy:
-  schema         Same contracts as above (see: bq-inspector schema --help)
-
 Global:
   bq-inspector --help | -h
   bq-inspector <command> --help
 
 Agent workflow: jobs list → jobs summary | jobs query | jobs performance | jobs lineage | jobs impact | jobs get
+  (job subcommands also work without the jobs prefix, e.g. bq-inspector summary)
 
 Errors are JSON on stderr; success is JSON on stdout (except plain-text --help).
 """.strip()
@@ -130,7 +119,7 @@ Examples:
 
 def build_jobs_group_usage() -> str:
     """Usage for the jobs command group."""
-    lines = "\n".join(f"  {name:<12} {desc}" for name, desc in _JOBS_SUBCOMMANDS)
+    lines = "\n".join(f"  {name:<12} {desc}" for name, desc in JOBS_SUBCOMMANDS)
     return f"""
 Usage:
   bq-inspector jobs <subcommand> --params '<json>' | --params @file.json [options]
@@ -166,32 +155,4 @@ Subcommands:
   get          Table metadata
 
 Run bq-inspector tables <subcommand> --help for params and examples.
-""".strip()
-
-
-def build_schema_group_usage() -> str:
-    """Usage for the legacy schema command group."""
-    return """
-Usage:
-  bq-inspector schema <input|output> --format json-schema
-
-Legacy JSON Schema (prefer per-command --input-schema / --output-schema).
-
-Subcommands:
-  input     Jobs get input JSON Schema
-  output    Response JSON Schema (oneOf across commands)
-
-Examples:
-  bq-inspector schema input --format json-schema
-  bq-inspector schema output --format json-schema
-
-Run bq-inspector schema <subcommand> --help for a short reminder.
-""".strip()
-
-
-def build_schema_subcommand_usage(name: Literal["input", "output"]) -> str:
-    """Usage for schema input or output."""
-    return f"""
-Usage:
-  bq-inspector schema {name} --format json-schema
 """.strip()

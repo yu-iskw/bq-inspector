@@ -51,6 +51,19 @@ def _read_next_page_token(iterator: object) -> str | None:
     return None
 
 
+def _resource_to_api_dict(resource: object) -> dict[str, object]:
+    """Return the REST-shaped resource from a google-cloud-bigquery SDK object."""
+    properties = getattr(resource, "_properties", None)
+    if isinstance(properties, dict):
+        return dict(properties)
+    to_api_repr = getattr(resource, "to_api_repr", None)
+    if callable(to_api_repr):
+        result = to_api_repr()
+        if isinstance(result, dict):
+            return result
+    raise TypeError("Expected BigQuery SDK resource or compatible mock")
+
+
 class SdkBigQueryClient:
     """BigQuery inspection client backed by google-cloud-bigquery."""
 
@@ -84,7 +97,7 @@ class SdkBigQueryClient:
                 project=ref["projectId"],
                 location=trimmed_location,
             )
-        return job.to_api_repr()
+        return _resource_to_api_dict(job)
 
     async def list_jobs(self, request: ListJobsRequest) -> ListJobsPage:
         return await _invoke_sync(
@@ -98,7 +111,9 @@ class SdkBigQueryClient:
 
         iterator = bq.list_jobs(**list_kwargs)
         page = next(iterator.pages, None)
-        jobs = [job.to_api_repr() for job in page] if page is not None else []
+        jobs: list[object] = (
+            [_resource_to_api_dict(job) for job in page] if page is not None else []
+        )
         next_page_token = _read_next_page_token(iterator)
 
         result: ListJobsPage = {"jobs": jobs}
@@ -117,7 +132,7 @@ class SdkBigQueryClient:
         project_id = ref["projectId"]
         dataset_id = ref["datasetId"]
         dataset = bq.get_dataset(f"{project_id}.{dataset_id}")
-        return dataset.to_api_repr()
+        return _resource_to_api_dict(dataset)
 
     async def list_tables(self, ref: DatasetRef) -> list[object]:
         return await _invoke_sync(
@@ -130,7 +145,7 @@ class SdkBigQueryClient:
         project_id = ref["projectId"]
         dataset_id = ref["datasetId"]
         tables = list(bq.list_tables(f"{project_id}.{dataset_id}"))
-        return [table.to_api_repr() for table in tables]
+        return [_resource_to_api_dict(table) for table in tables]
 
     async def get_table(self, ref: TableRef) -> object:
         return await _invoke_sync(
@@ -144,4 +159,4 @@ class SdkBigQueryClient:
         dataset_id = ref["datasetId"]
         table_id = ref["tableId"]
         table = bq.get_table(f"{project_id}.{dataset_id}.{table_id}")
-        return table.to_api_repr()
+        return _resource_to_api_dict(table)

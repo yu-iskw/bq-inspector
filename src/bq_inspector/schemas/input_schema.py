@@ -26,7 +26,14 @@ JOBS_VIEW_INPUT_PROPERTIES: dict[str, Any] = {
                         "yields 403 on jobs.get."
                     ),
                 },
-                "jobId": {"type": "string", "minLength": 1},
+                "jobId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": (
+                        "Job id, or full BigQuery job resource id "
+                        "(project:location.jobId, e.g. my-proj:US.bquxjob_abc)."
+                    ),
+                },
             },
         },
     },

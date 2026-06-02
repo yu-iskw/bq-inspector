@@ -175,19 +175,3 @@ TABLES_LIST_OUTPUT_SCHEMA: dict[str, Any] = {
         "errors": {"type": "array"},
     },
 }
-
-OUTPUT_SCHEMA: dict[str, Any] = {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "title": "bq-inspector command output (union)",
-    "oneOf": [
-        JOBS_GET_OUTPUT_SCHEMA,
-        JOBS_SUMMARY_OUTPUT_SCHEMA,
-        JOBS_QUERY_OUTPUT_SCHEMA,
-        JOBS_PERFORMANCE_OUTPUT_SCHEMA,
-        JOBS_LINEAGE_OUTPUT_SCHEMA,
-        JOBS_IMPACT_OUTPUT_SCHEMA,
-        JOBS_LIST_OUTPUT_SCHEMA,
-        CATALOG_RESOURCE_OUTPUT_SCHEMA,
-        TABLES_LIST_OUTPUT_SCHEMA,
-    ],
-}

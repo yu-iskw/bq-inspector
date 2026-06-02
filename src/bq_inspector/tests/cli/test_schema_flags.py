@@ -1,4 +1,4 @@
-"""Tests for schema command and per-command schema flags."""
+"""Tests for per-command --input-schema and --output-schema flags."""
 
 import json
 
@@ -13,29 +13,9 @@ from bq_inspector.commands.jobs.run_jobs_view import (
     run_jobs_lineage,
     run_jobs_summary,
 )
-from bq_inspector.commands.schema import run_schema_for_name
 from bq_inspector.commands.tables.get import run_tables_get
 from bq_inspector.commands.tables.list import run_tables_list
 from bq_inspector.core.shared.errors import BqInspectFailure
-
-
-@pytest.mark.asyncio
-async def test_schema_input_emits_json() -> None:
-    payload = await run_schema_for_name("input", "json-schema")
-    json.dumps(payload)
-    assert "$schema" in payload
-
-
-@pytest.mark.asyncio
-async def test_schema_output_emits_json() -> None:
-    payload = await run_schema_for_name("output", "json-schema")
-    json.dumps(payload)
-
-
-@pytest.mark.asyncio
-async def test_schema_rejects_unknown_names() -> None:
-    with pytest.raises(BqInspectFailure):
-        await run_schema_for_name("nope", "json-schema")
 
 
 @pytest.mark.asyncio
