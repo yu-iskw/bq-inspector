@@ -38,3 +38,34 @@ def test_rejects_blank_job_ids() -> None:
         "message": "Job ID is required.",
         "retriable": False,
     }
+
+
+def test_parses_composite_job_id_from_job_id_field() -> None:
+    assert normalize_job_ref(
+        {
+            "projectId": "ubie-yu-sandbox",
+            "jobId": "ubie-yu-sandbox:US.bquxjob_e77feda_19e85d5e021",
+        }
+    ) == {
+        "projectId": "ubie-yu-sandbox",
+        "location": "US",
+        "jobId": "bquxjob_e77feda_19e85d5e021",
+    }
+
+
+def test_composite_job_id_rejects_mismatched_project_id() -> None:
+    with pytest.raises(BqInspectFailure) as exc_info:
+        normalize_job_ref(
+            {
+                "projectId": "other-project",
+                "jobId": "ubie-yu-sandbox:US.bquxjob_e77feda_19e85d5e021",
+            }
+        )
+    assert exc_info.value.details["code"] == "BQINSPECTOR_INPUT_INVALID"
+    assert "composite job id" in exc_info.value.details["message"]
+
+
+def test_plain_job_id_unchanged() -> None:
+    assert normalize_job_ref(
+        {"projectId": "analytics-prod", "jobId": "bquxjob_abc", "location": "US"}
+    ) == {"projectId": "analytics-prod", "location": "US", "jobId": "bquxjob_abc"}

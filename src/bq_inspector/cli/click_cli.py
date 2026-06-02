@@ -21,6 +21,7 @@ from bq_inspector.cli.command_registry import (
     GroupCommandSpec,
 )
 from bq_inspector.cli.help import resolve_help_text, strip_trailing_help_flags, write_help_text
+from bq_inspector.cli.usage_build import JOB_SUBCOMMAND_NAMES
 from bq_inspector.commands.command_shared import InspectionCommandOptions, ParamsCommandRunner
 from bq_inspector.core.shared.errors import create_input_failure
 
@@ -50,6 +51,8 @@ class BqInspectGroup(click.Group):
         return command
 
     def _unknown_command_message(self, cmd_name: str) -> str:
+        if not self._group_path and cmd_name in JOB_SUBCOMMAND_NAMES:
+            return f"Unknown command: {cmd_name}. Did you mean: jobs {cmd_name}?"
         if self._group_path:
             return f"Unknown command: {' '.join((*self._group_path, cmd_name))}"
         return f"Unknown command: {cmd_name}"
@@ -119,6 +122,13 @@ def _write_json_result(result: Any) -> None:
         sys.stdout.write(f"{json.dumps(result, indent=2)}\n")
 
 
+def _normalize_flat_job_argv(argv: list[str]) -> list[str]:
+    """Allow `bq-inspector summary` as shorthand for `bq-inspector jobs summary`."""
+    if argv and argv[0] in JOB_SUBCOMMAND_NAMES:
+        return ["jobs", *argv]
+    return argv
+
+
 def invoke(argv: list[str] | None = None) -> None:
     """Run the Click CLI and write JSON results to stdout."""
     raw_argv = list(sys.argv[1:] if argv is None else argv)
@@ -128,5 +138,6 @@ def invoke(argv: list[str] | None = None) -> None:
         write_help_text(resolve_help_text(argv_without_help, wants_help=True))
         return
 
-    result = cli.main(args=raw_argv, prog_name="bq-inspector", standalone_mode=False)
+    normalized_argv = _normalize_flat_job_argv(raw_argv)
+    result = cli.main(args=normalized_argv, prog_name="bq-inspector", standalone_mode=False)
     _write_json_result(result)

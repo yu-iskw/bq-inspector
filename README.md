@@ -58,6 +58,15 @@ Unknown commands print global usage plus `Unknown command: <argv>`.
 
 **Pipeline:** `jobs list` → `jobs summary` | `jobs query` | `jobs performance` | `jobs lineage` | `jobs impact` | `jobs get`
 
+**Command forms:** Nested `jobs summary` and flat `summary` are equivalent for job views and `jobs list` → `list`.
+
+**Job id formats:** Pass `jobId` alone, or a Console-style composite id in `jobId`:
+`"my-proj:US.bquxjob_abc"` (location is parsed automatically; `projectId` must match if both are set).
+
+**Verifying lineage/impact:** Use a job that references tables. Trivial queries like `SELECT 1` legitimately return empty lineage/impact fields.
+
+**Smoke checklist:** `jobs list` with `allUsers: true` → `jobs summary` and flat `summary` with composite or split job ref.
+
 **Which job command?**
 
 | Goal                                             | Command            |
@@ -78,6 +87,7 @@ Example:
 
 ```bash
 bq-inspector jobs summary --params '{"jobs":[{"projectId":"YOUR_PROJECT","jobId":"YOUR_JOB_ID"}]}'
+bq-inspector summary --params '{"jobs":[{"projectId":"YOUR_PROJECT","jobId":"YOUR_PROJECT:US.bquxjob_abc"}]}'
 ```
 
 Optional: `bq-inspector <command> --output-schema` for the response shape.

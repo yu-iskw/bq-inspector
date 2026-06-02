@@ -11,6 +11,10 @@ from bq_inspector.bigquery.adapters.google_cloud.sdk_inspection_client import Sd
 from bq_inspector.core.shared.errors import BqInspectFailure, create_bq_inspector_error
 
 
+def _stub_sdk_job(properties: dict[str, object]) -> object:
+    return type("SdkJobStub", (), {"_properties": properties})()
+
+
 @pytest.fixture
 def mock_auth_client_fx() -> MagicMock:
     return MagicMock()
@@ -44,14 +48,49 @@ async def test_get_job_returns_metadata_with_location(
     sdk_client_fx: SdkBigQueryClient,
     bq_client_mock_fx: MagicMock,
 ) -> None:
-    job = MagicMock()
-    job.to_api_repr.return_value = {"id": "job-1"}
+    job = _stub_sdk_job({"id": "job-1", "status": {"state": "DONE"}})
     bq_client_mock_fx.get_job.return_value = job
 
     result = await sdk_client_fx.get_job({"projectId": "p", "jobId": "j", "location": "US"})
 
-    assert result == {"id": "job-1"}
+    assert result == {"id": "job-1", "status": {"state": "DONE"}}
     bq_client_mock_fx.get_job.assert_called_once_with("j", project="p", location="US")
+
+
+@pytest.mark.asyncio
+async def test_get_job_returns_status_and_statistics_from_properties(
+    sdk_client_fx: SdkBigQueryClient,
+    bq_client_mock_fx: MagicMock,
+) -> None:
+    job = _stub_sdk_job(
+        {
+            "jobReference": {"projectId": "p", "jobId": "j", "location": "US"},
+            "status": {"state": "DONE"},
+            "statistics": {"totalSlotMs": "15"},
+        }
+    )
+    bq_client_mock_fx.get_job.return_value = job
+
+    result = await sdk_client_fx.get_job({"projectId": "p", "jobId": "j", "location": "US"})
+
+    assert result["status"] == {"state": "DONE"}
+    assert result["statistics"] == {"totalSlotMs": "15"}
+
+
+@pytest.mark.asyncio
+async def test_get_job_falls_back_to_to_api_repr(
+    sdk_client_fx: SdkBigQueryClient,
+    bq_client_mock_fx: MagicMock,
+) -> None:
+    class JobWithoutProperties:
+        def to_api_repr(self) -> dict[str, str]:
+            return {"id": "job-1"}
+
+    bq_client_mock_fx.get_job.return_value = JobWithoutProperties()
+
+    result = await sdk_client_fx.get_job({"projectId": "p", "jobId": "j", "location": "US"})
+
+    assert result == {"id": "job-1"}
 
 
 @pytest.mark.asyncio
@@ -86,8 +125,13 @@ async def test_list_jobs_returns_jobs_and_next_page_token(
     sdk_client_fx: SdkBigQueryClient,
     bq_client_mock_fx: MagicMock,
 ) -> None:
-    listed_job = MagicMock()
-    listed_job.to_api_repr.return_value = {"id": "listed"}
+    listed_job = _stub_sdk_job(
+        {
+            "id": "listed",
+            "jobReference": {"projectId": "p", "jobId": "listed", "location": "US"},
+            "status": {"state": "DONE"},
+        }
+    )
     page = MagicMock()
     page.__iter__ = MagicMock(return_value=iter([listed_job]))
     iterator = MagicMock()
@@ -108,7 +152,16 @@ async def test_list_jobs_returns_jobs_and_next_page_token(
         }
     )
 
-    assert result == {"jobs": [{"id": "listed"}], "nextPageToken": "next"}
+    assert result == {
+        "jobs": [
+            {
+                "id": "listed",
+                "jobReference": {"projectId": "p", "jobId": "listed", "location": "US"},
+                "status": {"state": "DONE"},
+            }
+        ],
+        "nextPageToken": "next",
+    }
     call_kwargs = bq_client_mock_fx.list_jobs.call_args.kwargs
     assert call_kwargs["project"] == "p"
     assert call_kwargs["all_users"] is True
@@ -182,6 +235,27 @@ async def test_get_dataset_returns_metadata(
 
 
 @pytest.mark.asyncio
+async def test_get_dataset_returns_properties_from_sdk(
+    sdk_client_fx: SdkBigQueryClient,
+    bq_client_mock_fx: MagicMock,
+) -> None:
+    dataset = _stub_sdk_job(
+        {
+            "datasetReference": {"datasetId": "d", "projectId": "p"},
+            "location": "US",
+        }
+    )
+    bq_client_mock_fx.get_dataset.return_value = dataset
+
+    result = await sdk_client_fx.get_dataset({"projectId": "p", "datasetId": "d"})
+
+    assert result == {
+        "datasetReference": {"datasetId": "d", "projectId": "p"},
+        "location": "US",
+    }
+
+
+@pytest.mark.asyncio
 async def test_list_tables_returns_table_metadata(
     sdk_client_fx: SdkBigQueryClient,
     bq_client_mock_fx: MagicMock,
@@ -213,10 +287,32 @@ async def test_get_table_returns_metadata(
 
 
 @pytest.mark.asyncio
+async def test_get_table_returns_properties_from_sdk(
+    sdk_client_fx: SdkBigQueryClient,
+    bq_client_mock_fx: MagicMock,
+) -> None:
+    table = _stub_sdk_job(
+        {
+            "tableReference": {"projectId": "p", "datasetId": "d", "tableId": "t"},
+            "type": "TABLE",
+        }
+    )
+    bq_client_mock_fx.get_table.return_value = table
+
+    result = await sdk_client_fx.get_table(
+        {"projectId": "p", "datasetId": "d", "tableId": "t"},
+    )
+
+    assert result == {
+        "tableReference": {"projectId": "p", "datasetId": "d", "tableId": "t"},
+        "type": "TABLE",
+    }
+
+
+@pytest.mark.asyncio
 async def test_reuses_bigquery_client_per_project(mock_auth_client_fx: MagicMock) -> None:
     mock_client = MagicMock()
-    job = MagicMock()
-    job.to_api_repr.return_value = {"id": "job-1"}
+    job = _stub_sdk_job({"id": "job-1"})
     mock_client.get_job.return_value = job
 
     with patch(

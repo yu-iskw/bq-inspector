@@ -80,10 +80,12 @@ _JOBS_SUBCOMMANDS: tuple[tuple[str, str], ...] = (
     ("list", "List jobs (optional client-side filters in params)"),
 )
 
+JOB_SUBCOMMAND_NAMES: frozenset[str] = frozenset(name for name, _ in _JOBS_SUBCOMMANDS)
+
 
 def build_global_usage() -> str:
     """Root bq-inspector usage."""
-    subcommand_lines = "\n".join(f"  {name:<14} {desc}" for name, desc in _JOBS_SUBCOMMANDS)
+    subcommand_lines = "\n".join(f"  jobs {name:<12} {desc}" for name, desc in _JOBS_SUBCOMMANDS)
     return f"""
 bq-inspector — read-only BigQuery job and metadata inspection (JSON on stdout).
 
@@ -101,6 +103,7 @@ Global:
   bq-inspector <command> --help
 
 Agent workflow: jobs list → jobs summary | jobs query | jobs performance | jobs lineage | jobs impact | jobs get
+  (job subcommands also work without the jobs prefix, e.g. bq-inspector summary)
 
 Errors are JSON on stderr; success is JSON on stdout (except plain-text --help).
 """.strip()

@@ -46,7 +46,7 @@ make clean        # Clean build artifacts
 
 ## Testing
 
-- Tests live under `src/your_package/tests/` (colocated with the package)
+- Tests live under `src/bq_inspector/tests/` (colocated with the package)
 - Test files must match `test_*.py`
 - Run `make test` before commits
 - Aim for meaningful coverage on critical paths
@@ -82,7 +82,7 @@ make clean        # Clean build artifacts
 
 ## Architecture
 
-- Package source: `src/your_package/` (rename when initializing a real project)
+- Package source: `src/bq_inspector/`
 - Dev scripts: `dev/`
 - CI/CD: `.github/workflows/`
 - **Claude Code** automation: [`.claude/`](.claude/) — see [CLAUDE.md](CLAUDE.md) for how Claude loads this repo and the directory layout
@@ -154,3 +154,20 @@ Some tools load mirrored skills under `.agents/skills/` instead of `.claude/`. O
 - **`.gemini/settings.json`** — Gemini CLI project context
 - **`.cursor/rules/`** — Optional Cursor rules (e.g. Always Apply); see [Cursor: Rules](https://cursor.com/docs/rules)
 - **[`.codex/config.toml`](.codex/config.toml)** — Optional Codex defaults (sandbox, approvals); links above under **OpenAI Codex**
+
+## Learned User Preferences
+
+- Prefer minimal, focused fixes over broad refactors when addressing CLI or adapter issues.
+- Do not commit local `uv.lock` or `mise.lock` churn from setup when unrelated to the task.
+- Exclude unrelated untracked paths (e.g. `.cursor/hooks/`) from commits unless explicitly requested.
+
+## Learned Workspace Facts
+
+- This repo is **bq-inspector** (BigQuery CLI); package source is `src/bq_inspector/`, not template `src/your_package/`.
+- In git worktrees, run `mise trust` before `make setup-python` or other mise tasks.
+- Pyright resolves imports from `.venv`; run `make setup-python` before `make lint` or third-party imports fail spuriously.
+- BigQuery job subcommands are nested under `jobs` (e.g. `bq-inspector jobs summary`); flat shorthand also works (e.g. `bq-inspector summary`).
+- The legacy `bq-inspector schema` subcommand was removed; use per-command `--input-schema` and `--output-schema`.
+- BigQuery composite job IDs (`projectId:location.jobId`) may be passed in the `jobId` field; `normalize_job_ref` in `core/shared/job_ref.py` splits them.
+- SDK adapter uses `_resource_to_api_dict()` (`._properties` with `to_api_repr` fallback) for jobs, datasets, and tables so responses include full REST fields.
+- For lineage/impact verification, use a job that references tables; `SELECT 1`-style jobs legitimately have empty lineage/impact fields.
