@@ -1,6 +1,6 @@
-# Contributing to bq-inspect
+# Contributing to bq-inspector
 
-This document is for **developers** working on the Python `bq-inspect` package in this repository. End-user documentation lives in [README.md](README.md).
+This document is for **developers** working on the Python `bq-inspector` package in this repository. End-user documentation lives in [README.md](README.md).
 
 Repository-wide conventions (lint, test, git workflow, security) are in [AGENTS.md](AGENTS.md).
 
@@ -15,8 +15,8 @@ The TypeScript reference implementation lives in the [google-cloud-tools](https:
 ## Clone and install
 
 ```bash
-git clone https://github.com/yu-iskw/bq-inspect.git
-cd bq-inspect
+git clone https://github.com/yu-iskw/bq-inspector.git
+cd bq-inspector
 make setup
 ```
 
@@ -50,7 +50,7 @@ make scan-vulnerabilities
 
 ### Test coverage
 
-`make test` runs pytest with **pytest-cov** over `src/bq_inspect/tests/` and reports line and branch coverage in the terminal plus `coverage.xml`.
+`make test` runs pytest with **pytest-cov** over `src/bq_inspector/tests/` and reports line and branch coverage in the terminal plus `coverage.xml`.
 
 There is no enforced coverage gate in CI yet. Match the TypeScript package’s intent: **strong coverage on critical paths** (`core/`, `input/`, `operational/`, `bigquery/`, `schemas/`). The TS workspace targets **85%** lines/functions/statements and **80%** branches for those areas; aim for similar coverage when adding or changing behavior.
 
@@ -61,15 +61,15 @@ Prefer state-based tests on observable JSON output; avoid new mocks unless neces
 After `make setup-python` or `make setup`:
 
 ```bash
-uv run bq-inspect --help
-uv run bq-inspect jobs get --help
-uv run bq-inspect jobs summary --input-schema
+uv run bq-inspector --help
+uv run bq-inspector jobs get --help
+uv run bq-inspector jobs summary --input-schema
 ```
 
 Or use the editable install entrypoint:
 
 ```bash
-bq-inspect --help
+bq-inspector --help
 ```
 
 ### Manual smoke (optional)
@@ -77,7 +77,7 @@ bq-inspect --help
 After a CLI or BigQuery client change, re-run a short live check against a project you control (ADC via `gcloud auth application-default login`, or CI credentials). Do not commit project IDs, service account emails, or params files with secrets.
 
 1. `make setup-python`
-2. `uv run bq-inspect jobs list --params '{"projectId":"YOUR_PROJECT","allUsers":true,"maxResults":10}'` (add `impersonateServiceAccount` in JSON when testing impersonation)
+2. `uv run bq-inspector jobs list --params '{"projectId":"YOUR_PROJECT","allUsers":true,"maxResults":10}'` (add `impersonateServiceAccount` in JSON when testing impersonation)
 3. Copy `jobReference.location` from list output into a job view, e.g. `jobs summary`
 4. Spot-check `datasets get` and `tables list` on a dataset you can read
 
@@ -92,31 +92,31 @@ Operational commands accept only:
 
 Parsing layers:
 
-- [`src/bq_inspect/operational/`](src/bq_inspect/operational/) — operational flag types, Click flag specs, `parse_operational_argv`, and `resolve_params_value` (used by CLI and commands).
-- [`src/bq_inspect/cli/command_registry.py`](src/bq_inspect/cli/command_registry.py) — canonical command paths, usage strings (from templates), and runners.
-- [`src/bq_inspect/cli/usage_build.py`](src/bq_inspect/cli/usage_build.py) — shared usage templates; registry builds per-command help text.
-- [`src/bq_inspect/cli/click_cli.py`](src/bq_inspect/cli/click_cli.py) — Click command tree built from the registry.
-- [`src/bq_inspect/cli/help.py`](src/bq_inspect/cli/help.py) — single help pipeline (`--help` / `-h` → registry lookup).
-- [`src/bq_inspect/schemas/validate_input.py`](src/bq_inspect/schemas/validate_input.py) — `jsonschema` validation against the same JSON Schema as `--input-schema`.
-- [`src/bq_inspect/input/map_input.py`](src/bq_inspect/input/map_input.py) — domain mapping (epoch ms, list filters split, impersonation trim).
-- [`src/bq_inspect/input/input_parsers.py`](src/bq_inspect/input/input_parsers.py) — `validate_input` + `map*` per command.
-- [`src/bq_inspect/commands/`](src/bq_inspect/commands/) — wire parsers to core use cases.
+- [`src/bq_inspector/operational/`](src/bq_inspector/operational/) — operational flag types, Click flag specs, `parse_operational_argv`, and `resolve_params_value` (used by CLI and commands).
+- [`src/bq_inspector/cli/command_registry.py`](src/bq_inspector/cli/command_registry.py) — canonical command paths, usage strings (from templates), and runners.
+- [`src/bq_inspector/cli/usage_build.py`](src/bq_inspector/cli/usage_build.py) — shared usage templates; registry builds per-command help text.
+- [`src/bq_inspector/cli/click_cli.py`](src/bq_inspector/cli/click_cli.py) — Click command tree built from the registry.
+- [`src/bq_inspector/cli/help.py`](src/bq_inspector/cli/help.py) — single help pipeline (`--help` / `-h` → registry lookup).
+- [`src/bq_inspector/schemas/validate_input.py`](src/bq_inspector/schemas/validate_input.py) — `jsonschema` validation against the same JSON Schema as `--input-schema`.
+- [`src/bq_inspector/input/map_input.py`](src/bq_inspector/input/map_input.py) — domain mapping (epoch ms, list filters split, impersonation trim).
+- [`src/bq_inspector/input/input_parsers.py`](src/bq_inspector/input/input_parsers.py) — `validate_input` + `map*` per command.
+- [`src/bq_inspector/commands/`](src/bq_inspector/commands/) — wire parsers to core use cases.
 
-**Agent workflow:** `bq-inspect <command> --input-schema` → build params JSON → `bq-inspect <command> --params @file.json` (or inline JSON). Tests should pass `--params` with `json.dumps({...})` rather than legacy kebab-case flags.
+**Agent workflow:** `bq-inspector <command> --input-schema` → build params JSON → `bq-inspector <command> --params @file.json` (or inline JSON). Tests should pass `--params` with `json.dumps({...})` rather than legacy kebab-case flags.
 
 ## CLI help text (source of truth)
 
 Published usage strings are built from:
 
-- [`src/bq_inspect/cli/usage_build.py`](src/bq_inspect/cli/usage_build.py) — shared templates and `ParamsBodyKind` sections.
-- [`src/bq_inspect/cli/command_registry.py`](src/bq_inspect/cli/command_registry.py) — command paths, runners, and generated usage (source of truth for paths and help lookup).
-- [`src/bq_inspect/cli/help.py`](src/bq_inspect/cli/help.py) — resolves argv keys to usage via the registry for `bq-inspect … --help`.
+- [`src/bq_inspector/cli/usage_build.py`](src/bq_inspector/cli/usage_build.py) — shared templates and `ParamsBodyKind` sections.
+- [`src/bq_inspector/cli/command_registry.py`](src/bq_inspector/cli/command_registry.py) — command paths, runners, and generated usage (source of truth for paths and help lookup).
+- [`src/bq_inspector/cli/help.py`](src/bq_inspector/cli/help.py) — resolves argv keys to usage via the registry for `bq-inspector … --help`.
 
 **Rule:** Any new or changed params field must:
 
-1. Update JSON Schema in [`src/bq_inspect/schemas/input_schema.py`](src/bq_inspect/schemas/input_schema.py) (runtime validation follows automatically).
-2. Update [`src/bq_inspect/input/map_input.py`](src/bq_inspect/input/map_input.py) only if the field needs domain mapping beyond schema shape.
-3. Add or extend a `ParamsCommandUsageMeta` row in [`command_registry.py`](src/bq_inspect/cli/command_registry.py) and adjust `ParamsBodyKind` text in [`usage_build.py`](src/bq_inspect/cli/usage_build.py) when the params section changes.
+1. Update JSON Schema in [`src/bq_inspector/schemas/input_schema.py`](src/bq_inspector/schemas/input_schema.py) (runtime validation follows automatically).
+2. Update [`src/bq_inspector/input/map_input.py`](src/bq_inspector/input/map_input.py) only if the field needs domain mapping beyond schema shape.
+3. Add or extend a `ParamsCommandUsageMeta` row in [`command_registry.py`](src/bq_inspector/cli/command_registry.py) and adjust `ParamsBodyKind` text in [`usage_build.py`](src/bq_inspector/cli/usage_build.py) when the params section changes.
 4. Update [README.md](README.md) if the field is user-facing in examples or narrative.
 
 Keep [README.md](README.md) examples aligned with `--help` output; end users treat **`--help`** as authoritative.
@@ -131,9 +131,9 @@ Layer flow: **`cli/`** → **`commands/`** → **`core/`** → **`bigquery/`** �
 - **`commands/`** — Thin adapters grouped by resource; use **`input/`** and **`operational/`**, call **`core/`**.
 - **`core/`** — Use cases grouped by resource (`jobs`, `datasets`, `tables`) plus pure helpers (`project_job`, `shared`).
 - **`bigquery/`** — Transport layer (`auth/`, `types/`, `port/`, `errors/`, `adapters/google_cloud/`); not split by REST resource.
-- **`schemas/`** — JSON Schema contracts for agents; [`command_schemas.py`](src/bq_inspect/schemas/command_schemas.py) resolves per-command schemas for `--input-schema` / `--output-schema`.
+- **`schemas/`** — JSON Schema contracts for agents; [`command_schemas.py`](src/bq_inspector/schemas/command_schemas.py) resolves per-command schemas for `--input-schema` / `--output-schema`.
 
-## Package layout (`src/bq_inspect/`)
+## Package layout (`src/bq_inspector/`)
 
 - `bigquery/auth` — ADC + impersonation (`create_auth_client`)
 - `bigquery/types` — transport DTOs (`DatasetRef`, `ListJobsRequest`, …)
@@ -153,27 +153,27 @@ Layer flow: **`cli/`** → **`commands/`** → **`core/`** → **`bigquery/`** �
 
 ## Tests and fakes
 
-Tests live under [`src/bq_inspect/tests/`](src/bq_inspect/tests/) (colocated with the package; excluded from the published wheel).
+Tests live under [`src/bq_inspector/tests/`](src/bq_inspector/tests/) (colocated with the package; excluded from the published wheel).
 
 - **Core job inspection:** `inspect_jobs` with a job client port.
 - **List jobs / catalog:** `BigQueryInspectionClient` with `SdkBigQueryClient` or fakes.
 - **CLI parity in tests:** Invoke command runners with `['--params', json.dumps({...})]` (and inject `client` when avoiding ADC), or use `--input-schema` / `--output-schema` for schema-only paths.
 - **Fakes:**
-  - [`FixtureJobClient`](src/bq_inspect/tests/test_support/fixture_job_client.py) — in-memory job-only client for `jobs.get` and job view tests.
+  - [`FixtureJobClient`](src/bq_inspector/tests/test_support/fixture_job_client.py) — in-memory job-only client for `jobs.get` and job view tests.
   - `FixtureBigQueryClient` — full port fake for list/catalog tests (same module).
 
 Example (core):
 
 ```python
-from bq_inspect.tests.test_support.fixture_job_client import FixtureJobClient
+from bq_inspector.tests.test_support.fixture_job_client import FixtureJobClient
 
 client = FixtureJobClient({"job_123": job_fixture})
 result = await inspect_jobs(client, refs, view="summary")
 ```
 
-Example (CLI integration): see [`src/bq_inspect/tests/cli/test_jobs_integration.py`](src/bq_inspect/tests/cli/test_jobs_integration.py).
+Example (CLI integration): see [`src/bq_inspector/tests/cli/test_jobs_integration.py`](src/bq_inspector/tests/cli/test_jobs_integration.py).
 
-JSON fixtures for job payloads: [`src/bq_inspect/tests/fixtures/`](src/bq_inspect/tests/fixtures/).
+JSON fixtures for job payloads: [`src/bq_inspector/tests/fixtures/`](src/bq_inspector/tests/fixtures/).
 
 ## Pull request checklist
 

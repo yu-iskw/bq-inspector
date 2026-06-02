@@ -12,8 +12,8 @@ jobs:
       run:
         shell: bash
     env:
-      PYTHON_PACKAGE_NAME: bq-inspect
-      PYTHON_NAME_SPACE: bq_inspect
+      PYTHON_PACKAGE_NAME: bq-inspector
+      PYTHON_NAME_SPACE: bq_inspector
     steps:
       - uses: actions/checkout@v6
       - name: Set up Python
@@ -40,8 +40,8 @@ jobs:
       run:
         shell: bash
     env:
-      PYTHON_PACKAGE_NAME: bq-inspect
-      PYTHON_NAME_SPACE: bq_inspect
+      PYTHON_PACKAGE_NAME: bq-inspector
+      PYTHON_NAME_SPACE: bq_inspector
     steps:
       - uses: actions/checkout@v6
       - name: Set up Python

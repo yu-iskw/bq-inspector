@@ -13,16 +13,16 @@ exclude = [
   ".github",
   ".trunk",
   "dev",
-  "src/bq_inspect/tests",
+  "src/bq_inspector/tests",
   "dist",
   ".python-version",
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/bq_inspect"]
+packages = ["src/bq_inspector"]
 
 [project]
-name = "bq-inspect"
+name = "bq-inspector"
 version = "0.1.0"
 authors = [{ name = "yu-iskw" }]
 readme = "README.md"
@@ -55,10 +55,10 @@ dependencies = [
 ]
 
 [project.scripts]
-bq-inspect = "bq_inspect.cli:main"
+bq-inspector = "bq_inspector.cli:main"
 
 [tool.pytest.ini_options]
-testpaths = ["src/bq_inspect/tests"]
+testpaths = ["src/bq_inspector/tests"]
 asyncio_mode = "auto"
 
 [dependency-groups]
@@ -77,7 +77,7 @@ dev = [
 
 [tool.pyright]
 include = ["src"]
-exclude = ["src/bq_inspect/tests"]
+exclude = ["src/bq_inspector/tests"]
 extraPaths = ["src"]
 pythonVersion = "3.13"
 typeCheckingMode = "standard"
@@ -87,24 +87,24 @@ reportMissingImports = true
 reportMissingTypeStubs = "warning"
 
 [[tool.pylint.overrides]]
-module = "bq_inspect.core.shared.types"
+module = "bq_inspector.core.shared.types"
 disable = "invalid-name"
 
 [[tool.pylint.overrides]]
-module = "bq_inspect.input.parsed_input_types"
+module = "bq_inspector.input.parsed_input_types"
 disable = "invalid-name"
 
 [[tool.pylint.overrides]]
-module = "bq_inspect.__main__"
+module = "bq_inspector.__main__"
 disable = "invalid-name"
 
 [tool.vulture]
-paths = ["src/bq_inspect"]
+paths = ["src/bq_inspector"]
 min_confidence = 80
 
 [tool.coverage.run]
 branch = true
-source = ["src/bq_inspect"]
+source = ["src/bq_inspector"]
 
 [tool.coverage.report]
 show_missing = true

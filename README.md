@@ -1,15 +1,15 @@
-# bq-inspect
+# bq-inspector
 
-**bq-inspect** is a read-only CLI for BigQuery: it fetches job metadata (`jobs.get` / `jobs.list`) and dataset or table metadata (`datasets.get`, `tables.list`, `tables.get`). It prints **one JSON document on stdout** on success. Errors are **JSON on stderr** with a non-zero exit code (except plain-text `--help`).
+**bq-inspector** is a read-only CLI for BigQuery: it fetches job metadata (`jobs.get` / `jobs.list`) and dataset or table metadata (`datasets.get`, `tables.list`, `tables.get`). It prints **one JSON document on stdout** on success. Errors are **JSON on stderr** with a non-zero exit code (except plain-text `--help`).
 
-Operational commands take a single **`--params`** JSON object (or `@path` to a file). Field names match the command’s **`--input-schema`** output. For flags and options, **`bq-inspect --help`** and **`bq-inspect <command> --help`** are authoritative; this README may summarize and can lag behind the CLI.
+Operational commands take a single **`--params`** JSON object (or `@path` to a file). Field names match the command’s **`--input-schema`** output. For flags and options, **`bq-inspector --help`** and **`bq-inspector <command> --help`** are authoritative; this README may summarize and can lag behind the CLI.
 
-This repository is the **Python** implementation (`pip install bq-inspect`, import name `bq_inspect`). The original **TypeScript** CLI and library live in the [google-cloud-tools](https://github.com/yu-iskw/google-cloud-tools) monorepo under `packages/bq-inspect`. Both implementations target the same agent-facing contracts (command names, `--params` shapes, error codes, and JSON Schema discovery).
+This repository is the **Python** implementation (`pip install bq-inspector`, import name `bq_inspector`). The original **TypeScript** CLI and library live in the [google-cloud-tools](https://github.com/yu-iskw/google-cloud-tools) monorepo under `packages/bq-inspect`. Both implementations target the same agent-facing contracts (command names, `--params` shapes, error codes, and JSON Schema discovery).
 
 ## Usage
 
 ```bash
-bq-inspect <command> --params '<json>' | --params @file.json [options]
+bq-inspector <command> --params '<json>' | --params @file.json [options]
 ```
 
 Every operational command also supports `--input-schema` and `--output-schema` (JSON Schema on stdout, no BigQuery call).
@@ -19,22 +19,22 @@ Every operational command also supports `--input-schema` and `--output-schema` (
 From PyPI:
 
 ```bash
-pip install bq-inspect
+pip install bq-inspector
 ```
 
 Or install as a standalone tool with [uv](https://github.com/astral-sh/uv):
 
 ```bash
-uv tool install bq-inspect
+uv tool install bq-inspector
 ```
 
 From source (development or unreleased changes):
 
 ```bash
-git clone https://github.com/yu-iskw/bq-inspect.git
-cd bq-inspect
+git clone https://github.com/yu-iskw/bq-inspector.git
+cd bq-inspector
 pip install .
-# or: uv sync && uv run bq-inspect --help
+# or: uv sync && uv run bq-inspector --help
 ```
 
 Requires [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials) (ADC) unless you only use schema discovery flags (see below).
@@ -42,8 +42,8 @@ Requires [Application Default Credentials](https://cloud.google.com/docs/authent
 ## Help
 
 ```bash
-bq-inspect --help
-bq-inspect <command> --help
+bq-inspector --help
+bq-inspector <command> --help
 ```
 
 Use `-h` anywhere `--help` is accepted.
@@ -52,7 +52,7 @@ Unknown commands print global usage plus `Unknown command: <argv>`.
 
 ## Agent workflow
 
-1. Discover the params shape: `bq-inspect <command> --input-schema` (stdout is JSON Schema).
+1. Discover the params shape: `bq-inspector <command> --input-schema` (stdout is JSON Schema).
 2. Build a JSON object with the required fields (camelCase keys such as `projectId`, `jobId`, `datasetId`).
 3. Run the command with inline JSON or a file.
 
@@ -72,17 +72,17 @@ Unknown commands print global usage plus `Unknown command: <argv>`.
 
 Each view command calls `jobs.get` once per job and projects the response in memory. **`jobs get` returns the full [Job](https://cloud.google.com/bigquery/docs/reference/rest/v2/Job) resource** from the API; other commands slice it for smaller, task-focused JSON. Field names match [Job statistics](https://cloud.google.com/bigquery/docs/reference/rest/v2/Job#JobStatistics); many nested blocks (for example `statistics.mlStatistics`) appear only for matching job kinds.
 
-**Shared / sandbox projects:** `jobs list` returns your own jobs unless you set `allUsers: true`. In busy sandboxes, list with `allUsers: true`, then pass each job’s `jobReference.location` into job view commands. Omitting `location` on `jobs.get` often returns `BQINSPECT_PERMISSION_DENIED` (403), not a clear location error—the CLI hint will suggest adding `location` when that happens.
+**Shared / sandbox projects:** `jobs list` returns your own jobs unless you set `allUsers: true`. In busy sandboxes, list with `allUsers: true`, then pass each job’s `jobReference.location` into job view commands. Omitting `location` on `jobs.get` often returns `BQINSPECTOR_PERMISSION_DENIED` (403), not a clear location error—the CLI hint will suggest adding `location` when that happens.
 
 Example:
 
 ```bash
-bq-inspect jobs summary --params '{"jobs":[{"projectId":"YOUR_PROJECT","jobId":"YOUR_JOB_ID"}]}'
+bq-inspector jobs summary --params '{"jobs":[{"projectId":"YOUR_PROJECT","jobId":"YOUR_JOB_ID"}]}'
 ```
 
-Optional: `bq-inspect <command> --output-schema` for the response shape.
+Optional: `bq-inspector <command> --output-schema` for the response shape.
 
-Invalid params fail with `BQINSPECT_INPUT_INVALID` and JSON Schema error paths on stderr; treat `--input-schema` as the contract for `--params`. See [Error codes](#error-codes) for other codes.
+Invalid params fail with `BQINSPECTOR_INPUT_INVALID` and JSON Schema error paths on stderr; treat `--input-schema` as the contract for `--params`. See [Error codes](#error-codes) for other codes.
 
 ## Quickstart
 
@@ -90,7 +90,7 @@ Invalid params fail with `BQINSPECT_INPUT_INVALID` and JSON Schema error paths o
 
 ```bash
 # Summary (default inspection — no SQL, no query plan)
-bq-inspect jobs summary --params "$(cat <<'EOF'
+bq-inspector jobs summary --params "$(cat <<'EOF'
 {
   "jobs": [{ "projectId": "YOUR_PROJECT", "jobId": "YOUR_JOB_ID" }]
 }
@@ -98,24 +98,24 @@ EOF
 )"
 
 # Set location from jobs.list jobReference (required for non-default regions)
-bq-inspect jobs summary --params '{"jobs":[{"projectId":"YOUR_PROJECT","jobId":"YOUR_JOB_ID","location":"asia-northeast1"}]}'
+bq-inspector jobs summary --params '{"jobs":[{"projectId":"YOUR_PROJECT","jobId":"YOUR_JOB_ID","location":"asia-northeast1"}]}'
 
 # Other job views: include location from jobs.list when jobs are regional (same shape as summary above)
-bq-inspect jobs query --params '{"jobs":[{"projectId":"YOUR_PROJECT","jobId":"YOUR_JOB_ID","location":"asia-northeast1"}]}'
-bq-inspect jobs performance --params '{"jobs":[{"projectId":"YOUR_PROJECT","jobId":"YOUR_JOB_ID","location":"asia-northeast1"}]}'
-bq-inspect jobs lineage --params '{"jobs":[{"projectId":"YOUR_PROJECT","jobId":"YOUR_JOB_ID","location":"asia-northeast1"}]}'
-bq-inspect jobs impact --params '{"jobs":[{"projectId":"YOUR_PROJECT","jobId":"YOUR_JOB_ID","location":"asia-northeast1"}]}'
-bq-inspect jobs get --params '{"jobs":[{"projectId":"YOUR_PROJECT","jobId":"YOUR_JOB_ID","location":"asia-northeast1"}]}'
+bq-inspector jobs query --params '{"jobs":[{"projectId":"YOUR_PROJECT","jobId":"YOUR_JOB_ID","location":"asia-northeast1"}]}'
+bq-inspector jobs performance --params '{"jobs":[{"projectId":"YOUR_PROJECT","jobId":"YOUR_JOB_ID","location":"asia-northeast1"}]}'
+bq-inspector jobs lineage --params '{"jobs":[{"projectId":"YOUR_PROJECT","jobId":"YOUR_JOB_ID","location":"asia-northeast1"}]}'
+bq-inspector jobs impact --params '{"jobs":[{"projectId":"YOUR_PROJECT","jobId":"YOUR_JOB_ID","location":"asia-northeast1"}]}'
+bq-inspector jobs get --params '{"jobs":[{"projectId":"YOUR_PROJECT","jobId":"YOUR_JOB_ID","location":"asia-northeast1"}]}'
 ```
 
 ### List jobs (`jobs list`)
 
-Field list: [Params reference](#params-reference) (`jobs list`). Full schema: `bq-inspect jobs list --input-schema`.
+Field list: [Params reference](#params-reference) (`jobs list`). Full schema: `bq-inspector jobs list --input-schema`.
 
 In shared projects, set `"allUsers": true` or the list may be empty even when jobs exist. Use `jobReference.location` from list output for job view commands.
 
 ```bash
-bq-inspect jobs list --params "$(cat <<'EOF'
+bq-inspector jobs list --params "$(cat <<'EOF'
 {
   "projectId": "YOUR_PROJECT",
   "allUsers": true,
@@ -132,9 +132,9 @@ EOF
 ### Dataset and table metadata
 
 ```bash
-bq-inspect datasets get --params '{"projectId":"YOUR_PROJECT","datasetId":"YOUR_DATASET"}'
-bq-inspect tables list --params '{"projectId":"YOUR_PROJECT","datasetId":"YOUR_DATASET"}'
-bq-inspect tables get --params '{"projectId":"YOUR_PROJECT","datasetId":"YOUR_DATASET","tableId":"YOUR_TABLE"}'
+bq-inspector datasets get --params '{"projectId":"YOUR_PROJECT","datasetId":"YOUR_DATASET"}'
+bq-inspector tables list --params '{"projectId":"YOUR_PROJECT","datasetId":"YOUR_DATASET"}'
+bq-inspector tables get --params '{"projectId":"YOUR_PROJECT","datasetId":"YOUR_DATASET","tableId":"YOUR_TABLE"}'
 ```
 
 ## Commands overview
@@ -156,7 +156,7 @@ Project-wide `datasets list` is not supported (it would need `datasets.list`, wh
 
 ## Params reference
 
-Summaries from per-command `--help`; full types and constraints: `bq-inspect <command> --input-schema`.
+Summaries from per-command `--help`; full types and constraints: `bq-inspector <command> --input-schema`.
 
 **All commands:** optional `impersonateServiceAccount`, `impersonateDelegates`.
 
@@ -184,11 +184,11 @@ Summaries from per-command `--help`; full types and constraints: `bq-inspect <co
 Examples:
 
 ```bash
-bq-inspect jobs summary --input-schema
-bq-inspect jobs summary --output-schema
-bq-inspect jobs get --input-schema
-bq-inspect jobs list --input-schema
-bq-inspect datasets get --output-schema
+bq-inspector jobs summary --input-schema
+bq-inspector jobs summary --output-schema
+bq-inspector jobs get --input-schema
+bq-inspector jobs list --input-schema
+bq-inspector datasets get --output-schema
 ```
 
 ## Legacy `schema` subcommand
@@ -196,8 +196,8 @@ bq-inspect datasets get --output-schema
 Prefer per-command `--input-schema` / `--output-schema` above. The `schema` command remains for compatibility:
 
 ```bash
-bq-inspect schema input --format json-schema
-bq-inspect schema output --format json-schema
+bq-inspector schema input --format json-schema
+bq-inspector schema output --format json-schema
 ```
 
 `schema input` matches job view commands’ input shape. `schema output` is a `oneOf` union across command response shapes; use `--output-schema` on a specific command when you need that command’s response shape alone.
@@ -208,13 +208,13 @@ Errors are JSON on stderr with a `code` field. Schema validation failures includ
 
 | Code                          | Typical cause                                                                                                   |
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `BQINSPECT_INPUT_INVALID`     | Bad `--params` or flags; schema validation; HTTP 4xx (except 401/403/404/429).                                  |
-| `BQINSPECT_PERMISSION_DENIED` | IAM or ADC; on `jobs.get`, often missing `location` or wrong job ref (see [Troubleshooting](#troubleshooting)). |
-| `BQINSPECT_JOB_NOT_FOUND`     | HTTP 404 from BigQuery (job or catalog). Read `source.api` and `hint` for the resource type.                    |
-| `BQINSPECT_LOCATION_REQUIRED` | Reserved; prefer `location` on job refs (see hints on 403).                                                     |
-| `BQINSPECT_API_RATE_LIMITED`  | HTTP 429; retryable.                                                                                            |
-| `BQINSPECT_API_UNAVAILABLE`   | Transient API / 5xx.                                                                                            |
-| `BQINSPECT_INTERNAL`          | Unexpected CLI failure.                                                                                         |
+| `BQINSPECTOR_INPUT_INVALID`     | Bad `--params` or flags; schema validation; HTTP 4xx (except 401/403/404/429).                                  |
+| `BQINSPECTOR_PERMISSION_DENIED` | IAM or ADC; on `jobs.get`, often missing `location` or wrong job ref (see [Troubleshooting](#troubleshooting)). |
+| `BQINSPECTOR_JOB_NOT_FOUND`     | HTTP 404 from BigQuery (job or catalog). Read `source.api` and `hint` for the resource type.                    |
+| `BQINSPECTOR_LOCATION_REQUIRED` | Reserved; prefer `location` on job refs (see hints on 403).                                                     |
+| `BQINSPECTOR_API_RATE_LIMITED`  | HTTP 429; retryable.                                                                                            |
+| `BQINSPECTOR_API_UNAVAILABLE`   | Transient API / 5xx.                                                                                            |
+| `BQINSPECTOR_INTERNAL`          | Unexpected CLI failure.                                                                                         |
 
 ## Troubleshooting
 
@@ -225,12 +225,12 @@ Symptom-first checks when JSON looks wrong but the CLI is working:
 - In shared sandboxes, set `"allUsers": true` in `--params` (default list is only your user’s jobs).
 - With impersonation: the caller needs **Service Account Token Creator** on the target; the impersonated identity needs **BigQuery job list** access (`roles/bigquery.resourceViewer` or equivalent).
 
-**Job view commands return per-job `BQINSPECT_PERMISSION_DENIED` (403)**
+**Job view commands return per-job `BQINSPECTOR_PERMISSION_DENIED` (403)**
 
 - **`location` omitted:** copy `jobReference.location` from `jobs list` into each job ref (required for many regional jobs).
-- **`location` set:** BigQuery may still return **403 Access Denied** for a wrong `jobId`, wrong region, or IAM—not only missing `location`. Confirm `projectId` and `jobId` from `jobs list`; do not assume the code will be `BQINSPECT_JOB_NOT_FOUND`.
+- **`location` set:** BigQuery may still return **403 Access Denied** for a wrong `jobId`, wrong region, or IAM—not only missing `location`. Confirm `projectId` and `jobId` from `jobs list`; do not assume the code will be `BQINSPECTOR_JOB_NOT_FOUND`.
 
-**`BQINSPECT_JOB_NOT_FOUND`**
+**`BQINSPECTOR_JOB_NOT_FOUND`**
 
 - Typical for a wrong **project** on a job ref, a missing **dataset** or **table**, or catalog APIs returning HTTP 404.
 - The error code matches the TypeScript port for all 404 responses. Use **`source.api`** (`bigquery.jobs.get` vs `bigquery.datasets.get`, etc.) and the stderr **`hint`** to tell jobs from catalog resources apart.
@@ -272,7 +272,7 @@ Prefer narrow read access:
 
 ## Programmatic use (Python)
 
-The primary surface is the **`bq-inspect` CLI**. For in-process use, import from the `bq_inspect` package (for example core use cases under `bq_inspect.core`, ports under `bq_inspect.bigquery.port`, and JSON Schema helpers under `bq_inspect.schemas`). The package does not yet expose a stable public API beyond what the CLI uses internally; prefer subprocess invocation or the TypeScript library in [google-cloud-tools](https://github.com/yu-iskw/google-cloud-tools/tree/main/packages/bq-inspect) if you need a documented library entrypoint today.
+The primary surface is the **`bq-inspector` CLI**. For in-process use, import from the `bq_inspector` package (for example core use cases under `bq_inspector.core`, ports under `bq_inspector.bigquery.port`, and JSON Schema helpers under `bq_inspector.schemas`). The package does not yet expose a stable public API beyond what the CLI uses internally; prefer subprocess invocation or the TypeScript library in [google-cloud-tools](https://github.com/yu-iskw/google-cloud-tools/tree/main/packages/bq-inspect) if you need a documented library entrypoint today.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for architecture and test patterns when extending the Python implementation.
 
