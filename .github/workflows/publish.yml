@@ -12,8 +12,8 @@ jobs:
       run:
         shell: bash
     env:
-      PYTHON_PACKAGE_NAME: YOUR_PYTHON_PACKAGE_NAME
-      PYTHON_NAME_SPACE: YOUR_PYTHON_NAME_SPACE
+      PYTHON_PACKAGE_NAME: bq-inspector
+      PYTHON_NAME_SPACE: bq_inspector
     steps:
       - uses: actions/checkout@v6
       - name: Set up Python
@@ -40,7 +40,8 @@ jobs:
       run:
         shell: bash
     env:
-      PYTHON_PACKAGE_NAME: YOUR_PYTHON_PACKAGE_NAME
+      PYTHON_PACKAGE_NAME: bq-inspector
+      PYTHON_NAME_SPACE: bq_inspector
     steps:
       - uses: actions/checkout@v6
       - name: Set up Python
@@ -54,6 +55,7 @@ jobs:
       - name: Install package
         run: |
           python3 -m pip install -U "${{ env.PYTHON_PACKAGE_NAME}}"
+      # uv is installed only in the publish job; smoke-test the PyPI wheel via pip's python.
       - name: Test package
         run: |
-          uv run python -m "${{ env.PYTHON_NAME_SPACE }}"
+          python -m "${{ env.PYTHON_NAME_SPACE }}"

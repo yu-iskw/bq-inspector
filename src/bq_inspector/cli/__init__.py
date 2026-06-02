@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Template tests."""
+"""CLI entry point for bq-inspector (package; see cli/dispatch.py)."""
 
+from bq_inspector.cli.dispatch import main
 
-def test_dummy() -> None:
-    """Placeholder test; replace with real cases when the package grows."""
-    assert True
+__all__ = ["main"]

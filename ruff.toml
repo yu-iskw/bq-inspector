@@ -2,7 +2,7 @@
 # Catches bugs, AI-generated anti-patterns, and maintains consistency.
 # RUF100 (unused noqa) is included via the RUF group — keep noqa clean.
 
-target-version = "py311"
+target-version = "py310"
 line-length = 100
 
 [lint]
@@ -60,8 +60,13 @@ ignore = [
 ]
 
 [lint.per-file-ignores]
-"src/your_package/tests/**" = [
-  "S101", # assert used in tests
+"src/bq_inspector/tests/**" = [
+  "S101",    # assert used in tests
+  "PLR2004", # magic values in test assertions
+  "S105",    # page_token / next_page_token false positives
+]
+"src/bq_inspector/input/parsed_input_types.py" = [
+  "N815", # camelCase keys mirror JSON schema / API params
 ]
 
 # NOTE: Prefer narrow noqa comments over broad file-level bypasses.
