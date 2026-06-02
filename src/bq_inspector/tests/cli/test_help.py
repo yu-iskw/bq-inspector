@@ -70,18 +70,6 @@ def test_resolve_help_text_catalog_commands() -> None:
     assert "--table" not in tables_get
 
 
-def test_resolve_help_text_schema_variants() -> None:
-    schema = resolve_help_text(["schema"], True)
-    assert schema is not None
-    assert "json-schema" in schema
-    schema_input = resolve_help_text(["schema", "input"], True)
-    assert schema_input is not None
-    assert "schema input" in schema_input
-    schema_output = resolve_help_text(["schema", "output"], True)
-    assert schema_output is not None
-    assert "schema output" in schema_output
-
-
 def test_resolve_help_text_jobs_group_usage() -> None:
     text = resolve_help_text(["jobs"], True)
     assert text is not None

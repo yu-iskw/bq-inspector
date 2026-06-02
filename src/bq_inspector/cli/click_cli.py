@@ -18,9 +18,7 @@ from bq_inspector.cli.click_decorators import (
 from bq_inspector.cli.command_registry import (
     GLOBAL_USAGE,
     GROUP_COMMAND_SPECS,
-    SCHEMA_COMMAND_SPECS,
     GroupCommandSpec,
-    SchemaCommandSpec,
 )
 from bq_inspector.cli.help import resolve_help_text, strip_trailing_help_flags, write_help_text
 from bq_inspector.commands.command_shared import InspectionCommandOptions, ParamsCommandRunner
@@ -114,44 +112,6 @@ def cli(ctx: click.Context) -> None:
 
 for group_spec in GROUP_COMMAND_SPECS:
     cli.add_command(_build_params_group(group_spec))
-
-
-def _build_schema_group() -> click.Group:
-    @click.group(
-        "schema",
-        cls=BqInspectGroup,
-        group_path=("schema",),
-        invoke_without_command=True,
-        add_help_option=False,
-    )
-    @click.pass_context
-    def group(ctx: click.Context) -> None:
-        """Legacy schema commands."""
-        if ctx.invoked_subcommand is None:
-            raise create_input_failure("Unknown command: schema")
-
-    for schema_spec in SCHEMA_COMMAND_SPECS:
-        _register_schema_command(group, schema_spec)
-
-    return group
-
-
-def _register_schema_command(group: click.Group, spec: SchemaCommandSpec) -> None:
-    @group.command(spec.name, add_help_option=False)
-    @click.option(
-        "--format",
-        "schema_format",
-        type=click.Choice(["json-schema"], case_sensitive=False),
-        required=True,
-    )
-    @async_command
-    async def schema_command(*, schema_format: str) -> Any:
-        return await spec.runner(spec.name, schema_format)
-
-    schema_command.__name__ = f"schema_{spec.name}"  # pyright: ignore[reportAttributeAccessIssue]
-
-
-cli.add_command(_build_schema_group())
 
 
 def _write_json_result(result: Any) -> None:

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Literal
 
 
 class ParamsBodyKind(Enum):
@@ -97,9 +96,6 @@ Commands (each supports --input-schema / --output-schema for JSON Schema on stdo
   tables list      List tables in a dataset
   tables get       Table metadata
 
-Legacy:
-  schema         Same contracts as above (see: bq-inspector schema --help)
-
 Global:
   bq-inspector --help | -h
   bq-inspector <command> --help
@@ -166,32 +162,4 @@ Subcommands:
   get          Table metadata
 
 Run bq-inspector tables <subcommand> --help for params and examples.
-""".strip()
-
-
-def build_schema_group_usage() -> str:
-    """Usage for the legacy schema command group."""
-    return """
-Usage:
-  bq-inspector schema <input|output> --format json-schema
-
-Legacy JSON Schema (prefer per-command --input-schema / --output-schema).
-
-Subcommands:
-  input     Jobs get input JSON Schema
-  output    Response JSON Schema (oneOf across commands)
-
-Examples:
-  bq-inspector schema input --format json-schema
-  bq-inspector schema output --format json-schema
-
-Run bq-inspector schema <subcommand> --help for a short reminder.
-""".strip()
-
-
-def build_schema_subcommand_usage(name: Literal["input", "output"]) -> str:
-    """Usage for schema input or output."""
-    return f"""
-Usage:
-  bq-inspector schema {name} --format json-schema
 """.strip()

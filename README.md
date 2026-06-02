@@ -191,17 +191,6 @@ bq-inspector jobs list --input-schema
 bq-inspector datasets get --output-schema
 ```
 
-## Legacy `schema` subcommand
-
-Prefer per-command `--input-schema` / `--output-schema` above. The `schema` command remains for compatibility:
-
-```bash
-bq-inspector schema input --format json-schema
-bq-inspector schema output --format json-schema
-```
-
-`schema input` matches job view commands’ input shape. `schema output` is a `oneOf` union across command response shapes; use `--output-schema` on a specific command when you need that command’s response shape alone.
-
 ## Error codes
 
 Errors are JSON on stderr with a `code` field. Schema validation failures include `schemaErrors` with JSON Pointer paths.
