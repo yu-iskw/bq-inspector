@@ -2,8 +2,8 @@
 
 import pytest
 
+from bq_inspect.cli.command_registry import GLOBAL_USAGE, command_help_for_key
 from bq_inspect.cli.help import resolve_help_text, strip_trailing_help_flags
-from bq_inspect.cli.usage import GLOBAL_USAGE, JOBS_GET_USAGE
 
 
 def test_strip_trailing_help_flags() -> None:
@@ -38,7 +38,9 @@ def test_resolve_help_text_global_usage_for_bare_help() -> None:
 
 def test_resolve_help_text_jobs_get_usage() -> None:
     text = resolve_help_text(["jobs", "get"], True)
-    assert text == JOBS_GET_USAGE
+    jobs_get_usage = command_help_for_key("jobs get")
+    assert jobs_get_usage is not None
+    assert text == jobs_get_usage
     assert "--params" in text
     assert "--input-schema" in text
     assert "--output-schema" in text

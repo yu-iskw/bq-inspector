@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from typing import Any
 
-def is_big_query_job(value: object) -> bool:
+BigQueryJobDict = dict[str, Any]
+
+
+def is_big_query_job(value: object) -> value is BigQueryJobDict:
     """Return True when value looks like a BigQuery Job object."""
     return isinstance(value, dict) and not isinstance(value, list)

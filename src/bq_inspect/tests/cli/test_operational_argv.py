@@ -2,7 +2,7 @@
 
 import pytest
 
-from bq_inspect.cli.argv.operational_argv import parse_operational_argv
+from bq_inspect.operational import parse_operational_argv
 from bq_inspect.core.shared.errors import BqInspectFailure
 
 

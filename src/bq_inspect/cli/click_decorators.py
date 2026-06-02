@@ -4,67 +4,54 @@ from __future__ import annotations
 
 import asyncio
 import functools
-import sys
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import click
 
-from bq_inspect.cli.operational_flags import operational_flag_decorators
-from bq_inspect.operational.resolve import resolve_operational_argv
+from bq_inspect.operational.parse_argv import parse_operational_argv
 
 if TYPE_CHECKING:
     from bq_inspect.commands.command_shared import InspectionCommandOptions
+    from bq_inspect.operational.types import OperationalArgv
 
 F = TypeVar("F", bound=Callable[..., Any])
 
 
-def custom_help_option(usage: str) -> Callable[[F], F]:
-    """Attach a custom plain-text help handler that writes usage strings."""
-
-    def decorator(command: F) -> F:
-        def show_help(ctx: click.Context, param: click.Parameter, value: bool) -> None:
-            del param
-            if not value or ctx.resilient_parsing:
-                return
-            sys.stdout.write(f"{usage}\n")
-            ctx.exit(0)
-
-        return click.option(
-            "-h",
-            "--help",
-            is_flag=True,
-            expose_value=False,
-            is_eager=True,
-            callback=show_help,
-            help="Show this message and exit.",
-        )(command)
-
-    return decorator
-
-
 def operational_options(command: F) -> F:
     """Attach --params, --input-schema, and --output-schema to a command."""
-    wrapped = command
-    for decorator in reversed(operational_flag_decorators()):
-        wrapped = decorator(wrapped)
+
+    def _attach_flag_options(wrapped: F) -> F:
+        from bq_inspect.operational.flags import operational_flag_decorators
+
+        result = wrapped
+        for decorator in reversed(operational_flag_decorators()):
+            result = decorator(result)
+        return result
 
     @functools.wraps(command)
-    def wrapper(
-        *args: Any,
-        params: str | None,
-        input_schema: bool,
-        output_schema: bool,
-        **kwargs: Any,
-    ) -> Any:
-        operational = resolve_operational_argv(
-            params=params,
-            input_schema=input_schema,
-            output_schema=output_schema,
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        operational: OperationalArgv = parse_operational_argv(
+            _operational_argv_from_kwargs(kwargs),
         )
-        return wrapped(*args, operational=operational, **kwargs)
+        kwargs.pop("params", None)
+        kwargs.pop("input_schema", None)
+        kwargs.pop("output_schema", None)
+        return command(*args, operational=operational, **kwargs)
 
-    return wrapper  # type: ignore[return-value]
+    return _attach_flag_options(wrapper)  # type: ignore[return-value]
+
+
+def _operational_argv_from_kwargs(kwargs: dict[str, Any]) -> list[str]:
+    argv: list[str] = []
+    if kwargs.get("input_schema"):
+        argv.append("--input-schema")
+    if kwargs.get("output_schema"):
+        argv.append("--output-schema")
+    params = kwargs.get("params")
+    if params is not None:
+        argv.extend(["--params", str(params)])
+    return argv
 
 
 def async_command(command: F) -> F:

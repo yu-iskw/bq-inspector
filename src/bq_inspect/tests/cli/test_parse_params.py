@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from bq_inspect.cli.params.parse_params import resolve_params_value
+from bq_inspect.operational import resolve_params_value
 from bq_inspect.core.shared.errors import BqInspectFailure
 
 if TYPE_CHECKING:

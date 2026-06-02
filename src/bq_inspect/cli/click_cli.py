@@ -12,11 +12,11 @@ import click
 
 from bq_inspect.cli.click_decorators import (
     async_command,
-    custom_help_option,
     operational_options,
     pass_inspection_options,
 )
 from bq_inspect.cli.command_registry import (
+    GLOBAL_USAGE,
     GROUP_COMMAND_SPECS,
     SCHEMA_COMMAND_SPECS,
     SCHEMA_GROUP_USAGE,
@@ -24,9 +24,7 @@ from bq_inspect.cli.command_registry import (
     SchemaCommandSpec,
 )
 from bq_inspect.cli.help import resolve_help_text, strip_trailing_help_flags, write_help_text
-from bq_inspect.cli.usage import GLOBAL_USAGE
 from bq_inspect.commands.command_shared import InspectionCommandOptions, ParamsCommandRunner
-from bq_inspect.commands.schema import run_schema_for_name
 from bq_inspect.core.shared.errors import create_input_failure
 
 if TYPE_CHECKING:
@@ -63,11 +61,9 @@ class BqInspectGroup(click.Group):
 def _register_params_command(
     group: click.Group,
     name: str,
-    usage: str,
     runner: ParamsCommandRunner,
 ) -> None:
     @group.command(name, add_help_option=False)
-    @custom_help_option(usage)
     @operational_options
     @pass_inspection_options
     @async_command
@@ -89,19 +85,13 @@ def _build_params_group(spec: GroupCommandSpec) -> click.Group:
         invoke_without_command=True,
         add_help_option=False,
     )
-    @custom_help_option(spec.usage)
     @click.pass_context
     def group(ctx: click.Context) -> None:
         if ctx.invoked_subcommand is None:
             raise create_input_failure(f"Unknown command: {spec.name}")
 
     for command_spec in spec.commands:
-        _register_params_command(
-            group,
-            command_spec.path[-1],
-            command_spec.usage,
-            command_spec.runner,
-        )
+        _register_params_command(group, command_spec.path[-1], command_spec.runner)
 
     group.__doc__ = spec.name
     return group
@@ -111,6 +101,7 @@ def _build_params_group(spec: GroupCommandSpec) -> click.Group:
     cls=BqInspectGroup,
     context_settings={"help_option_names": []},
     invoke_without_command=True,
+    add_help_option=False,
 )
 @click.pass_context
 def cli(ctx: click.Context) -> None:
@@ -126,24 +117,28 @@ for group_spec in GROUP_COMMAND_SPECS:
     cli.add_command(_build_params_group(group_spec))
 
 
-@cli.group(
-    "schema",
-    cls=BqInspectGroup,
-    group_path=("schema",),
-    invoke_without_command=True,
-    add_help_option=False,
-)
-@custom_help_option(SCHEMA_GROUP_USAGE)
-@click.pass_context
-def schema_group(ctx: click.Context) -> None:
-    """Legacy schema commands."""
-    if ctx.invoked_subcommand is None:
-        raise create_input_failure("Unknown command: schema")
+def _build_schema_group() -> click.Group:
+    @click.group(
+        "schema",
+        cls=BqInspectGroup,
+        group_path=("schema",),
+        invoke_without_command=True,
+        add_help_option=False,
+    )
+    @click.pass_context
+    def group(ctx: click.Context) -> None:
+        """Legacy schema commands."""
+        if ctx.invoked_subcommand is None:
+            raise create_input_failure("Unknown command: schema")
+
+    for schema_spec in SCHEMA_COMMAND_SPECS:
+        _register_schema_command(group, schema_spec)
+
+    return group
 
 
-def _register_schema_command(spec: SchemaCommandSpec) -> None:
-    @schema_group.command(spec.name, add_help_option=False)
-    @custom_help_option(spec.usage)
+def _register_schema_command(group: click.Group, spec: SchemaCommandSpec) -> None:
+    @group.command(spec.name, add_help_option=False)
     @click.option(
         "--format",
         "schema_format",
@@ -152,13 +147,12 @@ def _register_schema_command(spec: SchemaCommandSpec) -> None:
     )
     @async_command
     async def schema_command(*, schema_format: str) -> Any:
-        return await run_schema_for_name(spec.name, schema_format)
+        return await spec.runner(spec.name, schema_format)
 
     schema_command.__name__ = f"schema_{spec.name}"
 
 
-for schema_spec in SCHEMA_COMMAND_SPECS:
-    _register_schema_command(schema_spec)
+cli.add_command(_build_schema_group())
 
 
 def _write_json_result(result: Any) -> None:
@@ -170,9 +164,9 @@ def invoke(argv: list[str] | None = None) -> None:
     """Run the Click CLI and write JSON results to stdout."""
     raw_argv = list(sys.argv[1:] if argv is None else argv)
 
-    argv, wants_help = strip_trailing_help_flags(raw_argv)
+    argv_without_help, wants_help = strip_trailing_help_flags(raw_argv)
     if wants_help:
-        write_help_text(resolve_help_text(argv, wants_help))
+        write_help_text(resolve_help_text(argv_without_help, wants_help=True))
         return
 
     result = cli.main(args=raw_argv, prog_name="bq-inspect", standalone_mode=False)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from google.api_core.exceptions import GoogleAPICallError
@@ -20,34 +21,20 @@ _HTTP_STATUS_TOO_MANY_REQUESTS = 429
 _HTTP_STATUS_SERVER_ERROR = 500
 
 
-def resolve_http_status(error: object) -> int | None:  # noqa: PLR0911, PLR0912
-    """Extract an HTTP status code from a Google API or dict-shaped error."""
-    if isinstance(error, GoogleAPICallError):
-        return parse_http_status(error.code)
+@dataclass(frozen=True)
+class GoogleApiErrorView:
+    """Normalized HTTP status and message from a Google API failure."""
 
-    if not isinstance(error, dict):
-        code = getattr(error, "code", None)
-        if code is not None:
-            parsed = parse_http_status(code)
-            if parsed is not None:
-                return parsed
-        response = getattr(error, "response", None)
-        if isinstance(response, dict):
-            return parse_http_status(response.get("status"))
-        return None
+    status: int | None
+    message: str
 
-    parsed_code = parse_http_status(error.get("code"))
-    if parsed_code is not None:
-        return parsed_code
-
-    response = error.get("response")
-    if isinstance(response, dict):
-        return parse_http_status(response.get("status"))
-
-    return None
+    @classmethod
+    def from_error(cls, error: object) -> GoogleApiErrorView:
+        """Build a view from a Google API or dict-shaped error."""
+        return cls(status=_extract_http_status(error), message=_extract_message(error))
 
 
-def parse_http_status(value: object) -> int | None:  # noqa: PLR0911
+def parse_http_status(value: object) -> int | None:
     """Parse a numeric or string HTTP status in the valid range."""
     if isinstance(value, int) and _HTTP_STATUS_MIN <= value < _HTTP_STATUS_MAX:
         return value
@@ -63,27 +50,17 @@ def parse_http_status(value: object) -> int | None:  # noqa: PLR0911
     return None
 
 
-def extract_google_error_message(error: object) -> str:  # noqa: PLR0911, PLR0912
+def resolve_http_status(error: object) -> int | None:
+    """Extract an HTTP status code from a Google API or dict-shaped error."""
+    return GoogleApiErrorView.from_error(error).status
+
+
+def extract_google_error_message(error: object) -> str:
     """Return the best available error message for a Google API failure."""
-    if isinstance(error, BaseException):
-        message = str(error).strip()
-        if len(message) > 0:
-            return message
-
-    if isinstance(error, dict):
-        message = error.get("message")
-        if isinstance(message, str) and message.strip():
-            return message
-
-    if hasattr(error, "message"):
-        message = getattr(error, "message", None)
-        if isinstance(message, str) and message.strip():
-            return message
-
-    return "BigQuery request failed."
+    return GoogleApiErrorView.from_error(error).message
 
 
-def map_http_status_to_error_code(status: int) -> BqInspectErrorCode:  # noqa: PLR0911
+def map_http_status_to_error_code(status: int) -> BqInspectErrorCode:
     """Map an HTTP status to a bq-inspect error code."""
     if status in (401, 403):
         return "BQINSPECT_PERMISSION_DENIED"
@@ -109,26 +86,69 @@ def map_google_error_to_bq_inspect_failure(
     context: ApiErrorHintContext | None = None,
 ) -> BqInspectFailure:
     """Convert a Google API error into a structured BqInspectFailure."""
-    status = resolve_http_status(error)
-    message = extract_google_error_message(error)
+    view = GoogleApiErrorView.from_error(error)
 
-    if status is None:
+    if view.status is None:
         return BqInspectFailure(
             create_bq_inspect_error(
                 code="BQINSPECT_INTERNAL",
-                message=message,
+                message=view.message,
             )
         )
 
-    code = map_http_status_to_error_code(status)
+    code = map_http_status_to_error_code(view.status)
     hint = hint_for_api_error(code, api, context)
 
     error_details = create_bq_inspect_error(
         code=code,
-        message=message,
-        source={"api": api, "status": status},
+        message=view.message,
+        source={"api": api, "status": view.status},
     )
     if hint is not None:
         error_details["hint"] = hint
 
     return BqInspectFailure(error_details)
+
+
+def _extract_http_status(error: object) -> int | None:
+    if isinstance(error, GoogleAPICallError):
+        return parse_http_status(error.code)
+
+    if isinstance(error, dict):
+        parsed_code = parse_http_status(error.get("code"))
+        if parsed_code is not None:
+            return parsed_code
+        response = error.get("response")
+        if isinstance(response, dict):
+            return parse_http_status(response.get("status"))
+        return None
+
+    code = getattr(error, "code", None)
+    if code is not None:
+        parsed = parse_http_status(code)
+        if parsed is not None:
+            return parsed
+
+    response = getattr(error, "response", None)
+    if isinstance(response, dict):
+        return parse_http_status(response.get("status"))
+
+    return None
+
+
+def _extract_message(error: object) -> str:
+    if isinstance(error, BaseException):
+        message = str(error).strip()
+        if len(message) > 0:
+            return message
+
+    if isinstance(error, dict):
+        message = error.get("message")
+        if isinstance(message, str) and message.strip():
+            return message
+
+    message = getattr(error, "message", None)
+    if isinstance(message, str) and message.strip():
+        return message
+
+    return "BigQuery request failed."

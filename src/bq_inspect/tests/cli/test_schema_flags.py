@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from bq_inspect.commands.command_shared import InspectionCommandOptions, JobsViewCommandOptions
+from bq_inspect.commands.command_shared import InspectionCommandOptions
 from bq_inspect.commands.datasets.get import run_datasets_get
 from bq_inspect.commands.jobs.list import run_jobs_list
 from bq_inspect.commands.jobs.run_jobs_view import (
@@ -40,7 +40,7 @@ async def test_schema_rejects_unknown_names() -> None:
 
 @pytest.mark.asyncio
 async def test_jobs_get_input_schema() -> None:
-    schema = await run_jobs_get(["--input-schema"], JobsViewCommandOptions(tool_version="0.1.0"))
+    schema = await run_jobs_get(["--input-schema"], InspectionCommandOptions(tool_version="0.1.0"))
     assert schema["$schema"] == "https://json-schema.org/draft/2020-12/schema"
     assert schema["title"] == "bq-inspect jobs get input"
     encoded = json.dumps(schema)
@@ -50,7 +50,7 @@ async def test_jobs_get_input_schema() -> None:
 
 @pytest.mark.asyncio
 async def test_jobs_get_output_schema() -> None:
-    schema = await run_jobs_get(["--output-schema"], JobsViewCommandOptions(tool_version="0.1.0"))
+    schema = await run_jobs_get(["--output-schema"], InspectionCommandOptions(tool_version="0.1.0"))
     assert schema["title"] == "bq-inspect jobs get output"
 
 
@@ -58,7 +58,7 @@ async def test_jobs_get_output_schema() -> None:
 async def test_jobs_summary_output_schema_includes_view_const() -> None:
     schema = await run_jobs_summary(
         ["--output-schema"],
-        JobsViewCommandOptions(tool_version="0.1.0"),
+        InspectionCommandOptions(tool_version="0.1.0"),
     )
     assert schema["title"] == "bq-inspect jobs summary output"
     assert '"summary"' in json.dumps(schema)
@@ -68,7 +68,7 @@ async def test_jobs_summary_output_schema_includes_view_const() -> None:
 async def test_jobs_lineage_output_schema_includes_view_const() -> None:
     schema = await run_jobs_lineage(
         ["--output-schema"],
-        JobsViewCommandOptions(tool_version="0.1.0"),
+        InspectionCommandOptions(tool_version="0.1.0"),
     )
     assert schema["title"] == "bq-inspect jobs lineage output"
     assert '"lineage"' in json.dumps(schema)
@@ -78,7 +78,7 @@ async def test_jobs_lineage_output_schema_includes_view_const() -> None:
 async def test_jobs_impact_output_schema_includes_view_const() -> None:
     schema = await run_jobs_impact(
         ["--output-schema"],
-        JobsViewCommandOptions(tool_version="0.1.0"),
+        InspectionCommandOptions(tool_version="0.1.0"),
     )
     assert schema["title"] == "bq-inspect jobs impact output"
     assert '"impact"' in json.dumps(schema)
@@ -89,7 +89,7 @@ async def test_rejects_both_schema_flags_on_jobs_get() -> None:
     with pytest.raises(BqInspectFailure) as exc_info:
         await run_jobs_get(
             ["--input-schema", "--output-schema"],
-            JobsViewCommandOptions(tool_version="0.1.0"),
+            InspectionCommandOptions(tool_version="0.1.0"),
         )
     assert exc_info.value.details["code"] == "BQINSPECT_INPUT_INVALID"
     assert "not both" in exc_info.value.details["message"]

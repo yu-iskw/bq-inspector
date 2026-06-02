@@ -1,11 +1,10 @@
-"""Help text resolution for bq-inspect CLI."""
+"""Help text resolution for bq-inspect CLI (single help pipeline)."""
 
 from __future__ import annotations
 
 import sys
 
-from bq_inspect.cli.command_registry import command_help_for_key
-from bq_inspect.cli.usage import GLOBAL_USAGE
+from bq_inspect.cli.command_registry import GLOBAL_USAGE, command_help_for_key
 
 
 def strip_trailing_help_flags(argv: list[str]) -> tuple[list[str], bool]:

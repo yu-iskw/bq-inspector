@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING
 
 import click
 
-from bq_inspect.cli.argv.operational_argv import normalize_click_exception_message
+from bq_inspect.operational.click_errors import normalize_click_exception_message
 from bq_inspect.cli.click_cli import invoke
 from bq_inspect.core.shared.errors import (
     BqInspectFailure,

@@ -92,12 +92,11 @@ Operational commands accept only:
 
 Parsing layers:
 
-- [`src/bq_inspect/operational/`](src/bq_inspect/operational/) — shared operational flag types and resolution (used by CLI and commands).
-- [`src/bq_inspect/cli/operational_flags.py`](src/bq_inspect/cli/operational_flags.py) — Click option definitions for operational flags.
-- [`src/bq_inspect/cli/argv/operational_argv.py`](src/bq_inspect/cli/argv/operational_argv.py) — legacy argv parsing for direct command runners and tests.
-- [`src/bq_inspect/cli/command_registry.py`](src/bq_inspect/cli/command_registry.py) — canonical command paths, usage strings, and runners.
+- [`src/bq_inspect/operational/`](src/bq_inspect/operational/) — operational flag types, Click flag specs, `parse_operational_argv`, and `resolve_params_value` (used by CLI and commands).
+- [`src/bq_inspect/cli/command_registry.py`](src/bq_inspect/cli/command_registry.py) — canonical command paths, usage strings (from templates), and runners.
+- [`src/bq_inspect/cli/usage_build.py`](src/bq_inspect/cli/usage_build.py) — shared usage templates; registry builds per-command help text.
 - [`src/bq_inspect/cli/click_cli.py`](src/bq_inspect/cli/click_cli.py) — Click command tree built from the registry.
-- [`src/bq_inspect/cli/params/parse_params.py`](src/bq_inspect/cli/params/parse_params.py) — resolve inline JSON or `@file`.
+- [`src/bq_inspect/cli/help.py`](src/bq_inspect/cli/help.py) — single help pipeline (`--help` / `-h` → registry lookup).
 - [`src/bq_inspect/schemas/validate_input.py`](src/bq_inspect/schemas/validate_input.py) — `jsonschema` validation against the same JSON Schema as `--input-schema`.
 - [`src/bq_inspect/cli/input/map_input.py`](src/bq_inspect/cli/input/map_input.py) — domain mapping (epoch ms, list filters split, impersonation trim).
 - [`src/bq_inspect/cli/input/input_parsers.py`](src/bq_inspect/cli/input/input_parsers.py) — `validate_input` + `map*` per command.
@@ -107,26 +106,26 @@ Parsing layers:
 
 ## CLI help text (source of truth)
 
-Published usage strings live in:
+Published usage strings are built from:
 
-- [`src/bq_inspect/cli/usage.py`](src/bq_inspect/cli/usage.py) — all `*_USAGE` constants (global, group, and per-command).
-- [`src/bq_inspect/cli/command_registry.py`](src/bq_inspect/cli/command_registry.py) — wires usage strings to command runners (source of truth for paths).
+- [`src/bq_inspect/cli/usage_build.py`](src/bq_inspect/cli/usage_build.py) — shared templates and `ParamsBodyKind` sections.
+- [`src/bq_inspect/cli/command_registry.py`](src/bq_inspect/cli/command_registry.py) — command paths, runners, and generated usage (source of truth for paths and help lookup).
 - [`src/bq_inspect/cli/help.py`](src/bq_inspect/cli/help.py) — resolves argv keys to usage via the registry for `bq-inspect … --help`.
 
 **Rule:** Any new or changed params field must:
 
 1. Update JSON Schema in [`src/bq_inspect/schemas/input_schema.py`](src/bq_inspect/schemas/input_schema.py) (runtime validation follows automatically).
 2. Update [`src/bq_inspect/cli/input/map_input.py`](src/bq_inspect/cli/input/map_input.py) only if the field needs domain mapping beyond schema shape.
-3. Update the matching block in [`src/bq_inspect/cli/usage.py`](src/bq_inspect/cli/usage.py).
+3. Add or extend a `ParamsCommandUsageMeta` row in [`command_registry.py`](src/bq_inspect/cli/command_registry.py) and adjust `ParamsBodyKind` text in [`usage_build.py`](src/bq_inspect/cli/usage_build.py) when the params section changes.
 4. Update [README.md](README.md) if the field is user-facing in examples or narrative.
 
-Keep [README.md](README.md) examples aligned with `cli/usage.py`; end users treat **`--help`** as authoritative.
+Keep [README.md](README.md) examples aligned with `--help` output; end users treat **`--help`** as authoritative.
 
 ## Architecture (minimal hexagonal)
 
 Layer flow: **`cli/`** → **`commands/`** → **`core/`** → **`bigquery/`** → **`schemas/`**
 
-- **`cli/`** — CLI package (`cli/__init__.py` exports `main` from `dispatch.py`): parse pipeline (`argv/`, `params/`, `input/`) plus help (`usage.py`, `help.py`, `dispatch.py`); not split by BigQuery resource.
+- **`cli/`** — CLI package (`cli/__init__.py` exports `main` from `dispatch.py`): Click tree (`click_cli.py`, `command_registry.py`), help (`help.py`), and input mapping (`input/`); operational parsing lives in **`operational/`**.
 - **`commands/`** — Thin CLI adapters grouped by resource (`jobs/`, `datasets/`, `tables/`), plus shared `command_shared.py` and meta `schema.py`: parse operational argv, build the BigQuery client, call application functions.
 - **`core/`** — Use cases grouped by resource (`jobs`, `datasets`, `tables`) plus pure helpers (`project_job`, `shared`).
 - **`bigquery/`** — Transport layer (`auth/`, `types/`, `port/`, `errors/`, `adapters/google_cloud/`); not split by REST resource.
@@ -181,7 +180,7 @@ JSON fixtures for job payloads: [`src/bq_inspect/tests/fixtures/`](src/bq_inspec
 - [ ] `make lint`
 - [ ] `make test`
 - [ ] `make build` (when packaging or entrypoints change)
-- [ ] CLI or flag changes: `cli/usage.py` (+ README if user-visible)
+- [ ] CLI or flag changes: `cli/usage_build.py` / `cli/command_registry.py` (+ README if user-visible)
 - [ ] New params fields: JSON Schema + map_input + usage + README as needed
 
 ## License

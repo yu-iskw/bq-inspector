@@ -9,7 +9,7 @@ from typing import Any
 from bq_inspect.core.shared.errors import create_input_failure
 
 
-def resolve_params_value(raw: str) -> Any:  # noqa: PLR0912
+def resolve_params_value(raw: str) -> Any:
     """Parse inline JSON or read JSON from an @file path."""
     trimmed = raw.strip()
 

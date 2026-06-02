@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from bq_inspect.core.jobs.bigquery_job_types import is_big_query_job
+from bq_inspect.core.jobs.bigquery_job_types import BigQueryJobDict, is_big_query_job
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -179,7 +179,7 @@ _JOB_PROJECTORS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
 }
 
 
-def project_job(job: object, view: JobView) -> object:  # noqa: PLR0911
+def project_job(job: object, view: JobView) -> object:
     """Return a view-specific projection of a BigQuery job payload."""
     if view == "full":
         return job
@@ -187,9 +187,8 @@ def project_job(job: object, view: JobView) -> object:  # noqa: PLR0911
     if not is_big_query_job(job):
         return job
 
-    job_dict: dict[str, Any] = job  # type: ignore[assignment]
     projector = _JOB_PROJECTORS.get(view)
     if projector is None:
         return job
 
-    return projector(job_dict)
+    return projector(job)
