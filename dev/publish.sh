@@ -37,7 +37,7 @@ uv build
 if [[ ${target} == "pypi" ]]; then
 	uv publish
 elif [[ ${target} == "testpypi" ]]; then
-	uv publish --publish-url "https://test.pypi.org/legacy/"
+	uv publish --index testpypi
 else
 	echo "No such target ${target}"
 	exit 1
