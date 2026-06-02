@@ -26,15 +26,30 @@ def _try_parse_composite_job_id(value: str) -> JobRef | None:
     }
 
 
+def _validate_composite_job_ref(input_ref: JobRef, composite: JobRef) -> None:
+    explicit_project = str(input_ref["projectId"]).strip()
+    if explicit_project and explicit_project != composite["projectId"]:
+        raise create_input_failure(
+            "jobId is a composite job id; projectId must match the project in jobId."
+        )
+    explicit_location = input_ref.get("location")
+    trimmed_location = explicit_location.strip() if isinstance(explicit_location, str) else None
+    composite_location = composite.get("location")
+    if (
+        trimmed_location
+        and isinstance(composite_location, str)
+        and trimmed_location != composite_location
+    ):
+        raise create_input_failure(
+            "jobId is a composite job id; location must match the location in jobId."
+        )
+
+
 def normalize_job_ref(input_ref: JobRef) -> JobRef:
     """Validate and trim job reference fields."""
     composite = _try_parse_composite_job_id(str(input_ref["jobId"]))
     if composite is not None:
-        explicit_project = str(input_ref["projectId"]).strip()
-        if explicit_project and explicit_project != composite["projectId"]:
-            raise create_input_failure(
-                "jobId is a composite job id; projectId must match or be omitted consistently."
-            )
+        _validate_composite_job_ref(input_ref, composite)
         return composite
 
     project_id = input_ref["projectId"].strip()

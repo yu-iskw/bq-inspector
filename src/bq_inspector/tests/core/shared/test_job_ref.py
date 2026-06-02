@@ -62,7 +62,20 @@ def test_composite_job_id_rejects_mismatched_project_id() -> None:
             }
         )
     assert exc_info.value.details["code"] == "BQINSPECTOR_INPUT_INVALID"
-    assert "composite job id" in exc_info.value.details["message"]
+    assert "project in jobId" in exc_info.value.details["message"]
+
+
+def test_composite_job_id_rejects_conflicting_location() -> None:
+    with pytest.raises(BqInspectFailure) as exc_info:
+        normalize_job_ref(
+            {
+                "projectId": "p",
+                "jobId": "p:US.job1",
+                "location": "EU",
+            }
+        )
+    assert exc_info.value.details["code"] == "BQINSPECTOR_INPUT_INVALID"
+    assert "location must match" in exc_info.value.details["message"]
 
 
 def test_plain_job_id_unchanged() -> None:

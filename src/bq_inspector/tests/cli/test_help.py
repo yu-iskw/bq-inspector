@@ -48,7 +48,7 @@ def test_resolve_help_text_unknown_with_suggestion() -> None:
     text = resolve_help_text(["performance", "extra"], True)
     assert GLOBAL_USAGE in text
     assert "Unknown command: performance extra" in text
-    assert "Did you mean: jobs performance?" in text
+    assert "Did you mean: performance (or jobs performance)?" in text
 
 
 def test_resolve_help_text_jobs_get_usage() -> None:

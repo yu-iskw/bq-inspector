@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
+from bq_inspector.cli.jobs_subcommands import JOBS_SUBCOMMANDS
+
 
 class ParamsBodyKind(Enum):
     """Params section body for a command's --help text."""
@@ -70,22 +72,10 @@ Params (see --input-schema):
 """.strip(),
 }
 
-_JOBS_SUBCOMMANDS: tuple[tuple[str, str], ...] = (
-    ("summary", "Job status, timing, bytes/slots (default inspection)"),
-    ("query", "SQL, configuration, and light lineage stats"),
-    ("performance", "Query plan, timeline, performanceInsights, script/session stats"),
-    ("lineage", "Referenced tables, routines, datasets, destinations"),
-    ("impact", "DML stats, load/export/ML/search/spark side-effect stats"),
-    ("get", "Full BigQuery Job JSON"),
-    ("list", "List jobs (optional client-side filters in params)"),
-)
-
-JOB_SUBCOMMAND_NAMES: frozenset[str] = frozenset(name for name, _ in _JOBS_SUBCOMMANDS)
-
 
 def build_global_usage() -> str:
     """Root bq-inspector usage."""
-    subcommand_lines = "\n".join(f"  jobs {name:<12} {desc}" for name, desc in _JOBS_SUBCOMMANDS)
+    subcommand_lines = "\n".join(f"  jobs {name:<12} {desc}" for name, desc in JOBS_SUBCOMMANDS)
     return f"""
 bq-inspector — read-only BigQuery job and metadata inspection (JSON on stdout).
 
@@ -129,7 +119,7 @@ Examples:
 
 def build_jobs_group_usage() -> str:
     """Usage for the jobs command group."""
-    lines = "\n".join(f"  {name:<12} {desc}" for name, desc in _JOBS_SUBCOMMANDS)
+    lines = "\n".join(f"  {name:<12} {desc}" for name, desc in JOBS_SUBCOMMANDS)
     return f"""
 Usage:
   bq-inspector jobs <subcommand> --params '<json>' | --params @file.json [options]
