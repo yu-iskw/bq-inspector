@@ -10,6 +10,10 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    environment:
+      name: testpypi
     defaults:
       run:
         shell: bash
@@ -24,7 +28,6 @@ jobs:
           pip install -r requirements.setup.txt
       - name: Test publish
         env:
-          UV_PUBLISH_TOKEN: "${{ secrets.TESTPYPI_API_TOKEN }}"
           PACKAGE_VERSION: "${{ inputs.package_version }}"
         run: |
           bash dev/publish.sh testpypi
