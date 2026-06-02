@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from bq_inspect.cli.input.map_input import (
+from bq_inspect.input.map_input import (
     map_catalog_input,
     map_jobs_list_input,
     map_jobs_view_input,
@@ -13,7 +13,7 @@ from bq_inspect.schemas.command_schemas import CommandId, JobsViewCommandId
 from bq_inspect.schemas.validate_input import validate_input
 
 if TYPE_CHECKING:
-    from bq_inspect.cli.input.parsed_input_types import (
+    from bq_inspect.input.parsed_input_types import (
         ParsedCatalogInput,
         ParsedJobsListInput,
         ParsedJobsViewInput,

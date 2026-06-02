@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from bq_inspect.cli.input.map_input import (
+from bq_inspect.input.map_input import (
     map_catalog_input,
     map_jobs_list_input,
     map_jobs_view_input,

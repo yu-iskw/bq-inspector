@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Literal, cast
 
-from bq_inspect.core.shared.impersonation_fields import impersonation_request_fields
+from bq_inspect.core.shared.impersonation_fields import merge_impersonation_into
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -205,5 +205,4 @@ def build_list_jobs_response_echo(
         "filters": filters,
     }
     apply_list_request_optionals_to_mapping(cast("dict[str, Any]", request), list_request)
-    request.update(impersonation_request_fields(impersonation))  # type: ignore[arg-type]
-    return request
+    return merge_impersonation_into(request, impersonation)

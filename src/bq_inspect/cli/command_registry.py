@@ -66,94 +66,119 @@ class SchemaCommandSpec:
     runner: Callable[[str], Awaitable[Any]]
 
 
+@dataclass(frozen=True)
+class ParamsCommandRegistration:
+    """Usage metadata and runner for one params-based command."""
+
+    meta: ParamsCommandUsageMeta
+    runner: ParamsCommandRunner
+
+
 def command_path_key(path: tuple[str, ...]) -> str:
     """Return the argv key for a command path."""
     return " ".join(path)
 
 
-_PARAMS_USAGE_METAS: tuple[ParamsCommandUsageMeta, ...] = (
-    ParamsCommandUsageMeta(
-        ("jobs", "summary"),
-        ParamsBodyKind.JOBS_VIEW,
-        '{"jobs":[{"projectId":"my-proj","jobId":"abc"}]}',
-        "./jobs-summary.json",
+_PARAMS_COMMAND_REGISTRATIONS: tuple[ParamsCommandRegistration, ...] = (
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("jobs", "summary"),
+            ParamsBodyKind.JOBS_VIEW,
+            '{"jobs":[{"projectId":"my-proj","jobId":"abc"}]}',
+            "./jobs-summary.json",
+        ),
+        jobs_summary_command,
     ),
-    ParamsCommandUsageMeta(
-        ("jobs", "query"),
-        ParamsBodyKind.JOBS_VIEW,
-        '{"jobs":[{"projectId":"my-proj","jobId":"abc"}]}',
-        "./jobs-query.json",
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("jobs", "query"),
+            ParamsBodyKind.JOBS_VIEW,
+            '{"jobs":[{"projectId":"my-proj","jobId":"abc"}]}',
+            "./jobs-query.json",
+        ),
+        jobs_query_command,
     ),
-    ParamsCommandUsageMeta(
-        ("jobs", "performance"),
-        ParamsBodyKind.JOBS_VIEW,
-        '{"jobs":[{"projectId":"my-proj","jobId":"abc"}]}',
-        "./jobs-performance.json",
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("jobs", "performance"),
+            ParamsBodyKind.JOBS_VIEW,
+            '{"jobs":[{"projectId":"my-proj","jobId":"abc"}]}',
+            "./jobs-performance.json",
+        ),
+        jobs_performance_command,
     ),
-    ParamsCommandUsageMeta(
-        ("jobs", "lineage"),
-        ParamsBodyKind.JOBS_VIEW,
-        '{"jobs":[{"projectId":"my-proj","jobId":"abc"}]}',
-        "./jobs-lineage.json",
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("jobs", "lineage"),
+            ParamsBodyKind.JOBS_VIEW,
+            '{"jobs":[{"projectId":"my-proj","jobId":"abc"}]}',
+            "./jobs-lineage.json",
+        ),
+        jobs_lineage_command,
     ),
-    ParamsCommandUsageMeta(
-        ("jobs", "impact"),
-        ParamsBodyKind.JOBS_VIEW,
-        '{"jobs":[{"projectId":"my-proj","jobId":"abc"}]}',
-        "./jobs-impact.json",
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("jobs", "impact"),
+            ParamsBodyKind.JOBS_VIEW,
+            '{"jobs":[{"projectId":"my-proj","jobId":"abc"}]}',
+            "./jobs-impact.json",
+        ),
+        jobs_impact_command,
     ),
-    ParamsCommandUsageMeta(
-        ("jobs", "get"),
-        ParamsBodyKind.JOBS_VIEW,
-        '{"jobs":[{"projectId":"my-proj","jobId":"abc"}]}',
-        "./jobs-get.json",
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("jobs", "get"),
+            ParamsBodyKind.JOBS_VIEW,
+            '{"jobs":[{"projectId":"my-proj","jobId":"abc"}]}',
+            "./jobs-get.json",
+        ),
+        jobs_get_command,
     ),
-    ParamsCommandUsageMeta(
-        ("jobs", "list"),
-        ParamsBodyKind.JOBS_LIST,
-        '{"projectId":"my-proj","allUsers":true,"maxResults":50}',
-        "./jobs-list.json",
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("jobs", "list"),
+            ParamsBodyKind.JOBS_LIST,
+            '{"projectId":"my-proj","allUsers":true,"maxResults":50}',
+            "./jobs-list.json",
+        ),
+        run_jobs_list_command,
     ),
-    ParamsCommandUsageMeta(
-        ("datasets", "get"),
-        ParamsBodyKind.DATASETS_GET,
-        '{"projectId":"my-proj","datasetId":"analytics"}',
-        "./datasets-get.json",
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("datasets", "get"),
+            ParamsBodyKind.DATASETS_GET,
+            '{"projectId":"my-proj","datasetId":"analytics"}',
+            "./datasets-get.json",
+        ),
+        datasets_get_command,
     ),
-    ParamsCommandUsageMeta(
-        ("tables", "list"),
-        ParamsBodyKind.TABLES_LIST,
-        '{"projectId":"my-proj","datasetId":"analytics"}',
-        "./tables-list.json",
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("tables", "list"),
+            ParamsBodyKind.TABLES_LIST,
+            '{"projectId":"my-proj","datasetId":"analytics"}',
+            "./tables-list.json",
+        ),
+        tables_list_command,
     ),
-    ParamsCommandUsageMeta(
-        ("tables", "get"),
-        ParamsBodyKind.TABLES_GET,
-        '{"projectId":"my-proj","datasetId":"analytics","tableId":"events"}',
-        "./tables-get.json",
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("tables", "get"),
+            ParamsBodyKind.TABLES_GET,
+            '{"projectId":"my-proj","datasetId":"analytics","tableId":"events"}',
+            "./tables-get.json",
+        ),
+        tables_get_command,
     ),
 )
 
-_RUNNERS_BY_PATH: dict[tuple[str, ...], ParamsCommandRunner] = {
-    ("jobs", "summary"): jobs_summary_command,
-    ("jobs", "query"): jobs_query_command,
-    ("jobs", "performance"): jobs_performance_command,
-    ("jobs", "lineage"): jobs_lineage_command,
-    ("jobs", "impact"): jobs_impact_command,
-    ("jobs", "get"): jobs_get_command,
-    ("jobs", "list"): run_jobs_list_command,
-    ("datasets", "get"): datasets_get_command,
-    ("tables", "list"): tables_list_command,
-    ("tables", "get"): tables_get_command,
-}
-
 PARAMS_COMMAND_SPECS: tuple[ParamsCommandSpec, ...] = tuple(
     ParamsCommandSpec(
-        meta.path,
-        build_params_command_usage(meta),
-        _RUNNERS_BY_PATH[meta.path],
+        registration.meta.path,
+        build_params_command_usage(registration.meta),
+        registration.runner,
     )
-    for meta in _PARAMS_USAGE_METAS
+    for registration in _PARAMS_COMMAND_REGISTRATIONS
 )
 
 GROUP_COMMAND_SPECS: tuple[GroupCommandSpec, ...] = (

@@ -91,7 +91,7 @@ module = "bq_inspect.core.shared.types"
 disable = "invalid-name"
 
 [[tool.pylint.overrides]]
-module = "bq_inspect.cli.input.parsed_input_types"
+module = "bq_inspect.input.parsed_input_types"
 disable = "invalid-name"
 
 [[tool.pylint.overrides]]

@@ -5,6 +5,7 @@ from __future__ import annotations
 from bq_inspect.core.shared.impersonation_fields import (
     auth_client_options_from_impersonation,
     impersonation_request_fields,
+    merge_impersonation_into,
     select_impersonation_fields,
 )
 
@@ -44,6 +45,16 @@ def test_auth_client_options_from_impersonation_copies_fields() -> None:
         "impersonateServiceAccount": "sa@p.iam.gserviceaccount.com",
         "impersonateDelegates": ["d1@p.iam.gserviceaccount.com"],
     }
+
+
+def test_merge_impersonation_into_updates_request_in_place() -> None:
+    request = {"jobs": [], "view": "summary"}
+    merged = merge_impersonation_into(
+        request,
+        {"impersonateServiceAccount": "sa@p.iam.gserviceaccount.com"},
+    )
+    assert merged is request
+    assert merged["impersonateServiceAccount"] == "sa@p.iam.gserviceaccount.com"
 
 
 def test_select_impersonation_fields_strips_non_impersonation_keys() -> None:

@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import click
 
-from bq_inspect.operational.parse_argv import parse_operational_argv
+from bq_inspect.operational.resolve import resolve_operational_argv
 
 if TYPE_CHECKING:
     from bq_inspect.commands.command_shared import InspectionCommandOptions
@@ -31,27 +31,14 @@ def operational_options(command: F) -> F:
 
     @functools.wraps(command)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
-        operational: OperationalArgv = parse_operational_argv(
-            _operational_argv_from_kwargs(kwargs),
+        operational: OperationalArgv = resolve_operational_argv(
+            params=kwargs.pop("params", None),
+            input_schema=kwargs.pop("input_schema", False) is True,
+            output_schema=kwargs.pop("output_schema", False) is True,
         )
-        kwargs.pop("params", None)
-        kwargs.pop("input_schema", None)
-        kwargs.pop("output_schema", None)
         return command(*args, operational=operational, **kwargs)
 
     return _attach_flag_options(wrapper)  # type: ignore[return-value]
-
-
-def _operational_argv_from_kwargs(kwargs: dict[str, Any]) -> list[str]:
-    argv: list[str] = []
-    if kwargs.get("input_schema"):
-        argv.append("--input-schema")
-    if kwargs.get("output_schema"):
-        argv.append("--output-schema")
-    params = kwargs.get("params")
-    if params is not None:
-        argv.extend(["--params", str(params)])
-    return argv
 
 
 def async_command(command: F) -> F:

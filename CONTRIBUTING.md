@@ -52,7 +52,7 @@ make scan-vulnerabilities
 
 `make test` runs pytest with **pytest-cov** over `src/bq_inspect/tests/` and reports line and branch coverage in the terminal plus `coverage.xml`.
 
-There is no enforced coverage gate in CI yet. Match the TypeScript package’s intent: **strong coverage on critical paths** (`core/`, `cli/input/`, `cli/params/`, `bigquery/`, `schemas/`). The TS workspace targets **85%** lines/functions/statements and **80%** branches for those areas; aim for similar coverage when adding or changing behavior.
+There is no enforced coverage gate in CI yet. Match the TypeScript package’s intent: **strong coverage on critical paths** (`core/`, `input/`, `operational/`, `bigquery/`, `schemas/`). The TS workspace targets **85%** lines/functions/statements and **80%** branches for those areas; aim for similar coverage when adding or changing behavior.
 
 Prefer state-based tests on observable JSON output; avoid new mocks unless necessary.
 
@@ -98,8 +98,8 @@ Parsing layers:
 - [`src/bq_inspect/cli/click_cli.py`](src/bq_inspect/cli/click_cli.py) — Click command tree built from the registry.
 - [`src/bq_inspect/cli/help.py`](src/bq_inspect/cli/help.py) — single help pipeline (`--help` / `-h` → registry lookup).
 - [`src/bq_inspect/schemas/validate_input.py`](src/bq_inspect/schemas/validate_input.py) — `jsonschema` validation against the same JSON Schema as `--input-schema`.
-- [`src/bq_inspect/cli/input/map_input.py`](src/bq_inspect/cli/input/map_input.py) — domain mapping (epoch ms, list filters split, impersonation trim).
-- [`src/bq_inspect/cli/input/input_parsers.py`](src/bq_inspect/cli/input/input_parsers.py) — `validate_input` + `map*` per command.
+- [`src/bq_inspect/input/map_input.py`](src/bq_inspect/input/map_input.py) — domain mapping (epoch ms, list filters split, impersonation trim).
+- [`src/bq_inspect/input/input_parsers.py`](src/bq_inspect/input/input_parsers.py) — `validate_input` + `map*` per command.
 - [`src/bq_inspect/commands/`](src/bq_inspect/commands/) — wire parsers to core use cases.
 
 **Agent workflow:** `bq-inspect <command> --input-schema` → build params JSON → `bq-inspect <command> --params @file.json` (or inline JSON). Tests should pass `--params` with `json.dumps({...})` rather than legacy kebab-case flags.
@@ -115,7 +115,7 @@ Published usage strings are built from:
 **Rule:** Any new or changed params field must:
 
 1. Update JSON Schema in [`src/bq_inspect/schemas/input_schema.py`](src/bq_inspect/schemas/input_schema.py) (runtime validation follows automatically).
-2. Update [`src/bq_inspect/cli/input/map_input.py`](src/bq_inspect/cli/input/map_input.py) only if the field needs domain mapping beyond schema shape.
+2. Update [`src/bq_inspect/input/map_input.py`](src/bq_inspect/input/map_input.py) only if the field needs domain mapping beyond schema shape.
 3. Add or extend a `ParamsCommandUsageMeta` row in [`command_registry.py`](src/bq_inspect/cli/command_registry.py) and adjust `ParamsBodyKind` text in [`usage_build.py`](src/bq_inspect/cli/usage_build.py) when the params section changes.
 4. Update [README.md](README.md) if the field is user-facing in examples or narrative.
 
@@ -123,10 +123,12 @@ Keep [README.md](README.md) examples aligned with `--help` output; end users tre
 
 ## Architecture (minimal hexagonal)
 
-Layer flow: **`cli/`** → **`commands/`** → **`core/`** → **`bigquery/`** → **`schemas/`**
+Layer flow: **`cli/`** → **`commands/`** → **`core/`** → **`bigquery/`** → **`schemas/`** (with **`input/`** and **`operational/`** shared by CLI and commands)
 
-- **`cli/`** — CLI package (`cli/__init__.py` exports `main` from `dispatch.py`): Click tree (`click_cli.py`, `command_registry.py`), help (`help.py`), and input mapping (`input/`); operational parsing lives in **`operational/`**.
-- **`commands/`** — Thin CLI adapters grouped by resource (`jobs/`, `datasets/`, `tables/`), plus shared `command_shared.py` and meta `schema.py`: parse operational argv, build the BigQuery client, call application functions.
+- **`cli/`** — Click tree (`click_cli.py`, `command_registry.py`), help (`help.py`), dispatch; imports **`commands/`** for runners only.
+- **`input/`** — JSON Schema validation and domain mapping (no dependency on `cli/`).
+- **`operational/`** — `--params` / schema flags, argv parsing, params file resolution.
+- **`commands/`** — Thin adapters grouped by resource; use **`input/`** and **`operational/`**, call **`core/`**.
 - **`core/`** — Use cases grouped by resource (`jobs`, `datasets`, `tables`) plus pure helpers (`project_job`, `shared`).
 - **`bigquery/`** — Transport layer (`auth/`, `types/`, `port/`, `errors/`, `adapters/google_cloud/`); not split by REST resource.
 - **`schemas/`** — JSON Schema contracts for agents; [`command_schemas.py`](src/bq_inspect/schemas/command_schemas.py) resolves per-command schemas for `--input-schema` / `--output-schema`.
@@ -138,11 +140,9 @@ Layer flow: **`cli/`** → **`commands/`** → **`core/`** → **`bigquery/`** �
 - `bigquery/port` — `BigQueryInspectionClient` port
 - `bigquery/errors` — Google API error → `BqInspectFailure` mapping
 - `bigquery/adapters/google_cloud` — `SdkBigQueryClient`
-- `cli/usage` — `*_USAGE` strings for `--help`
-- `cli/help` — argv → usage mapping for `--help`
-- `cli/argv` — operational flags (`--params`, schemas)
-- `cli/params` — JSON / `@file` resolution
-- `cli/input` — validate + map + parsed types
+- `cli/` — Click app, registry, help resolution
+- `operational/` — operational flags and `--params` resolution
+- `input/` — validate + map + parsed types
 - `commands/` — CLI subcommands (`jobs/`, `datasets/`, `tables/`, plus shared `command_shared.py`, `schema.py`)
 - `core/jobs` — `inspect_jobs` with job views (`summary`, `query`, `performance`, `lineage`, `impact`, `full`) and `jobs list` (+ client-side filters)
 - `core/datasets` — `datasets get`

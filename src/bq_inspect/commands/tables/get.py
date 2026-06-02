@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from bq_inspect.cli.input.input_parsers import parse_tables_get_input
+from bq_inspect.input.input_parsers import parse_tables_get_input
 from bq_inspect.commands.command_shared import (
     InspectionCommandOptions,
     create_run_catalog_command,
@@ -14,7 +14,7 @@ from bq_inspect.core.shared.errors import create_input_failure
 from bq_inspect.core.tables.get import get_table_metadata
 
 if TYPE_CHECKING:
-    from bq_inspect.cli.input.parsed_input_types import ParsedCatalogInput
+    from bq_inspect.input.parsed_input_types import ParsedCatalogInput
 
 
 async def _execute_tables_get(

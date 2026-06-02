@@ -17,6 +17,7 @@ _EXIT_CODES: dict[BqInspectErrorCode, int] = {
     "BQINSPECT_INTERNAL": 1,
 }
 
+# BQINSPECT_JOB_NOT_FOUND: all HTTP 404 responses (jobs and catalog). Use source.api + hint.
 _DEFAULT_RETRIABLE_BY_CODE: dict[BqInspectErrorCode, bool] = {
     "BQINSPECT_INPUT_INVALID": False,
     "BQINSPECT_PERMISSION_DENIED": False,

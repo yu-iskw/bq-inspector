@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from bq_inspect.cli.input.input_parsers import (
+from bq_inspect.input.input_parsers import (
     parse_datasets_get_input,
     parse_jobs_get_input,
     parse_jobs_list_input,

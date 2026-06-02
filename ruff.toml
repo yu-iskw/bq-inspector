@@ -65,7 +65,7 @@ ignore = [
   "PLR2004", # magic values in test assertions
   "S105",    # page_token / next_page_token false positives
 ]
-"src/bq_inspect/cli/input/parsed_input_types.py" = [
+"src/bq_inspect/input/parsed_input_types.py" = [
   "N815", # camelCase keys mirror JSON schema / API params
 ]
 

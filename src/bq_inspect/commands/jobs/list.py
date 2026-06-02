@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from bq_inspect.cli.input.input_parsers import parse_jobs_list_input
+from bq_inspect.input.input_parsers import parse_jobs_list_input
 from bq_inspect.commands.command_shared import (
     InspectionCommandOptions,
     create_run_params_command,
@@ -14,7 +14,7 @@ from bq_inspect.core.jobs.list import ListJobsOrchestrationInput, list_jobs
 from bq_inspect.core.shared.impersonation_fields import select_impersonation_fields
 
 if TYPE_CHECKING:
-    from bq_inspect.cli.input.parsed_input_types import ParsedJobsListInput
+    from bq_inspect.input.parsed_input_types import ParsedJobsListInput
 
 
 async def _execute_jobs_list(

@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 from bq_inspect.core.jobs.project_job import project_job
 from bq_inspect.core.shared.envelope import build_tool_envelope
 from bq_inspect.core.shared.errors import BqInspectFailure, create_bq_inspect_error
-from bq_inspect.core.shared.impersonation_fields import impersonation_request_fields
+from bq_inspect.core.shared.impersonation_fields import merge_impersonation_into
 from bq_inspect.core.shared.job_ref import normalize_job_ref
 
 if TYPE_CHECKING:
@@ -49,12 +49,13 @@ def _build_request_echo(
     request: InspectJobRequest,
     view: JobView,
 ) -> InspectJobResponseRequest:
-    echo: InspectJobResponseRequest = {
-        "jobs": request["jobs"],
-        "view": view,
-    }
-    echo.update(impersonation_request_fields(request))  # type: ignore[arg-type]
-    return echo
+    return merge_impersonation_into(
+        {
+            "jobs": request["jobs"],
+            "view": view,
+        },
+        request,
+    )
 
 
 async def inspect_jobs(
