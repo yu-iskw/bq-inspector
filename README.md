@@ -206,15 +206,15 @@ bq-inspect schema output --format json-schema
 
 Errors are JSON on stderr with a `code` field. Schema validation failures include `schemaErrors` with JSON Pointer paths.
 
-| Code                          | Typical cause                                                                                                                   |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `BQINSPECT_INPUT_INVALID`     | Bad `--params` or flags; schema validation; HTTP 4xx from BigQuery for invalid API params (e.g. bad `state` or `pageToken`), except 401/403/404/429 |
-| `BQINSPECT_PERMISSION_DENIED` | IAM or ADC; on `jobs.get`, often missing `location` or wrong job ref (see [Troubleshooting](#troubleshooting))                  |
-| `BQINSPECT_JOB_NOT_FOUND`     | Any HTTP 404 from BigQuery (job or catalog resource). The code name is historical; always read `source.api` and `hint` to see whether the missing resource is a job (`bigquery.jobs.get`), dataset (`bigquery.datasets.get`), or table (`bigquery.tables.get` / `list`) |
-| `BQINSPECT_LOCATION_REQUIRED` | Reserved; prefer `location` on job refs (see hints on 403)                                                                      |
-| `BQINSPECT_API_RATE_LIMITED`  | HTTP 429; retryable                                                                                                             |
-| `BQINSPECT_API_UNAVAILABLE`   | Transient API / 5xx                                                                                                             |
-| `BQINSPECT_INTERNAL`          | Unexpected CLI failure                                                                                                          |
+| Code                          | Typical cause                                                                                                   |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `BQINSPECT_INPUT_INVALID`     | Bad `--params` or flags; schema validation; HTTP 4xx (except 401/403/404/429).                                  |
+| `BQINSPECT_PERMISSION_DENIED` | IAM or ADC; on `jobs.get`, often missing `location` or wrong job ref (see [Troubleshooting](#troubleshooting)). |
+| `BQINSPECT_JOB_NOT_FOUND`     | HTTP 404 from BigQuery (job or catalog). Read `source.api` and `hint` for the resource type.                    |
+| `BQINSPECT_LOCATION_REQUIRED` | Reserved; prefer `location` on job refs (see hints on 403).                                                     |
+| `BQINSPECT_API_RATE_LIMITED`  | HTTP 429; retryable.                                                                                            |
+| `BQINSPECT_API_UNAVAILABLE`   | Transient API / 5xx.                                                                                            |
+| `BQINSPECT_INTERNAL`          | Unexpected CLI failure.                                                                                         |
 
 ## Troubleshooting
 

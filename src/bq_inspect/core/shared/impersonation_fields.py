@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, TypedDict, TypeVar
 if TYPE_CHECKING:
     from bq_inspect.bigquery.auth.create_auth_client import AuthClientOptions
 
-TRequest = TypeVar("TRequest", bound=dict[str, Any])
+RequestT = TypeVar("RequestT", bound=dict[str, Any])
 
 
 class ImpersonationFields(TypedDict, total=False):
@@ -15,7 +15,7 @@ class ImpersonationFields(TypedDict, total=False):
     impersonateDelegates: list[str]
 
 
-def merge_impersonation_into(request: TRequest, fields: ImpersonationFields) -> TRequest:
+def merge_impersonation_into(request: RequestT, fields: ImpersonationFields) -> RequestT:
     """Merge impersonation echo fields into a request mapping."""
     request.update(impersonation_request_fields(fields))
     return request
