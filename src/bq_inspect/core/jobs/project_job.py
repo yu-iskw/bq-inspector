@@ -49,6 +49,9 @@ QUERY_QUERY_VIEW_KEYS = (
     "totalSlotMs",
 )
 
+# BigQuery JobStatistics2: SQL text lives in statistics.query.query (not statistics.query itself).
+QUERY_STATISTICS_SQL_KEY = "query"
+
 
 def _omit_keys(source: dict[str, Any], keys: tuple[str, ...]) -> dict[str, Any]:
     output = dict(source)
@@ -65,6 +68,11 @@ def _trim_statistics_query(
     if query is None or not isinstance(query, dict):
         return dict(statistics)
     return {**statistics, "query": _omit_keys(query, query_keys_to_omit)}
+
+
+def _omit_query_sql_from_statistics(statistics: dict[str, Any]) -> dict[str, Any]:
+    """Keep statistics.query (plan, timeline, insights); drop only the SQL text field."""
+    return _trim_statistics_query(statistics, (QUERY_STATISTICS_SQL_KEY,))
 
 
 def _pick_defined(record: dict[str, Any], keys: tuple[str, ...]) -> dict[str, Any]:
@@ -142,7 +150,7 @@ def _project_performance(job: dict[str, Any]) -> dict[str, Any]:
     )
     statistics = job.get("statistics")
     if isinstance(statistics, dict):
-        output["statistics"] = _trim_statistics_query(statistics, ("query",))
+        output["statistics"] = _omit_query_sql_from_statistics(statistics)
     return output
 
 

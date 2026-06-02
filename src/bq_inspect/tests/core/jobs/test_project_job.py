@@ -85,6 +85,8 @@ def test_performance_keeps_query_plan_and_omits_configuration_sql() -> None:
                 **fixture_query,
                 "query": "SELECT 1",
                 "queryPlan": [{"name": "stage"}],
+                "timeline": [{"elapsedMs": "1"}],
+                "performanceInsights": [{"insight": "unused_columns"}],
             },
         },
     }
@@ -94,9 +96,26 @@ def test_performance_keeps_query_plan_and_omits_configuration_sql() -> None:
     assert "configuration" not in projected
     statistics = projected["statistics"]
     assert isinstance(statistics, dict)
+    assert "query" in statistics
     query_stats = statistics["query"]
     assert isinstance(query_stats, dict)
     assert query_stats["queryPlan"] == [{"name": "stage"}]
+    assert query_stats["timeline"] == [{"elapsedMs": "1"}]
+    assert query_stats["performanceInsights"] == [{"insight": "unused_columns"}]
+    assert query_stats["totalBytesProcessed"] == "12345"
+    assert "query" not in query_stats
+
+
+def test_performance_keeps_query_statistics_from_lineage_fixture() -> None:
+    projected = project_job(_load_fixture("query-job-with-lineage.json"), "performance")
+    assert isinstance(projected, dict)
+    statistics = projected["statistics"]
+    assert isinstance(statistics, dict)
+    query_stats = statistics["query"]
+    assert isinstance(query_stats, dict)
+    assert query_stats["queryPlan"] == [{"name": "stage-0"}]
+    assert query_stats["timeline"] == [{"elapsedMs": "100"}]
+    assert query_stats["performanceInsights"] == [{"insight": "unused_columns"}]
     assert "query" not in query_stats
 
 
