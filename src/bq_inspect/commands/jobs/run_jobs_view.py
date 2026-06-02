@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
-from bq_inspect.input.input_parsers import parse_jobs_view_input_for_command
 from bq_inspect.commands.command_shared import (
     InspectionCommandOptions,
     ParamsCommandRunner,
@@ -13,10 +12,11 @@ from bq_inspect.commands.command_shared import (
 )
 from bq_inspect.core.jobs.get import InspectJobOptions, inspect_jobs
 from bq_inspect.core.shared.impersonation_fields import merge_impersonation_into
+from bq_inspect.input.input_parsers import parse_jobs_view_input_for_command
 
 if TYPE_CHECKING:
-    from bq_inspect.input.parsed_input_types import ParsedJobsViewInput
     from bq_inspect.core.shared.types import InspectJobRequest, JobView
+    from bq_inspect.input.parsed_input_types import ParsedJobsViewInput
     from bq_inspect.schemas.command_schemas import JobsViewCommandId
 
 
@@ -29,12 +29,15 @@ async def _execute_jobs_view(
     if client is None:
         client = await create_sdk_inspection_client_from_input(input_data)
 
-    request = merge_impersonation_into(
-        {
-            "jobs": input_data["jobs"],
-            "view": view,
-        },
-        input_data,
+    request = cast(
+        "InspectJobRequest",
+        merge_impersonation_into(
+            {
+                "jobs": input_data["jobs"],
+                "view": view,
+            },
+            input_data,
+        ),
     )
 
     return await inspect_jobs(

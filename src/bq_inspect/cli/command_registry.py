@@ -63,7 +63,7 @@ class SchemaCommandSpec:
 
     name: str
     usage: str
-    runner: Callable[[str], Awaitable[Any]]
+    runner: Callable[[str, str], Awaitable[Any]]
 
 
 @dataclass(frozen=True)

@@ -44,7 +44,7 @@ _OPERATIONAL_ARGV_PARSER = _OPERATIONAL_PARSER.make_parser(_OPERATIONAL_PARSER_C
 def parse_operational_argv(argv: list[str]) -> OperationalArgv:
     """Parse command argv for schema discovery or --params run mode."""
     try:
-        opts, args, _order = _OPERATIONAL_ARGV_PARSER.parse_args(list(argv))
+        opts, args, _ = _OPERATIONAL_ARGV_PARSER.parse_args(list(argv))
     except click.MissingParameter as error:
         if error.param is not None and error.param.name == "params":
             raise create_input_failure("expected one argument") from error

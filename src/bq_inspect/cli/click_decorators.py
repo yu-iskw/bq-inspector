@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import click
 
+from bq_inspect.operational.flags import operational_flag_decorators
 from bq_inspect.operational.resolve import resolve_operational_argv
 
 if TYPE_CHECKING:
@@ -22,8 +23,6 @@ def operational_options(command: F) -> F:
     """Attach --params, --input-schema, and --output-schema to a command."""
 
     def _attach_flag_options(wrapped: F) -> F:
-        from bq_inspect.operational.flags import operational_flag_decorators
-
         result = wrapped
         for decorator in reversed(operational_flag_decorators()):
             result = decorator(result)

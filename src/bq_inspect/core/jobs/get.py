@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from bq_inspect.core.jobs.project_job import project_job
 from bq_inspect.core.shared.envelope import build_tool_envelope
@@ -49,12 +49,15 @@ def _build_request_echo(
     request: InspectJobRequest,
     view: JobView,
 ) -> InspectJobResponseRequest:
-    return merge_impersonation_into(
-        {
-            "jobs": request["jobs"],
-            "view": view,
-        },
-        request,
+    return cast(
+        "InspectJobResponseRequest",
+        merge_impersonation_into(
+            {
+                "jobs": request["jobs"],
+                "view": view,
+            },
+            request,
+        ),
     )
 
 

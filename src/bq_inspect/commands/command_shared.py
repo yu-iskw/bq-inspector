@@ -7,12 +7,12 @@ from typing import TYPE_CHECKING, Any
 
 from bq_inspect.bigquery.adapters.google_cloud.sdk_inspection_client import SdkBigQueryClient
 from bq_inspect.bigquery.auth.create_auth_client import create_auth_client
-from bq_inspect.operational.parse_argv import parse_operational_argv
-from bq_inspect.operational.params import resolve_params_value
 from bq_inspect.core.shared.impersonation_fields import (
     ImpersonationFields,
     auth_client_options_from_impersonation,
 )
+from bq_inspect.operational.params import resolve_params_value
+from bq_inspect.operational.parse_argv import parse_operational_argv
 from bq_inspect.schemas.command_schemas import CommandId, get_command_schema
 
 if TYPE_CHECKING:

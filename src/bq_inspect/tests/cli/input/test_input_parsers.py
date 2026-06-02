@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import pytest
 
+from bq_inspect.core.jobs.list_request_fields import parse_iso_timestamp_to_millis
+from bq_inspect.core.shared.errors import BqInspectFailure
 from bq_inspect.input.input_parsers import (
     parse_datasets_get_input,
     parse_jobs_get_input,
@@ -11,8 +13,6 @@ from bq_inspect.input.input_parsers import (
     parse_tables_get_input,
     parse_tables_list_input,
 )
-from bq_inspect.core.jobs.list_request_fields import parse_iso_timestamp_to_millis
-from bq_inspect.core.shared.errors import BqInspectFailure
 
 
 def test_parse_jobs_get_input_parses_jobs_with_optional_location() -> None:

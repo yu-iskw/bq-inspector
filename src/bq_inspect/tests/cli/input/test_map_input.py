@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+from bq_inspect.core.jobs.list_request_fields import parse_iso_timestamp_to_millis
 from bq_inspect.input.map_input import (
     map_catalog_input,
     map_jobs_list_input,
     map_jobs_view_input,
 )
-from bq_inspect.core.jobs.list_request_fields import parse_iso_timestamp_to_millis
 
 
 def test_map_jobs_view_input_normalizes_job_refs() -> None:

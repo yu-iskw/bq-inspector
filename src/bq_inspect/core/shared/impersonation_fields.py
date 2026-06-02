@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeVar, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict, TypeVar
 
 if TYPE_CHECKING:
     from bq_inspect.bigquery.auth.create_auth_client import AuthClientOptions

@@ -4,8 +4,8 @@ from bq_inspect.operational.click_errors import (
     click_exception_to_failure,
     normalize_click_exception_message,
 )
-from bq_inspect.operational.parse_argv import parse_operational_argv
 from bq_inspect.operational.params import resolve_params_value
+from bq_inspect.operational.parse_argv import parse_operational_argv
 from bq_inspect.operational.resolve import resolve_operational_argv
 from bq_inspect.operational.types import (
     InputSchemaArgv,

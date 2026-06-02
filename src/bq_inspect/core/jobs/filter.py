@@ -34,13 +34,17 @@ def _read_big_int_path(input_value: object, path: list[str]) -> int | None:
             return None
         current = current[key]
 
-    if isinstance(current, str):
+    return _coerce_big_int(current)
+
+
+def _coerce_big_int(value: object) -> int | None:
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
         try:
-            return int(current)
+            return int(value)
         except ValueError:
-            return None
-    if isinstance(current, int):
-        return current
+            pass
     return None
 
 

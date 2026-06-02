@@ -22,13 +22,13 @@ from typing import TYPE_CHECKING
 
 import click
 
-from bq_inspect.operational.click_errors import normalize_click_exception_message
 from bq_inspect.cli.click_cli import invoke
 from bq_inspect.core.shared.errors import (
     BqInspectFailure,
     create_bq_inspect_error,
     get_exit_code,
 )
+from bq_inspect.operational.click_errors import normalize_click_exception_message
 
 if TYPE_CHECKING:
     from bq_inspect.core.shared.types import BqInspectError
@@ -55,8 +55,6 @@ def main() -> None:
     """Run the bq-inspect CLI."""
     try:
         invoke()
-    except KeyboardInterrupt:
-        raise
     except Exception as error:
         details = _to_cli_error(error)
         sys.stderr.write(f"{json.dumps(details, indent=2)}\n")

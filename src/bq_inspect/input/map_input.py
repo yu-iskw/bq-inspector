@@ -10,13 +10,13 @@ from bq_inspect.core.shared.job_ref import normalize_job_ref
 from bq_inspect.core.shared.normalize import normalize_delegate_list, normalize_optional_trimmed
 
 if TYPE_CHECKING:
+    from bq_inspect.core.shared.impersonation_fields import ImpersonationFields
+    from bq_inspect.core.shared.types import JobRef
     from bq_inspect.input.parsed_input_types import (
         ParsedCatalogInput,
         ParsedJobsListInput,
         ParsedJobsViewInput,
     )
-    from bq_inspect.core.shared.impersonation_fields import ImpersonationFields
-    from bq_inspect.core.shared.types import JobRef
 
 
 def _parse_impersonation_fields(obj: dict[str, Any]) -> ImpersonationFields:

@@ -205,4 +205,7 @@ def build_list_jobs_response_echo(
         "filters": filters,
     }
     apply_list_request_optionals_to_mapping(cast("dict[str, Any]", request), list_request)
-    return merge_impersonation_into(request, impersonation)
+    return cast(
+        "ListJobsResponseRequest",
+        merge_impersonation_into(cast("dict[str, Any]", request), impersonation),
+    )

@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from bq_inspect.operational import resolve_params_value
 from bq_inspect.core.shared.errors import BqInspectFailure
+from bq_inspect.operational import resolve_params_value
 
 if TYPE_CHECKING:
     from pathlib import Path

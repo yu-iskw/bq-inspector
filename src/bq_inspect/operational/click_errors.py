@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import click
+import click  # noqa: TC002
 
 from bq_inspect.core.shared.errors import BqInspectFailure, create_input_failure
 

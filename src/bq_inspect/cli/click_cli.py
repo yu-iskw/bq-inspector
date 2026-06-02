@@ -19,7 +19,6 @@ from bq_inspect.cli.command_registry import (
     GLOBAL_USAGE,
     GROUP_COMMAND_SPECS,
     SCHEMA_COMMAND_SPECS,
-    SCHEMA_GROUP_USAGE,
     GroupCommandSpec,
     SchemaCommandSpec,
 )
@@ -74,7 +73,7 @@ def _register_params_command(
     ) -> Any:
         return await runner.run_operational(operational, command_options)
 
-    params_command.__name__ = name.replace(" ", "_")
+    params_command.__name__ = name.replace(" ", "_")  # pyright: ignore[reportAttributeAccessIssue]
 
 
 def _build_params_group(spec: GroupCommandSpec) -> click.Group:
@@ -149,7 +148,7 @@ def _register_schema_command(group: click.Group, spec: SchemaCommandSpec) -> Non
     async def schema_command(*, schema_format: str) -> Any:
         return await spec.runner(spec.name, schema_format)
 
-    schema_command.__name__ = f"schema_{spec.name}"
+    schema_command.__name__ = f"schema_{spec.name}"  # pyright: ignore[reportAttributeAccessIssue]
 
 
 cli.add_command(_build_schema_group())
