@@ -83,7 +83,9 @@ JOBS_PERFORMANCE_OUTPUT_SCHEMA = _make_jobs_view_output_schema(
 JOBS_LINEAGE_OUTPUT_SCHEMA = _make_jobs_view_output_schema(
     "lineage", "bq-inspector jobs lineage output"
 )
-JOBS_IMPACT_OUTPUT_SCHEMA = _make_jobs_view_output_schema("impact", "bq-inspector jobs impact output")
+JOBS_IMPACT_OUTPUT_SCHEMA = _make_jobs_view_output_schema(
+    "impact", "bq-inspector jobs impact output"
+)
 
 JOBS_LIST_OUTPUT_SCHEMA: dict[str, Any] = {
     "title": "bq-inspector jobs list output",

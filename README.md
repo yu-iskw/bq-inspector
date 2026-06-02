@@ -206,8 +206,8 @@ bq-inspector schema output --format json-schema
 
 Errors are JSON on stderr with a `code` field. Schema validation failures include `schemaErrors` with JSON Pointer paths.
 
-| Code                          | Typical cause                                                                                                   |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Code                            | Typical cause                                                                                                   |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `BQINSPECTOR_INPUT_INVALID`     | Bad `--params` or flags; schema validation; HTTP 4xx (except 401/403/404/429).                                  |
 | `BQINSPECTOR_PERMISSION_DENIED` | IAM or ADC; on `jobs.get`, often missing `location` or wrong job ref (see [Troubleshooting](#troubleshooting)). |
 | `BQINSPECTOR_JOB_NOT_FOUND`     | HTTP 404 from BigQuery (job or catalog). Read `source.api` and `hint` for the resource type.                    |
