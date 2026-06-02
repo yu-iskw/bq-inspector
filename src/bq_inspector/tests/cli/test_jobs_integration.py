@@ -10,7 +10,11 @@ import pytest
 
 from bq_inspector.commands.command_shared import InspectionCommandOptions
 from bq_inspector.commands.jobs.list import run_jobs_list
-from bq_inspector.commands.jobs.run_jobs_view import run_jobs_summary
+from bq_inspector.commands.jobs.run_jobs_view import (
+    run_jobs_impact,
+    run_jobs_lineage,
+    run_jobs_summary,
+)
 from bq_inspector.core.jobs.get import InspectJobOptions, inspect_jobs
 from bq_inspector.tests.test_support.fixture_job_client import (
     FixtureBigQueryClient,
@@ -24,6 +28,19 @@ _FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
 def _load_fixture(name: str = "successful-query-job.json") -> dict[str, object]:
     with (_FIXTURES / name).open(encoding="utf-8") as handle:
         return json.load(handle)
+
+
+_LINEAGE_JOB_PARAMS = json.dumps(
+    {
+        "jobs": [
+            {
+                "projectId": "analytics-prod",
+                "location": "US",
+                "jobId": "job_lineage_1",
+            }
+        ]
+    }
+)
 
 
 @pytest.mark.asyncio
@@ -83,6 +100,39 @@ async def test_run_jobs_list_with_fixture_client() -> None:
     assert response["request"]["allUsers"] is True
     assert response["page"]["nextPageToken"] == "next"
     assert response["errors"] == []
+
+
+@pytest.mark.asyncio
+async def test_run_jobs_lineage_includes_referenced_tables() -> None:
+    job = _load_fixture("query-job-with-lineage.json")
+    client = FixtureJobClient({"job_lineage_1": job})
+
+    response = await run_jobs_lineage(
+        ["--params", _LINEAGE_JOB_PARAMS],
+        InspectionCommandOptions(client=client, tool_version="0.1.0"),
+    )
+
+    query_stats = response["jobs"][0]["job"]["statistics"]["query"]
+    tables = query_stats["referencedTables"]
+    assert len(tables) == 1
+    assert tables[0]["tableId"] == "users"
+    assert "queryPlan" not in query_stats
+
+
+@pytest.mark.asyncio
+async def test_run_jobs_impact_includes_dml_stats() -> None:
+    job = _load_fixture("query-job-with-lineage.json")
+    client = FixtureJobClient({"job_lineage_1": job})
+
+    response = await run_jobs_impact(
+        ["--params", _LINEAGE_JOB_PARAMS],
+        InspectionCommandOptions(client=client, tool_version="0.1.0"),
+    )
+
+    stats = response["jobs"][0]["job"]["statistics"]
+    assert stats["query"]["dmlStats"] is not None
+    assert stats["mlStatistics"] == {"modelId": "model_1"}
+    assert "referencedTables" not in stats["query"]
 
 
 @pytest.mark.asyncio

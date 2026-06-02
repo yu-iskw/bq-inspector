@@ -1,10 +1,10 @@
-# Python Package Template — project instructions
+# bq-inspector — project instructions
 
 Authoritative shared instructions for humans and coding agents. How each product loads this repo: [Coding agents & instruction files](#coding-agents--instruction-files).
 
 ## Project overview
 
-Python package template. Tooling:
+Read-only BigQuery job and metadata inspection CLI (`src/bq_inspector/`). Tooling:
 
 - **Package manager**: [uv](https://github.com/astral-sh/uv) (via `requirements.setup.txt`, not mise)
 - **CLI toolchain**: [mise](https://mise.jdx.dev/) — Trunk, Trivy, OSV-Scanner, Grype, CodeQL (`mise.toml` [tasks], `mise.lock`, `minimum_release_age = "7d"`)
