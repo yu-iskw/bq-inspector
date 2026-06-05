@@ -20,7 +20,7 @@ from bq_inspector.cli.command_registry import (
     GROUP_COMMAND_SPECS,
     GroupCommandSpec,
 )
-from bq_inspector.cli.flat_jobs import flat_unknown_command_hint, normalize_flat_job_argv
+from bq_inspector.cli.flat_argv import flat_unknown_command_hint, normalize_flat_job_argv
 from bq_inspector.cli.help import resolve_help_text, strip_trailing_help_flags, write_help_text
 from bq_inspector.commands.command_shared import InspectionCommandOptions, ParamsCommandRunner
 from bq_inspector.core.shared.errors import create_input_failure

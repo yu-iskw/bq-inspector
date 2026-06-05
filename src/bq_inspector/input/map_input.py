@@ -6,8 +6,13 @@ from typing import TYPE_CHECKING, Any
 
 from bq_inspector.core.jobs.filter import JobFilters
 from bq_inspector.core.jobs.list_request_fields import list_request_from_validated_params
+from bq_inspector.core.shared.errors import create_input_failure
 from bq_inspector.core.shared.job_ref import normalize_job_ref
 from bq_inspector.core.shared.normalize import normalize_delegate_list, normalize_optional_trimmed
+from bq_inspector.datalineage.defaults import (
+    DEFAULT_LINEAGE_GRAPH_MAX_DEPTH,
+    DEFAULT_LINEAGE_GRAPH_MAX_RESULTS,
+)
 
 if TYPE_CHECKING:
     from bq_inspector.core.shared.impersonation_fields import ImpersonationFields
@@ -109,7 +114,11 @@ def _parse_lineage_direction(raw: object) -> LineageDirection:
     direction = str(raw).strip()
     if direction == "UPSTREAM":
         return "UPSTREAM"
-    return "DOWNSTREAM"
+    if direction == "DOWNSTREAM":
+        return "DOWNSTREAM"
+    raise create_input_failure(
+        'direction must be "UPSTREAM" or "DOWNSTREAM".',
+    )
 
 
 def map_lineage_input(obj: dict[str, Any]) -> ParsedLineageInput:
@@ -144,9 +153,13 @@ def map_lineage_graph_input(obj: dict[str, Any]) -> ParsedLineageGraphInput:
     max_depth = obj.get("maxDepth")
     if isinstance(max_depth, int):
         result["maxDepth"] = max_depth
+    else:
+        result["maxDepth"] = DEFAULT_LINEAGE_GRAPH_MAX_DEPTH
 
     max_results = obj.get("maxResults")
     if isinstance(max_results, int):
         result["maxResults"] = max_results
+    else:
+        result["maxResults"] = DEFAULT_LINEAGE_GRAPH_MAX_RESULTS
 
     return result

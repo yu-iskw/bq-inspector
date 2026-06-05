@@ -7,41 +7,21 @@ Google Cloud SDK adapter for read-only BigQuery inspection.
 
 from __future__ import annotations
 
-import asyncio
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING
 
 from google.cloud import bigquery
 
-from bq_inspector.bigquery.errors.google_api_errors import map_google_error_to_bq_inspector_failure
 from bq_inspector.core.jobs.list_request_fields import list_request_to_sdk_kwargs
 from bq_inspector.core.shared.api_error_hints import ApiErrorHintContext
-from bq_inspector.core.shared.errors import BqInspectFailure
-
-_T = TypeVar("_T")
+from bq_inspector.core.shared.invoke_sync import invoke_sync
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from google.auth.credentials import Credentials
     from google.cloud.bigquery.client import Client
 
     from bq_inspector.bigquery.types.list_jobs import ListJobsPage, ListJobsRequest
     from bq_inspector.bigquery.types.refs import DatasetRef, TableRef
     from bq_inspector.core.shared.types import JobRef
-
-
-async def _invoke_sync(
-    fn: Callable[..., _T],
-    *,
-    api: str,
-    context: ApiErrorHintContext | None = None,
-) -> _T:
-    try:
-        return await asyncio.to_thread(fn)
-    except BqInspectFailure:
-        raise
-    except Exception as error:
-        raise map_google_error_to_bq_inspector_failure(error, api, context) from error
 
 
 def _read_next_page_token(iterator: object) -> str | None:
@@ -79,7 +59,7 @@ class SdkBigQueryClient:
         return client
 
     async def get_job(self, ref: JobRef) -> object:
-        return await _invoke_sync(
+        return await invoke_sync(
             lambda: self._get_job_sync(ref),
             api="bigquery.jobs.get",
             context=ApiErrorHintContext(job_ref=ref),
@@ -100,7 +80,7 @@ class SdkBigQueryClient:
         return _resource_to_api_dict(job)
 
     async def list_jobs(self, request: ListJobsRequest) -> ListJobsPage:
-        return await _invoke_sync(
+        return await invoke_sync(
             lambda: self._list_jobs_sync(request),
             api="bigquery.jobs.list",
         )
@@ -122,7 +102,7 @@ class SdkBigQueryClient:
         return result
 
     async def get_dataset(self, ref: DatasetRef) -> object:
-        return await _invoke_sync(
+        return await invoke_sync(
             lambda: self._get_dataset_sync(ref),
             api="bigquery.datasets.get",
         )
@@ -135,7 +115,7 @@ class SdkBigQueryClient:
         return _resource_to_api_dict(dataset)
 
     async def list_tables(self, ref: DatasetRef) -> list[object]:
-        return await _invoke_sync(
+        return await invoke_sync(
             lambda: self._list_tables_sync(ref),
             api="bigquery.tables.list",
         )
@@ -148,7 +128,7 @@ class SdkBigQueryClient:
         return [_resource_to_api_dict(table) for table in tables]
 
     async def get_table(self, ref: TableRef) -> object:
-        return await _invoke_sync(
+        return await invoke_sync(
             lambda: self._get_table_sync(ref),
             api="bigquery.tables.get",
         )

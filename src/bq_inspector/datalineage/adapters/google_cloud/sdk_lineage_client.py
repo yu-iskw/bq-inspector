@@ -2,23 +2,20 @@
 
 from __future__ import annotations
 
-import asyncio
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING
 
 from google.cloud import datacatalog_lineage_v1
 from google.protobuf.json_format import MessageToDict
 from google.protobuf.message import Message
 
-from bq_inspector.bigquery.errors.google_api_errors import map_google_error_to_bq_inspector_failure
-from bq_inspector.core.shared.errors import BqInspectFailure
-
-_T = TypeVar("_T")
-
-_DEFAULT_MAX_DEPTH = 5
-_DEFAULT_MAX_RESULTS = 1000
+from bq_inspector.core.shared.invoke_sync import invoke_sync
+from bq_inspector.datalineage.defaults import (
+    DEFAULT_LINEAGE_GRAPH_MAX_DEPTH,
+    DEFAULT_LINEAGE_GRAPH_MAX_RESULTS,
+)
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable
+    from collections.abc import Iterable
 
     from google.auth.credentials import Credentials
     from google.cloud.datacatalog_lineage_v1.services.lineage.pagers import SearchLinksPager
@@ -30,19 +27,6 @@ if TYPE_CHECKING:
         SearchLinksPage,
         SearchLinksRequest,
     )
-
-
-async def _invoke_sync(
-    fn: Callable[[], _T],
-    *,
-    api: str,
-) -> _T:
-    try:
-        return await asyncio.to_thread(fn)
-    except BqInspectFailure:
-        raise
-    except Exception as error:
-        raise map_google_error_to_bq_inspector_failure(error, api) from error
 
 
 def _message_to_dict(message: object) -> dict[str, object]:
@@ -93,7 +77,7 @@ class SdkLineageClient:
         def _call() -> SearchLinksPager:
             return self._client.search_links(request=sdk_request)
 
-        pager = await _invoke_sync(_call, api="datalineage.locations.searchLinks")
+        pager = await invoke_sync(_call, api="datalineage.locations.searchLinks")
         page: SearchLinksPage = {"links": _links_to_dicts(pager.links)}
         if pager.next_page_token:
             page["nextPageToken"] = pager.next_page_token
@@ -118,8 +102,8 @@ class SdkLineageClient:
                 )
             ),
             limits=datacatalog_lineage_v1.SearchLineageStreamingRequest.SearchLimits(
-                max_depth=request.get("maxDepth", _DEFAULT_MAX_DEPTH),
-                max_results=request.get("maxResults", _DEFAULT_MAX_RESULTS),
+                max_depth=request.get("maxDepth", DEFAULT_LINEAGE_GRAPH_MAX_DEPTH),
+                max_results=request.get("maxResults", DEFAULT_LINEAGE_GRAPH_MAX_RESULTS),
             ),
         )
 
@@ -131,4 +115,4 @@ class SdkLineageClient:
                 unreachable.extend(list(chunk.unreachable))
             return {"links": merged_links, "unreachable": unreachable}
 
-        return await _invoke_sync(_call, api="datalineage.locations.searchLineageStreaming")
+        return await invoke_sync(_call, api="datalineage.locations.searchLineageStreaming")

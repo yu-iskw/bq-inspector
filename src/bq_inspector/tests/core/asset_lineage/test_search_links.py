@@ -1,11 +1,15 @@
-"""Tests for lineage search use cases."""
+"""Tests for asset-lineage search use cases."""
 
 from __future__ import annotations
 
 import pytest
 
-from bq_inspector.core.lineage.search_graph import search_table_lineage_graph
-from bq_inspector.core.lineage.search_links import search_table_links
+from bq_inspector.core.asset_lineage.search_graph import search_table_lineage_graph
+from bq_inspector.core.asset_lineage.search_links import search_table_links
+from bq_inspector.datalineage.defaults import (
+    DEFAULT_LINEAGE_GRAPH_MAX_DEPTH,
+    DEFAULT_LINEAGE_GRAPH_MAX_RESULTS,
+)
 from bq_inspector.tests.test_support.fixture_lineage_client import (
     FixtureLineageClient,
     FixtureLineageInput,
@@ -88,7 +92,8 @@ async def test_search_table_lineage_graph_merges_stream_chunks() -> None:
             "location": "us",
             "table": _TABLE,
             "direction": "DOWNSTREAM",
-            "maxDepth": 5,
+            "maxDepth": DEFAULT_LINEAGE_GRAPH_MAX_DEPTH,
+            "maxResults": DEFAULT_LINEAGE_GRAPH_MAX_RESULTS,
         },
         client=client,
         tool_version="0.1.0",
@@ -99,3 +104,5 @@ async def test_search_table_lineage_graph_merges_stream_chunks() -> None:
     assert len(response["warnings"]) == 1
     assert response["warnings"][0]["code"] == "LINEAGE_UNREACHABLE"
     assert response["errors"] == []
+    assert response["request"]["maxDepth"] == DEFAULT_LINEAGE_GRAPH_MAX_DEPTH
+    assert response["request"]["maxResults"] == DEFAULT_LINEAGE_GRAPH_MAX_RESULTS

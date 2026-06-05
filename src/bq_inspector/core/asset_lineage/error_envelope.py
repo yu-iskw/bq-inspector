@@ -1,10 +1,15 @@
-"""Lineage response error envelope builder."""
+"""Asset-lineage response error envelope builder."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
 from bq_inspector.core.shared.errors import BqInspectFailure
+from bq_inspector.core.shared.types import (
+    LineageGraphResponse,
+    LineageLinksResponse,
+    LineageRequestEcho,
+)
 
 if TYPE_CHECKING:
     from bq_inspector.core.shared.types import (
@@ -18,11 +23,11 @@ if TYPE_CHECKING:
 def lineage_error_envelope(
     schema_version: BqInspectSchemaVersion,
     tool: ToolBlock,
-    request: dict[str, object],
+    request: LineageRequestEcho,
     error: BaseException,
     *,
     response_kind: Literal["links", "graph"],
-) -> dict[str, object]:
+) -> LineageLinksResponse | LineageGraphResponse:
     """Build a lineage response envelope from a BqInspectFailure."""
     errors: list[BqInspectError] = []
 
@@ -31,19 +36,26 @@ def lineage_error_envelope(
     else:
         raise error
 
-    envelope: dict[str, object] = {
-        "schemaVersion": schema_version,
-        "tool": tool,
-        "request": request,
-        "links": [],
-        "warnings": [],
-        "errors": errors,
-    }
     if response_kind == "graph":
-        envelope["unreachable"] = []
-    else:
-        envelope["page"] = {}
-    return envelope
+        return LineageGraphResponse(
+            schemaVersion=schema_version,
+            tool=tool,
+            request=request,
+            links=[],
+            unreachable=[],
+            warnings=[],
+            errors=errors,
+        )
+
+    return LineageLinksResponse(
+        schemaVersion=schema_version,
+        tool=tool,
+        request=request,
+        links=[],
+        page={},
+        warnings=[],
+        errors=errors,
+    )
 
 
 def unreachable_warnings(unreachable: list[str]) -> list[BqInspectWarning]:

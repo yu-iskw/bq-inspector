@@ -1,8 +1,8 @@
-"""Tests for flat job subcommand policy."""
+"""Tests for flat argv normalization and help policy."""
 
 from __future__ import annotations
 
-from bq_inspector.cli.flat_jobs import flat_help_command_key, normalize_flat_job_argv
+from bq_inspector.cli.flat_argv import flat_help_command_key, normalize_flat_job_argv
 
 
 def test_prepends_jobs_for_job_subcommand() -> None:

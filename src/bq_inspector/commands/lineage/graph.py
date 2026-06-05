@@ -2,31 +2,22 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
-from bq_inspector.commands.command_shared import (
-    InspectionCommandOptions,
-    create_run_params_command,
-    create_sdk_lineage_client_from_input,
+from bq_inspector.commands.lineage._shared import (
+    base_lineage_request,
+    create_asset_lineage_params_command,
 )
-from bq_inspector.core.lineage.search_graph import LineageGraphRequest, search_table_lineage_graph
+from bq_inspector.core.asset_lineage.search_graph import search_table_lineage_graph
 from bq_inspector.input.input_parsers import parse_lineage_graph_input
 
 if TYPE_CHECKING:
+    from bq_inspector.core.asset_lineage.requests import LineageGraphRequest
     from bq_inspector.input.parsed_input_types import ParsedLineageGraphInput
 
 
 def _build_graph_request(input_data: ParsedLineageGraphInput) -> LineageGraphRequest:
-    request: LineageGraphRequest = {
-        "clientProjectId": input_data["clientProjectId"],
-        "location": input_data["location"],
-        "table": {
-            "projectId": input_data["projectId"],
-            "datasetId": input_data["datasetId"],
-            "tableId": input_data["tableId"],
-        },
-        "direction": input_data["direction"],
-    }
+    request: LineageGraphRequest = {**base_lineage_request(input_data)}
     if "maxDepth" in input_data:
         request["maxDepth"] = input_data["maxDepth"]
     if "maxResults" in input_data:
@@ -34,24 +25,10 @@ def _build_graph_request(input_data: ParsedLineageGraphInput) -> LineageGraphReq
     return request
 
 
-async def _execute_lineage_graph(
-    input_data: ParsedLineageGraphInput,
-    command_options: InspectionCommandOptions,
-) -> Any:
-    client = command_options.lineage_client
-    if client is None:
-        client = await create_sdk_lineage_client_from_input(input_data)
-
-    return await search_table_lineage_graph(
-        _build_graph_request(input_data),
-        client=client,
-        tool_version=command_options.tool_version,
-    )
-
-
-lineage_graph_command = create_run_params_command(
+lineage_graph_command = create_asset_lineage_params_command(
     "lineage graph",
     parse_lineage_graph_input,
-    _execute_lineage_graph,
+    _build_graph_request,
+    search_table_lineage_graph,
 )
 run_lineage_graph = lineage_graph_command.run_argv

@@ -150,3 +150,43 @@ class TablesListResponse(TypedDict):
     tables: list[object]
     warnings: list[BqInspectWarning]
     errors: list[BqInspectError]
+
+
+class LineageRequestEcho(TypedDict, total=False):
+    """Echo of asset-lineage command params in API responses."""
+
+    clientProjectId: str
+    location: str
+    projectId: str
+    datasetId: str
+    tableId: str
+    direction: str
+    fullyQualifiedName: str
+    pageSize: int
+    pageToken: str
+    maxDepth: int
+    maxResults: int
+
+
+class LineageLinksPageBlock(TypedDict, total=False):
+    nextPageToken: str
+
+
+class LineageLinksResponse(TypedDict):
+    schemaVersion: BqInspectSchemaVersion
+    tool: ToolBlock
+    request: LineageRequestEcho
+    links: list[object]
+    page: LineageLinksPageBlock
+    warnings: list[BqInspectWarning]
+    errors: list[BqInspectError]
+
+
+class LineageGraphResponse(TypedDict):
+    schemaVersion: BqInspectSchemaVersion
+    tool: ToolBlock
+    request: LineageRequestEcho
+    links: list[object]
+    unreachable: list[str]
+    warnings: list[BqInspectWarning]
+    errors: list[BqInspectError]
