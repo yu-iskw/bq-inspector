@@ -12,7 +12,6 @@ from bq_inspector.core.shared.normalize import normalize_delegate_list, normaliz
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
 
-DATALINEAGE_READONLY_SCOPE = "https://www.googleapis.com/auth/datalineage.readonly"
 CLOUD_PLATFORM_SCOPE = "https://www.googleapis.com/auth/cloud-platform"
 
 
@@ -24,14 +23,19 @@ class LineageAuthClientOptions(TypedDict, total=False):
 async def create_lineage_auth_client(
     options: LineageAuthClientOptions | None = None,
 ) -> Credentials:
-    """Build credentials scoped for read-only Data Lineage API access."""
+    """Build credentials for Data Lineage API access.
+
+    searchLinks accepts only the cloud-platform OAuth scope (see Data Lineage
+    REST docs). searchLineageStreaming also accepts datalineage.readonly, but
+    lineage commands use one client for both APIs.
+    """
     resolved = options or {}
     target_principal = normalize_optional_trimmed(resolved.get("impersonateServiceAccount"))
 
     if target_principal is None:
         credentials, _ = await asyncio.to_thread(
             auth_default,
-            scopes=[DATALINEAGE_READONLY_SCOPE],
+            scopes=[CLOUD_PLATFORM_SCOPE],
         )
         return credentials
 
@@ -45,7 +49,7 @@ async def create_lineage_auth_client(
         return impersonated_credentials.Credentials(
             source_credentials=source_credentials,
             target_principal=target_principal,
-            target_scopes=[DATALINEAGE_READONLY_SCOPE],
+            target_scopes=[CLOUD_PLATFORM_SCOPE],
             delegates=delegates,
         )
 

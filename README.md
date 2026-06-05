@@ -195,7 +195,7 @@ Project-wide `datasets list` is not supported (it would need `datasets.list`, wh
 - **`lineage links`** — asset-centric: immediate neighbors via Data Lineage API (`searchLinks`).
 - **`lineage graph`** — asset-centric: multi-hop graph via Data Lineage API (`searchLineageStreaming`).
 
-Lineage commands use a separate OAuth scope (`datalineage.readonly`) from BigQuery job/catalog commands.
+Lineage commands use the `cloud-platform` OAuth scope (required by `searchLinks`; requested only when those commands run). Access is still constrained by IAM (`roles/datalineage.viewer`).
 
 ## Params reference
 
@@ -291,7 +291,7 @@ Symptom-first checks when JSON looks wrong but the CLI is working:
 The CLI uses the official **BigQuery** client with **Application Default Credentials** from `google-auth`.
 
 - **Default:** credentials are scoped to `https://www.googleapis.com/auth/bigquery.readonly` for BigQuery job and catalog commands.
-- **Lineage commands** (`lineage links`, `lineage graph`) use `https://www.googleapis.com/auth/datalineage.readonly` instead (requested only when those commands run).
+- **Lineage commands** (`lineage links`, `lineage graph`) use `https://www.googleapis.com/auth/cloud-platform` (required by the Data Lineage `searchLinks` API; requested only when those commands run).
 - **Impersonation:** set `impersonateServiceAccount` (and optional `impersonateDelegates`) in `--params`. The source principal must have **Service Account Token Creator** on the target (and on each delegate). While impersonating, access is still requested with `bigquery.readonly` on the **target** identity. The source ADC client uses `https://www.googleapis.com/auth/cloud-platform` only for the token exchange path.
 
 Example params fragment:
