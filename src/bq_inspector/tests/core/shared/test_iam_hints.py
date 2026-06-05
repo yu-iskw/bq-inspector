@@ -16,3 +16,12 @@ def test_returns_metadata_hint_for_datasets_and_tables() -> None:
 
 def test_returns_none_for_unknown_apis() -> None:
     assert iam_hint_for_api("other.api") is None
+
+
+def test_returns_lineage_hint_for_datalineage_apis() -> None:
+    hint = iam_hint_for_api("datalineage.locations.searchLinks")
+    assert hint is not None
+    assert "datalineage.events.get" in hint
+    assert "clientProjectId" in hint
+    assert "billing" in hint.lower()
+    assert iam_hint_for_api("datalineage.locations.searchLineageStreaming") == hint

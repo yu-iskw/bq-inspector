@@ -17,8 +17,11 @@ _IAM_HINT_PREFIXES: tuple[tuple[tuple[str, ...], str], ...] = (
     (
         ("datalineage.",),
         (
-            "Grant roles/datalineage.viewer on clientProjectId and ensure the "
-            "Data Lineage API is enabled in that project."
+            "Grant roles/datalineage.viewer on each project that stores the lineage "
+            "links/events (datalineage.events.get); links live with their Lineage "
+            "Events and may be in a different project than the table. "
+            "clientProjectId is used for billing/quota only—enable the Data Lineage "
+            "API there when it differs from the link-owning project(s)."
         ),
     ),
 )
