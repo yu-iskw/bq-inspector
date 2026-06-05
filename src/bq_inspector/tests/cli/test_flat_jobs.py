@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from bq_inspector.cli.flat_jobs import normalize_flat_job_argv
+from bq_inspector.cli.flat_jobs import flat_help_command_key, normalize_flat_job_argv
 
 
 def test_prepends_jobs_for_job_subcommand() -> None:
@@ -42,3 +42,8 @@ def test_flat_lineage_still_maps_to_jobs_lineage() -> None:
         "lineage",
         "--input-schema",
     ]
+
+
+def test_flat_help_lineage_resolves_to_group_not_jobs_lineage() -> None:
+    assert flat_help_command_key(["lineage"]) is None
+    assert flat_help_command_key(["lineage", "links"]) is None

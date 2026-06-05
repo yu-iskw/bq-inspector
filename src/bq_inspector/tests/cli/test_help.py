@@ -92,6 +92,22 @@ def test_resolve_help_text_jobs_group_usage() -> None:
     assert "Subcommands:" in text
 
 
+def test_resolve_help_text_lineage_group_usage() -> None:
+    text = resolve_help_text(["lineage"], True)
+    lineage_group_usage = command_help_for_key("lineage")
+    assert lineage_group_usage is not None
+    assert text == lineage_group_usage
+    assert "links" in text
+    assert "graph" in text
+
+
+def test_resolve_help_text_jobs_lineage_usage_via_nested_path() -> None:
+    text = resolve_help_text(["jobs", "lineage"], True)
+    jobs_lineage_usage = command_help_for_key("jobs lineage")
+    assert jobs_lineage_usage is not None
+    assert text == jobs_lineage_usage
+
+
 def test_resolve_help_text_unknown_command() -> None:
     text = resolve_help_text(["foo", "bar"], True)
     assert text is not None

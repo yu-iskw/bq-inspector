@@ -33,6 +33,8 @@ def flat_help_command_key(argv: list[str]) -> str | None:
     """Map ['summary'] to 'jobs summary' for help lookup."""
     if _is_lineage_group_argv(argv):
         return None
+    if len(argv) == 1 and argv[0] == "lineage":
+        return None
     if len(argv) == 1 and is_flat_job_command(argv[0]):
         return f"jobs {argv[0]}"
     return None
