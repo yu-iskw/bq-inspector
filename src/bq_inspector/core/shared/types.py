@@ -172,11 +172,19 @@ class LineageLinksPageBlock(TypedDict, total=False):
     nextPageToken: str
 
 
+class LineageLinkDict(TypedDict, total=False):
+    """REST-shaped Data Lineage link entry."""
+
+    source: dict[str, object]
+    target: dict[str, object]
+    depth: int
+
+
 class LineageLinksResponse(TypedDict):
     schemaVersion: BqInspectSchemaVersion
     tool: ToolBlock
     request: LineageRequestEcho
-    links: list[object]
+    links: list[dict[str, object]]
     page: LineageLinksPageBlock
     warnings: list[BqInspectWarning]
     errors: list[BqInspectError]
@@ -186,7 +194,7 @@ class LineageGraphResponse(TypedDict):
     schemaVersion: BqInspectSchemaVersion
     tool: ToolBlock
     request: LineageRequestEcho
-    links: list[object]
+    links: list[dict[str, object]]
     unreachable: list[str]
     warnings: list[BqInspectWarning]
     errors: list[BqInspectError]

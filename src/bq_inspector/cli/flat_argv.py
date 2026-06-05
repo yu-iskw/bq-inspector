@@ -30,7 +30,7 @@ def is_top_level_group_name(name: str) -> bool:
     return name in _TOP_LEVEL_GROUP_NAMES
 
 
-def normalize_flat_job_argv(argv: list[str]) -> list[str]:
+def normalize_flat_argv(argv: list[str]) -> list[str]:
     """Allow `bq-inspector summary` as shorthand for `bq-inspector jobs summary`."""
     if not argv or not is_flat_job_command(argv[0]):
         return argv
