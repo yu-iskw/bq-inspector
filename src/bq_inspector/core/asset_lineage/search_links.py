@@ -60,7 +60,7 @@ async def search_table_links(
             schemaVersion=schema_version,
             tool=tool,
             request=request_echo,
-            links=cast(list[object], page["links"]),
+            links=cast("list[object]", page["links"]),
             page=page_block,
             warnings=[],
             errors=[],

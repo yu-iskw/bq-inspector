@@ -62,7 +62,7 @@ async def search_table_lineage_graph(
             schemaVersion=schema_version,
             tool=tool,
             request=request_echo,
-            links=cast(list[object], result["links"]),
+            links=cast("list[object]", result["links"]),
             unreachable=unreachable,
             warnings=unreachable_warnings(unreachable),
             errors=[],
