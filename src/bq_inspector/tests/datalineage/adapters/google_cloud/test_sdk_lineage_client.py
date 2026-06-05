@@ -134,14 +134,17 @@ async def test_search_lineage_graph_uses_default_limits(
 ) -> None:
     lineage_client_mock_fx.search_lineage_streaming.return_value = []
 
-    with patch(
-        "bq_inspector.datalineage.adapters.google_cloud.sdk_lineage_client."
-        "datacatalog_lineage_v1.SearchLineageStreamingRequest",
-        return_value=MagicMock(),
-    ), patch(
-        "bq_inspector.datalineage.adapters.google_cloud.sdk_lineage_client."
-        "datacatalog_lineage_v1.SearchLineageStreamingRequest.SearchLimits",
-    ) as limits_cls:
+    with (
+        patch(
+            "bq_inspector.datalineage.adapters.google_cloud.sdk_lineage_client."
+            "datacatalog_lineage_v1.SearchLineageStreamingRequest",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "bq_inspector.datalineage.adapters.google_cloud.sdk_lineage_client."
+            "datacatalog_lineage_v1.SearchLineageStreamingRequest.SearchLimits",
+        ) as limits_cls,
+    ):
         await sdk_lineage_client_fx.search_lineage_graph(
             {
                 "parent": "projects/p/locations/us",
