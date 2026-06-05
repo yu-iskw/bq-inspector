@@ -52,6 +52,7 @@ dependencies = [
   "google-auth",
   "jsonschema",
   "typing_extensions",
+  "google-cloud-datacatalog-lineage>=0.7.0",
 ]
 
 [project.scripts]

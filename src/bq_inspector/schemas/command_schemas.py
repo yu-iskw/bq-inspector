@@ -13,6 +13,8 @@ from bq_inspector.schemas.input_schema import (
     JOBS_PERFORMANCE_INPUT_SCHEMA,
     JOBS_QUERY_INPUT_SCHEMA,
     JOBS_SUMMARY_INPUT_SCHEMA,
+    LINEAGE_GRAPH_INPUT_SCHEMA,
+    LINEAGE_LINKS_INPUT_SCHEMA,
     TABLES_GET_INPUT_SCHEMA,
     TABLES_LIST_INPUT_SCHEMA,
 )
@@ -25,6 +27,8 @@ from bq_inspector.schemas.output_schema import (
     JOBS_PERFORMANCE_OUTPUT_SCHEMA,
     JOBS_QUERY_OUTPUT_SCHEMA,
     JOBS_SUMMARY_OUTPUT_SCHEMA,
+    LINEAGE_GRAPH_OUTPUT_SCHEMA,
+    LINEAGE_LINKS_OUTPUT_SCHEMA,
     TABLES_LIST_OUTPUT_SCHEMA,
 )
 
@@ -37,6 +41,8 @@ CommandId = Literal[
     "jobs performance",
     "jobs query",
     "jobs summary",
+    "lineage graph",
+    "lineage links",
     "tables get",
     "tables list",
 ]
@@ -73,6 +79,10 @@ _COMMAND_SCHEMAS: dict[str, Any] = {
     "tables list:output": TABLES_LIST_OUTPUT_SCHEMA,
     "tables get:input": TABLES_GET_INPUT_SCHEMA,
     "tables get:output": CATALOG_RESOURCE_OUTPUT_SCHEMA,
+    "lineage links:input": LINEAGE_LINKS_INPUT_SCHEMA,
+    "lineage links:output": LINEAGE_LINKS_OUTPUT_SCHEMA,
+    "lineage graph:input": LINEAGE_GRAPH_INPUT_SCHEMA,
+    "lineage graph:output": LINEAGE_GRAPH_OUTPUT_SCHEMA,
 }
 
 

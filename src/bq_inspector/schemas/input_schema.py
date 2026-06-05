@@ -198,3 +198,63 @@ TABLES_GET_INPUT_SCHEMA: dict[str, Any] = {
         },
     },
 }
+
+_LINEAGE_BASE_PROPERTIES: dict[str, Any] = {
+    "clientProjectId": {
+        "type": "string",
+        "minLength": 1,
+        "description": (
+            "Project used as the Data Lineage API parent for billing and quota. "
+            "Defaults to projectId when omitted."
+        ),
+    },
+    "location": {
+        "type": "string",
+        "minLength": 1,
+        "description": (
+            "Data Lineage API location (for example us, eu, or global). "
+            "This is not the BigQuery dataset location."
+        ),
+    },
+    "projectId": {"type": "string", "minLength": 1},
+    "datasetId": {"type": "string", "minLength": 1},
+    "tableId": {"type": "string", "minLength": 1},
+    "direction": {
+        "type": "string",
+        "enum": ["UPSTREAM", "DOWNSTREAM"],
+        "description": (
+            "UPSTREAM finds immediate sources; DOWNSTREAM finds immediate destinations."
+        ),
+    },
+    "impersonateServiceAccount": {"type": "string", "minLength": 1},
+    "impersonateDelegates": {
+        "type": "array",
+        "items": {"type": "string", "minLength": 1},
+    },
+}
+
+LINEAGE_LINKS_INPUT_SCHEMA: dict[str, Any] = {
+    "$schema": JSON_SCHEMA_DRAFT_2020_12,
+    "title": "bq-inspector lineage links input",
+    "type": "object",
+    "required": ["location", "projectId", "datasetId", "tableId", "direction"],
+    "additionalProperties": False,
+    "properties": {
+        **_LINEAGE_BASE_PROPERTIES,
+        "pageSize": {"type": "integer", "minimum": 1, "maximum": 100},
+        "pageToken": {"type": "string", "minLength": 1},
+    },
+}
+
+LINEAGE_GRAPH_INPUT_SCHEMA: dict[str, Any] = {
+    "$schema": JSON_SCHEMA_DRAFT_2020_12,
+    "title": "bq-inspector lineage graph input",
+    "type": "object",
+    "required": ["location", "projectId", "datasetId", "tableId", "direction"],
+    "additionalProperties": False,
+    "properties": {
+        **_LINEAGE_BASE_PROPERTIES,
+        "maxDepth": {"type": "integer", "minimum": 1, "maximum": 100},
+        "maxResults": {"type": "integer", "minimum": 1, "maximum": 10000},
+    },
+}

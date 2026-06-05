@@ -175,3 +175,92 @@ TABLES_LIST_OUTPUT_SCHEMA: dict[str, Any] = {
         "errors": {"type": "array"},
     },
 }
+
+_LINEAGE_REQUEST_PROPERTIES: dict[str, Any] = {
+    "clientProjectId": {"type": "string", "minLength": 1},
+    "location": {"type": "string", "minLength": 1},
+    "projectId": {"type": "string", "minLength": 1},
+    "datasetId": {"type": "string", "minLength": 1},
+    "tableId": {"type": "string", "minLength": 1},
+    "direction": {"type": "string", "enum": ["UPSTREAM", "DOWNSTREAM"]},
+    "fullyQualifiedName": {"type": "string", "minLength": 1},
+}
+
+LINEAGE_LINKS_OUTPUT_SCHEMA: dict[str, Any] = {
+    "title": "bq-inspector lineage links output",
+    "type": "object",
+    "required": ["schemaVersion", "tool", "request", "links", "page", "warnings", "errors"],
+    "additionalProperties": False,
+    "properties": {
+        "schemaVersion": SCHEMA_VERSION_FIELD,
+        "tool": TOOL_BLOCK,
+        "request": {
+            "type": "object",
+            "required": [
+                "clientProjectId",
+                "location",
+                "projectId",
+                "datasetId",
+                "tableId",
+                "direction",
+                "fullyQualifiedName",
+            ],
+            "additionalProperties": True,
+            "properties": _LINEAGE_REQUEST_PROPERTIES,
+        },
+        "links": {"type": "array"},
+        "page": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "nextPageToken": {"type": "string"},
+            },
+        },
+        "warnings": {"type": "array"},
+        "errors": {"type": "array"},
+    },
+}
+
+LINEAGE_GRAPH_OUTPUT_SCHEMA: dict[str, Any] = {
+    "title": "bq-inspector lineage graph output",
+    "type": "object",
+    "required": [
+        "schemaVersion",
+        "tool",
+        "request",
+        "links",
+        "unreachable",
+        "warnings",
+        "errors",
+    ],
+    "additionalProperties": False,
+    "properties": {
+        "schemaVersion": SCHEMA_VERSION_FIELD,
+        "tool": TOOL_BLOCK,
+        "request": {
+            "type": "object",
+            "required": [
+                "clientProjectId",
+                "location",
+                "projectId",
+                "datasetId",
+                "tableId",
+                "direction",
+                "fullyQualifiedName",
+            ],
+            "additionalProperties": True,
+            "properties": {
+                **_LINEAGE_REQUEST_PROPERTIES,
+                "maxDepth": {"type": "integer"},
+                "maxResults": {"type": "integer"},
+            },
+        },
+        "links": {"type": "array"},
+        "unreachable": {
+            "type": "array",
+            "items": {"type": "string"},
+        },
+        "warnings": {"type": "array"},
+        "errors": {"type": "array"},
+    },
+}

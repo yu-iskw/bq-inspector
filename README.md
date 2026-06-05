@@ -58,6 +58,8 @@ Unknown commands print global usage plus `Unknown command: <argv>`.
 
 **Pipeline:** `jobs list` → `jobs summary` | `jobs query` | `jobs performance` | `jobs lineage` | `jobs impact` | `jobs get`
 
+**Catalog / asset lineage:** `tables get` → `lineage links` → `lineage graph` (Data Lineage API; see [Lineage commands](#lineage-commands))
+
 **Command forms:** Nested `jobs summary` and flat `summary` are equivalent for job views and `jobs list` → `list`.
 
 **Job id formats:** Pass `jobId` alone, or a Console-style composite id in `jobId`:
@@ -78,6 +80,15 @@ Unknown commands print global usage plus `Unknown command: <argv>`.
 | Tables, routines, datasets touched               | `jobs lineage`     |
 | DML/load/ML/search/export side-effect stats      | `jobs impact`      |
 | Full BigQuery Job resource                       | `jobs get`         |
+
+**Asset lineage (table-centric, multi-hop via Data Lineage API):**
+
+| Goal                                          | Command         |
+| --------------------------------------------- | --------------- |
+| Immediate upstream/downstream table neighbors | `lineage links` |
+| Multi-hop lineage graph                       | `lineage graph` |
+
+`jobs lineage` reports what a **single job** touched. `lineage links` / `lineage graph` query platform-wide table relationships (requires Data Lineage API enabled in GCP).
 
 Each view command calls `jobs.get` once per job and projects the response in memory. **`jobs get` returns the full [Job](https://cloud.google.com/bigquery/docs/reference/rest/v2/Job) resource** from the API; other commands slice it for smaller, task-focused JSON. Field names match [Job statistics](https://cloud.google.com/bigquery/docs/reference/rest/v2/Job#JobStatistics); many nested blocks (for example `statistics.mlStatistics`) appear only for matching job kinds.
 
@@ -147,22 +158,44 @@ bq-inspector tables list --params '{"projectId":"YOUR_PROJECT","datasetId":"YOUR
 bq-inspector tables get --params '{"projectId":"YOUR_PROJECT","datasetId":"YOUR_DATASET","tableId":"YOUR_TABLE"}'
 ```
 
+### Asset lineage (`lineage links`, `lineage graph`)
+
+Requires the [Data Lineage API](https://cloud.google.com/dataplex/docs/reference/data-lineage/rest) enabled and `roles/datalineage.viewer` on `clientProjectId` (defaults to `projectId` when omitted). The `location` param is the **Lineage API location** (`us`, `eu`, `global`, …), not the BigQuery dataset location.
+
+```bash
+# Immediate upstream sources (1 hop)
+bq-inspector lineage links --params '{"location":"us","projectId":"YOUR_PROJECT","datasetId":"YOUR_DATASET","tableId":"YOUR_TABLE","direction":"UPSTREAM"}'
+
+# Multi-hop downstream graph (default maxDepth 5)
+bq-inspector lineage graph --params '{"location":"us","projectId":"YOUR_PROJECT","datasetId":"YOUR_DATASET","tableId":"YOUR_TABLE","direction":"DOWNSTREAM","maxDepth":10}'
+```
+
 ## Commands overview
 
-| Command            | What it returns (from help)                          | BigQuery APIs (typical) | Suggested predefined role                                      |
-| ------------------ | ---------------------------------------------------- | ----------------------- | -------------------------------------------------------------- |
-| `jobs summary`     | Job status, timing, bytes/slots (default inspection) | `jobs.get`              | `roles/bigquery.resourceViewer`                                |
-| `jobs query`       | SQL, configuration, light lineage stats              | `jobs.get`              | `roles/bigquery.resourceViewer`                                |
-| `jobs performance` | Query plan, timeline, performanceInsights            | `jobs.get`              | `roles/bigquery.resourceViewer`                                |
-| `jobs lineage`     | Referenced tables, routines, datasets, destinations  | `jobs.get`              | `roles/bigquery.resourceViewer`                                |
-| `jobs impact`      | DML/load/ML/search/export/spark side-effect stats    | `jobs.get`              | `roles/bigquery.resourceViewer`                                |
-| `jobs get`         | Full BigQuery Job JSON                               | `jobs.get`              | `roles/bigquery.resourceViewer`                                |
-| `jobs list`        | List jobs (optional client-side filters in params)   | `jobs.list`             | `roles/bigquery.resourceViewer`                                |
-| `datasets get`     | Dataset metadata                                     | `datasets.get`          | `roles/bigquery.metadataViewer` (often granted on the dataset) |
-| `tables list`      | List tables in a dataset                             | `tables.list`           | `roles/bigquery.metadataViewer`                                |
-| `tables get`       | Table metadata                                       | `tables.get`            | `roles/bigquery.metadataViewer`                                |
+| Command            | What it returns (from help)                          | BigQuery APIs (typical)  | Suggested predefined role                                      |
+| ------------------ | ---------------------------------------------------- | ------------------------ | -------------------------------------------------------------- |
+| `jobs summary`     | Job status, timing, bytes/slots (default inspection) | `jobs.get`               | `roles/bigquery.resourceViewer`                                |
+| `jobs query`       | SQL, configuration, light lineage stats              | `jobs.get`               | `roles/bigquery.resourceViewer`                                |
+| `jobs performance` | Query plan, timeline, performanceInsights            | `jobs.get`               | `roles/bigquery.resourceViewer`                                |
+| `jobs lineage`     | Referenced tables, routines, datasets, destinations  | `jobs.get`               | `roles/bigquery.resourceViewer`                                |
+| `jobs impact`      | DML/load/ML/search/export/spark side-effect stats    | `jobs.get`               | `roles/bigquery.resourceViewer`                                |
+| `jobs get`         | Full BigQuery Job JSON                               | `jobs.get`               | `roles/bigquery.resourceViewer`                                |
+| `jobs list`        | List jobs (optional client-side filters in params)   | `jobs.list`              | `roles/bigquery.resourceViewer`                                |
+| `datasets get`     | Dataset metadata                                     | `datasets.get`           | `roles/bigquery.metadataViewer` (often granted on the dataset) |
+| `tables list`      | List tables in a dataset                             | `tables.list`            | `roles/bigquery.metadataViewer`                                |
+| `tables get`       | Table metadata                                       | `tables.get`             | `roles/bigquery.metadataViewer`                                |
+| `lineage links`    | Immediate upstream/downstream table links            | `searchLinks`            | `roles/datalineage.viewer` on `clientProjectId`                |
+| `lineage graph`    | Multi-hop table lineage graph                        | `searchLineageStreaming` | `roles/datalineage.viewer` on `clientProjectId`                |
 
 Project-wide `datasets list` is not supported (it would need `datasets.list`, which is outside the usual metadata-only posture).
+
+## Lineage commands
+
+- **`jobs lineage`** — job-local: tables/routines/datasets referenced by one BigQuery job (`jobs.get` projection).
+- **`lineage links`** — asset-centric: immediate neighbors via Data Lineage API (`searchLinks`).
+- **`lineage graph`** — asset-centric: multi-hop graph via Data Lineage API (`searchLineageStreaming`).
+
+Lineage commands use a separate OAuth scope (`datalineage.readonly`) from BigQuery job/catalog commands.
 
 ## Params reference
 
@@ -186,6 +219,15 @@ Summaries from per-command `--help`; full types and constraints: `bq-inspector <
 - `projectId`, `datasetId` (`tableId` required for `tables get`)
 - `tables list` returns all tables in the dataset (the SDK auto-paginates `tables.list`). Unlike `jobs list`, there is no `pageToken` on this command.
 
+**Lineage** (`lineage links`, `lineage graph`):
+
+- `location` (required) — Data Lineage API location (`us`, `eu`, `global`, …)
+- `projectId`, `datasetId`, `tableId` (required) — table to search from
+- `direction` (required) — `UPSTREAM` or `DOWNSTREAM`
+- `clientProjectId` (optional) — API billing/quota project; defaults to `projectId`
+- `lineage links` only: `pageSize`, `pageToken`
+- `lineage graph` only: `maxDepth` (default 5), `maxResults` (default 1000)
+
 ## JSON Schema discovery
 
 - **Discovery:** `--input-schema` or `--output-schema` (use one at a time; prints JSON Schema on stdout and exits without calling BigQuery).
@@ -199,6 +241,8 @@ bq-inspector jobs summary --output-schema
 bq-inspector jobs get --input-schema
 bq-inspector jobs list --input-schema
 bq-inspector datasets get --output-schema
+bq-inspector lineage links --input-schema
+bq-inspector lineage graph --output-schema
 ```
 
 ## Error codes
@@ -246,7 +290,8 @@ Symptom-first checks when JSON looks wrong but the CLI is working:
 
 The CLI uses the official **BigQuery** client with **Application Default Credentials** from `google-auth`.
 
-- **Default:** credentials are scoped to `https://www.googleapis.com/auth/bigquery.readonly`.
+- **Default:** credentials are scoped to `https://www.googleapis.com/auth/bigquery.readonly` for BigQuery job and catalog commands.
+- **Lineage commands** (`lineage links`, `lineage graph`) use `https://www.googleapis.com/auth/datalineage.readonly` instead (requested only when those commands run).
 - **Impersonation:** set `impersonateServiceAccount` (and optional `impersonateDelegates`) in `--params`. The source principal must have **Service Account Token Creator** on the target (and on each delegate). While impersonating, access is still requested with `bigquery.readonly` on the **target** identity. The source ADC client uses `https://www.googleapis.com/auth/cloud-platform` only for the token exchange path.
 
 Example params fragment:
@@ -266,6 +311,7 @@ Prefer narrow read access:
 
 - **Job commands / `jobs list`:** `roles/bigquery.resourceViewer` (or a custom role with `bigquery.jobs.get` / `bigquery.jobs.list`) on the **identity that calls BigQuery** (the impersonated service account when using impersonation).
 - **`datasets get` / `tables list` / `tables get`:** `roles/bigquery.metadataViewer` on the dataset or project (or a custom metadata-only role with `datasets.get`, `tables.list`, `tables.get`).
+- **`lineage links` / `lineage graph`:** `roles/datalineage.viewer` on `clientProjectId`; enable the Data Lineage API in that project.
 - Grant the calling principal `roles/iam.serviceAccountTokenCreator` on the target service account (and delegates, if any) when using impersonation.
 - Avoid `roles/bigquery.dataViewer` and `roles/bigquery.jobUser` for inspection-only workflows.
 

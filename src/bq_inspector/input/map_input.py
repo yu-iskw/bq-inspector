@@ -12,10 +12,13 @@ from bq_inspector.core.shared.normalize import normalize_delegate_list, normaliz
 if TYPE_CHECKING:
     from bq_inspector.core.shared.impersonation_fields import ImpersonationFields
     from bq_inspector.core.shared.types import JobRef
+    from bq_inspector.datalineage.types.requests import LineageDirection
     from bq_inspector.input.parsed_input_types import (
         ParsedCatalogInput,
         ParsedJobsListInput,
         ParsedJobsViewInput,
+        ParsedLineageGraphInput,
+        ParsedLineageInput,
     )
 
 
@@ -89,5 +92,61 @@ def map_catalog_input(obj: dict[str, Any]) -> ParsedCatalogInput:
     table_id = obj.get("tableId")
     if isinstance(table_id, str):
         result["tableId"] = table_id.strip()
+
+    return result
+
+
+def _resolve_client_project_id(obj: dict[str, Any]) -> str:
+    raw_client_project_id = obj.get("clientProjectId")
+    if isinstance(raw_client_project_id, str):
+        client_project_id = normalize_optional_trimmed(raw_client_project_id)
+        if client_project_id is not None:
+            return client_project_id
+    return str(obj["projectId"]).strip()
+
+
+def _parse_lineage_direction(raw: object) -> LineageDirection:
+    direction = str(raw).strip()
+    if direction == "UPSTREAM":
+        return "UPSTREAM"
+    return "DOWNSTREAM"
+
+
+def map_lineage_input(obj: dict[str, Any]) -> ParsedLineageInput:
+    """Map lineage command params to domain input."""
+    result: ParsedLineageInput = {
+        "clientProjectId": _resolve_client_project_id(obj),
+        "location": str(obj["location"]).strip(),
+        "projectId": str(obj["projectId"]).strip(),
+        "datasetId": str(obj["datasetId"]).strip(),
+        "tableId": str(obj["tableId"]).strip(),
+        "direction": _parse_lineage_direction(obj["direction"]),
+        **(_parse_impersonation_fields(obj)),
+    }
+
+    page_size = obj.get("pageSize")
+    if isinstance(page_size, int):
+        result["pageSize"] = page_size
+
+    page_token = obj.get("pageToken")
+    if isinstance(page_token, str):
+        trimmed = page_token.strip()
+        if len(trimmed) > 0:
+            result["pageToken"] = trimmed
+
+    return result
+
+
+def map_lineage_graph_input(obj: dict[str, Any]) -> ParsedLineageGraphInput:
+    """Map lineage graph command params to domain input."""
+    result: ParsedLineageGraphInput = {**map_lineage_input(obj)}
+
+    max_depth = obj.get("maxDepth")
+    if isinstance(max_depth, int):
+        result["maxDepth"] = max_depth
+
+    max_results = obj.get("maxResults")
+    if isinstance(max_results, int):
+        result["maxResults"] = max_results
 
     return result

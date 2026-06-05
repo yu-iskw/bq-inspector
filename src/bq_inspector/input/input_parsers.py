@@ -8,6 +8,8 @@ from bq_inspector.input.map_input import (
     map_catalog_input,
     map_jobs_list_input,
     map_jobs_view_input,
+    map_lineage_graph_input,
+    map_lineage_input,
 )
 from bq_inspector.schemas.command_schemas import CommandId, JobsViewCommandId
 from bq_inspector.schemas.validate_input import validate_input
@@ -17,6 +19,8 @@ if TYPE_CHECKING:
         ParsedCatalogInput,
         ParsedJobsListInput,
         ParsedJobsViewInput,
+        ParsedLineageGraphInput,
+        ParsedLineageInput,
     )
 
 CatalogCommandId = CommandId
@@ -61,3 +65,13 @@ def parse_tables_list_input(raw: Any) -> ParsedCatalogInput:
 def parse_tables_get_input(raw: Any) -> ParsedCatalogInput:
     """Parse tables get params."""
     return _parse_catalog_input("tables get", raw)
+
+
+def parse_lineage_links_input(raw: Any) -> ParsedLineageInput:
+    """Parse lineage links params."""
+    return map_lineage_input(validate_input("lineage links", raw))
+
+
+def parse_lineage_graph_input(raw: Any) -> ParsedLineageGraphInput:
+    """Parse lineage graph params."""
+    return map_lineage_graph_input(validate_input("lineage graph", raw))

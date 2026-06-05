@@ -11,6 +11,8 @@ from bq_inspector.core.shared.impersonation_fields import (
     ImpersonationFields,
     auth_client_options_from_impersonation,
 )
+from bq_inspector.datalineage.adapters.google_cloud.sdk_lineage_client import SdkLineageClient
+from bq_inspector.datalineage.auth.create_lineage_auth_client import create_lineage_auth_client
 from bq_inspector.operational.params import resolve_params_value
 from bq_inspector.operational.parse_argv import parse_operational_argv
 from bq_inspector.schemas.command_schemas import CommandId, get_command_schema
@@ -19,6 +21,7 @@ if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
     from bq_inspector.bigquery.port.inspection_client import BigQueryInspectionClient
+    from bq_inspector.datalineage.port.lineage_client import LineageInspectionClient
     from bq_inspector.operational.types import OperationalArgv
 
 
@@ -29,9 +32,11 @@ class InspectionCommandOptions:
         self,
         *,
         client: BigQueryInspectionClient | None = None,
+        lineage_client: LineageInspectionClient | None = None,
         tool_version: str,
     ) -> None:
         self.client = client
+        self.lineage_client = lineage_client
         self.tool_version = tool_version
 
 
@@ -49,6 +54,16 @@ async def create_sdk_inspection_client_from_input(
     """Create an SDK-backed inspection client from impersonation params."""
     auth_client = await create_auth_client(auth_client_options_from_impersonation(input_data))
     return SdkBigQueryClient(auth_client)
+
+
+async def create_sdk_lineage_client_from_input(
+    input_data: ImpersonationFields,
+) -> SdkLineageClient:
+    """Create an SDK-backed Data Lineage client from impersonation params."""
+    auth_client = await create_lineage_auth_client(
+        auth_client_options_from_impersonation(input_data)
+    )
+    return SdkLineageClient(auth_client)
 
 
 async def run_from_operational_argv(

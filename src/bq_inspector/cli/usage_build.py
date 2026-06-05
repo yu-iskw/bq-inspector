@@ -16,6 +16,7 @@ class ParamsBodyKind(Enum):
     DATASETS_GET = "datasets_get"
     TABLES_LIST = "tables_list"
     TABLES_GET = "tables_get"
+    LINEAGE = "lineage"
 
 
 @dataclass(frozen=True)
@@ -70,6 +71,16 @@ Params (see --input-schema):
   projectId, datasetId, tableId
   impersonateServiceAccount, impersonateDelegates
 """.strip(),
+    ParamsBodyKind.LINEAGE: """
+Params (see --input-schema):
+  location             Required Data Lineage API location (us, eu, global, ...)
+  projectId, datasetId, tableId
+  direction            UPSTREAM or DOWNSTREAM
+  clientProjectId      Optional API billing project (defaults to projectId)
+  lineage links only: pageSize, pageToken
+  lineage graph only: maxDepth, maxResults
+  impersonateServiceAccount, impersonateDelegates
+""".strip(),
 }
 
 
@@ -87,12 +98,15 @@ Commands (each supports --input-schema / --output-schema for JSON Schema on stdo
   datasets get     Dataset metadata
   tables list      List tables in a dataset
   tables get       Table metadata
+  lineage links    Immediate upstream/downstream table lineage (1 hop)
+  lineage graph    Multi-hop table lineage graph
 
 Global:
   bq-inspector --help | -h
   bq-inspector <command> --help
 
 Agent workflow: jobs list → jobs summary | jobs query | jobs performance | jobs lineage | jobs impact | jobs get
+  Catalog/lineage: tables get → lineage links → lineage graph
   (job subcommands also work without the jobs prefix, e.g. bq-inspector summary)
 
 Errors are JSON on stderr; success is JSON on stdout (except plain-text --help).
@@ -155,4 +169,18 @@ Subcommands:
   get          Table metadata
 
 Run bq-inspector tables <subcommand> --help for params and examples.
+""".strip()
+
+
+def build_lineage_group_usage() -> str:
+    """Usage for the lineage command group."""
+    return """
+Usage:
+  bq-inspector lineage <subcommand> --params '<json>' | --params @file.json [options]
+
+Subcommands:
+  links        Immediate upstream/downstream links for a table
+  graph        Multi-hop lineage graph for a table
+
+Run bq-inspector lineage <subcommand> --help for params and examples.
 """.strip()

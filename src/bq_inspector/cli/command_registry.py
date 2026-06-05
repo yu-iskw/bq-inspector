@@ -11,6 +11,7 @@ from bq_inspector.cli.usage_build import (
     build_datasets_group_usage,
     build_global_usage,
     build_jobs_group_usage,
+    build_lineage_group_usage,
     build_params_command_usage,
     build_tables_group_usage,
 )
@@ -24,6 +25,8 @@ from bq_inspector.commands.jobs.run_jobs_view import (
     jobs_query_command,
     jobs_summary_command,
 )
+from bq_inspector.commands.lineage.graph import lineage_graph_command
+from bq_inspector.commands.lineage.links import lineage_links_command
 from bq_inspector.commands.tables.get import tables_get_command
 from bq_inspector.commands.tables.list import tables_list_command
 
@@ -62,6 +65,13 @@ class ParamsCommandRegistration:
 def command_path_key(path: tuple[str, ...]) -> str:
     """Return the argv key for a command path."""
     return " ".join(path)
+
+
+_LINEAGE_TABLE_EXAMPLE = (
+    '"location":"us","projectId":"my-proj","datasetId":"analytics","tableId":"events"'
+)
+_LINEAGE_LINKS_EXAMPLE = "{" + _LINEAGE_TABLE_EXAMPLE + ',"direction":"UPSTREAM"}'
+_LINEAGE_GRAPH_EXAMPLE = "{" + _LINEAGE_TABLE_EXAMPLE + ',"direction":"DOWNSTREAM"}'
 
 
 _PARAMS_COMMAND_REGISTRATIONS: tuple[ParamsCommandRegistration, ...] = (
@@ -155,6 +165,24 @@ _PARAMS_COMMAND_REGISTRATIONS: tuple[ParamsCommandRegistration, ...] = (
         ),
         tables_get_command,
     ),
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("lineage", "links"),
+            ParamsBodyKind.LINEAGE,
+            _LINEAGE_LINKS_EXAMPLE,
+            "./lineage-links.json",
+        ),
+        lineage_links_command,
+    ),
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("lineage", "graph"),
+            ParamsBodyKind.LINEAGE,
+            _LINEAGE_GRAPH_EXAMPLE,
+            "./lineage-graph.json",
+        ),
+        lineage_graph_command,
+    ),
 )
 
 PARAMS_COMMAND_SPECS: tuple[ParamsCommandSpec, ...] = tuple(
@@ -181,6 +209,11 @@ GROUP_COMMAND_SPECS: tuple[GroupCommandSpec, ...] = (
         "tables",
         build_tables_group_usage(),
         tuple(spec for spec in PARAMS_COMMAND_SPECS if spec.path[0] == "tables"),
+    ),
+    GroupCommandSpec(
+        "lineage",
+        build_lineage_group_usage(),
+        tuple(spec for spec in PARAMS_COMMAND_SPECS if spec.path[0] == "lineage"),
     ),
 )
 
