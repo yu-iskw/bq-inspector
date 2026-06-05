@@ -157,7 +157,7 @@ Some tools load mirrored skills under `.agents/skills/` instead of `.claude/`. O
 
 ## Learned User Preferences
 
-- Prefer minimal, focused fixes over broad refactors when addressing CLI or adapter issues.
+- Prefer minimal, focused fixes over broad refactors; do not over-implement beyond stated scope when adding CLI or adapter features.
 - Do not commit local `uv.lock` or `mise.lock` churn from setup when unrelated to the task.
 - Exclude unrelated untracked paths (e.g. `.cursor/hooks/`) from commits unless explicitly requested.
 
@@ -170,4 +170,8 @@ Some tools load mirrored skills under `.agents/skills/` instead of `.claude/`. O
 - The legacy `bq-inspector schema` subcommand was removed; use per-command `--input-schema` and `--output-schema`.
 - BigQuery composite job IDs (`projectId:location.jobId`) may be passed in the `jobId` field; `normalize_job_ref` in `core/shared/job_ref.py` splits them.
 - SDK adapter uses `_resource_to_api_dict()` (`._properties` with `to_api_repr` fallback) for jobs, datasets, and tables so responses include full REST fields.
-- For lineage/impact verification, use a job that references tables; `SELECT 1`-style jobs legitimately have empty lineage/impact fields.
+- For job-local lineage/impact verification, use a job that references tables; `SELECT 1`-style jobs legitimately have empty lineage/impact fields.
+- `jobs lineage` is job-local (`jobs.get` projection); `lineage links` and `lineage graph` use the Data Lineage API via `datalineage/` (`google-cloud-datacatalog-lineage`).
+- Data Lineage BigQuery table FQNs use Dataplex dot-delimited format `bigquery:{projectId}.{datasetId}.{tableId}` (not REST path-style).
+- Lineage commands request `cloud-platform` OAuth scope (required by `searchLinks`); IAM still requires `roles/datalineage.viewer` on `clientProjectId`.
+- `clientProjectId` defaults to `projectId` for lineage commands when omitted; bare `lineage --help` shows the lineage group while bare `lineage` with `--params`/`--input-schema` still flat-aliases to `jobs lineage`.
