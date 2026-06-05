@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, overload
 
 from bq_inspector.core.shared.errors import BqInspectFailure
 from bq_inspector.core.shared.types import (
@@ -18,6 +18,28 @@ if TYPE_CHECKING:
         BqInspectWarning,
         ToolBlock,
     )
+
+
+@overload
+def lineage_error_envelope(
+    schema_version: BqInspectSchemaVersion,
+    tool: ToolBlock,
+    request: LineageRequestEcho,
+    error: BaseException,
+    *,
+    response_kind: Literal["links"],
+) -> LineageLinksResponse: ...
+
+
+@overload
+def lineage_error_envelope(
+    schema_version: BqInspectSchemaVersion,
+    tool: ToolBlock,
+    request: LineageRequestEcho,
+    error: BaseException,
+    *,
+    response_kind: Literal["graph"],
+) -> LineageGraphResponse: ...
 
 
 def lineage_error_envelope(

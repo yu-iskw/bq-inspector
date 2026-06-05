@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from bq_inspector.core.asset_lineage.error_envelope import (
     lineage_error_envelope,
@@ -62,7 +62,7 @@ async def search_table_lineage_graph(
             schemaVersion=schema_version,
             tool=tool,
             request=request_echo,
-            links=result["links"],
+            links=cast(list[object], result["links"]),
             unreachable=unreachable,
             warnings=unreachable_warnings(unreachable),
             errors=[],

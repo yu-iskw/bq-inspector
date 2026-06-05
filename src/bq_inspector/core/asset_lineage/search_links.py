@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from bq_inspector.core.asset_lineage.error_envelope import lineage_error_envelope
 from bq_inspector.core.asset_lineage.fqn import lineage_parent, table_ref_to_fqn
@@ -60,7 +60,7 @@ async def search_table_links(
             schemaVersion=schema_version,
             tool=tool,
             request=request_echo,
-            links=page["links"],
+            links=cast(list[object], page["links"]),
             page=page_block,
             warnings=[],
             errors=[],

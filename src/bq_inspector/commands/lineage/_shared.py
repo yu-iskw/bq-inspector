@@ -15,15 +15,16 @@ from bq_inspector.core.asset_lineage.requests import (
     TableLineageRequest,
 )
 from bq_inspector.core.shared.types import LineageGraphResponse, LineageLinksResponse
+from bq_inspector.input.parsed_input_types import ParsedLineageInput
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
     from bq_inspector.bigquery.types.refs import TableRef
     from bq_inspector.commands.command_shared import ParamsCommandRunner
-    from bq_inspector.input.parsed_input_types import ParsedLineageGraphInput, ParsedLineageInput
     from bq_inspector.schemas.command_schemas import CommandId
 
+_InputT = TypeVar("_InputT", bound=ParsedLineageInput)
 _RequestT = TypeVar("_RequestT", LineageLinksRequest, LineageGraphRequest)
 _ResponseT = TypeVar("_ResponseT", LineageLinksResponse, LineageGraphResponse)
 
@@ -48,10 +49,10 @@ def base_lineage_request(input_data: ParsedLineageInput) -> TableLineageRequest:
 
 
 async def run_asset_lineage_command(
-    input_data: ParsedLineageInput,
+    input_data: _InputT,
     command_options: InspectionCommandOptions,
     *,
-    build_request: Callable[[ParsedLineageInput], _RequestT],
+    build_request: Callable[[_InputT], _RequestT],
     search_fn: Callable[..., Awaitable[_ResponseT]],
 ) -> _ResponseT:
     """Resolve a lineage client and run a table-lineage use case."""
@@ -68,14 +69,14 @@ async def run_asset_lineage_command(
 
 def create_asset_lineage_params_command(
     command_id: CommandId,
-    parse_fn: Callable[[object], ParsedLineageInput | ParsedLineageGraphInput],
-    build_request: Callable[[ParsedLineageInput], _RequestT],
+    parse_fn: Callable[[object], _InputT],
+    build_request: Callable[[_InputT], _RequestT],
     search_fn: Callable[..., Awaitable[_ResponseT]],
 ) -> ParamsCommandRunner:
     """Build a params command runner for asset-lineage search use cases."""
 
     async def execute(
-        input_data: ParsedLineageInput,
+        input_data: _InputT,
         command_options: InspectionCommandOptions,
     ) -> _ResponseT:
         return await run_asset_lineage_command(
