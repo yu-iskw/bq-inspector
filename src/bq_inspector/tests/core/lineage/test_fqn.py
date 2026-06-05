@@ -13,7 +13,7 @@ def test_table_ref_to_fqn() -> None:
             "tableId": "events",
         }
     )
-    assert fqn == "bigquery:projects/data-proj/datasets/analytics/tables/events"
+    assert fqn == "bigquery:data-proj.analytics.events"
 
 
 def test_lineage_parent() -> None:

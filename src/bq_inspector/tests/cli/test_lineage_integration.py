@@ -14,7 +14,7 @@ from bq_inspector.tests.test_support.fixture_lineage_client import (
     FixtureLineageInput,
 )
 
-_FQN = "bigquery:projects/data-proj/datasets/analytics/tables/events"
+_FQN = "bigquery:data-proj.analytics.events"
 
 
 @pytest.mark.asyncio
@@ -30,11 +30,7 @@ async def test_run_lineage_links_with_fixture_client() -> None:
             links_by_fqn_direction={
                 (_FQN, "UPSTREAM"): [
                     {
-                        "source": {
-                            "fullyQualifiedName": (
-                                "bigquery:projects/data-proj/datasets/raw/tables/events"
-                            )
-                        },
+                        "source": {"fullyQualifiedName": "bigquery:data-proj.raw.events"},
                         "target": {"fullyQualifiedName": _FQN},
                     }
                 ]

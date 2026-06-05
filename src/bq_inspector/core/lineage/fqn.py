@@ -10,9 +10,7 @@ if TYPE_CHECKING:
 
 def table_ref_to_fqn(ref: TableRef) -> str:
     """Return the BigQuery table FQN used by the Data Lineage API."""
-    return (
-        f"bigquery:projects/{ref['projectId']}/datasets/{ref['datasetId']}/tables/{ref['tableId']}"
-    )
+    return f"bigquery:{ref['projectId']}.{ref['datasetId']}.{ref['tableId']}"
 
 
 def lineage_parent(client_project_id: str, location: str) -> str:

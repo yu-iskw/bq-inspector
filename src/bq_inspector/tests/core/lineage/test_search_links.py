@@ -16,7 +16,7 @@ _TABLE = {
     "datasetId": "analytics",
     "tableId": "events",
 }
-_FQN = "bigquery:projects/data-proj/datasets/analytics/tables/events"
+_FQN = "bigquery:data-proj.analytics.events"
 
 
 @pytest.mark.asyncio
@@ -26,11 +26,7 @@ async def test_search_table_links_upstream() -> None:
             links_by_fqn_direction={
                 (_FQN, "UPSTREAM"): [
                     {
-                        "source": {
-                            "fullyQualifiedName": (
-                                "bigquery:projects/data-proj/datasets/raw/tables/events"
-                            )
-                        },
+                        "source": {"fullyQualifiedName": "bigquery:data-proj.raw.events"},
                         "target": {"fullyQualifiedName": _FQN},
                     }
                 ]
@@ -65,11 +61,7 @@ async def test_search_table_lineage_graph_merges_stream_chunks() -> None:
                         "links": [
                             {
                                 "source": {"fullyQualifiedName": _FQN},
-                                "target": {
-                                    "fullyQualifiedName": (
-                                        "bigquery:projects/data-proj/datasets/marts/tables/events"
-                                    )
-                                },
+                                "target": {"fullyQualifiedName": "bigquery:data-proj.marts.events"},
                                 "depth": 1,
                             }
                         ],
@@ -78,16 +70,8 @@ async def test_search_table_lineage_graph_merges_stream_chunks() -> None:
                     {
                         "links": [
                             {
-                                "source": {
-                                    "fullyQualifiedName": (
-                                        "bigquery:projects/data-proj/datasets/marts/tables/events"
-                                    )
-                                },
-                                "target": {
-                                    "fullyQualifiedName": (
-                                        "bigquery:projects/data-proj/datasets/marts/tables/report"
-                                    )
-                                },
+                                "source": {"fullyQualifiedName": "bigquery:data-proj.marts.events"},
+                                "target": {"fullyQualifiedName": "bigquery:data-proj.marts.report"},
                                 "depth": 2,
                             }
                         ],
