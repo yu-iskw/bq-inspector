@@ -85,7 +85,12 @@ def _apply_entry_view_fields(
         sdk_request.paths.extend(paths)  # type: ignore[attr-defined]
 
 
-def _apply_list_pagination(sdk_request: object, request: ListByParentRequest) -> None:
+def _apply_list_pagination(
+    sdk_request: object,
+    request: ListByParentRequest,
+    *,
+    supports_order_by: bool,
+) -> None:
     page_size = request.get("pageSize")
     if page_size is not None:
         sdk_request.page_size = page_size  # type: ignore[attr-defined]
@@ -98,9 +103,10 @@ def _apply_list_pagination(sdk_request: object, request: ListByParentRequest) ->
     if filter_value is not None:
         sdk_request.filter = filter_value  # type: ignore[attr-defined]
 
-    order_by = request.get("orderBy")
-    if order_by is not None:
-        sdk_request.order_by = order_by  # type: ignore[attr-defined]
+    if supports_order_by:
+        order_by = request.get("orderBy")
+        if order_by is not None:
+            sdk_request.order_by = order_by  # type: ignore[attr-defined]
 
 
 def _list_page_from_pager(
@@ -165,7 +171,7 @@ class SdkCatalogClient:
     ) -> ListResourcesPage:
         request_cls = getattr(dataplex_v1, spec.request_type_name)
         sdk_request = request_cls(parent=request["parent"])
-        _apply_list_pagination(sdk_request, request)
+        _apply_list_pagination(sdk_request, request, supports_order_by=spec.supports_order_by)
 
         service = self.service_for_kind(spec.service)
         method = getattr(service, spec.sdk_method)

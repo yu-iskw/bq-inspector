@@ -286,7 +286,7 @@ bq-inspector catalog glossaries list --params '{"parent":"projects/YOUR_PROJECT/
 - **BigQuery-backed search results:** also requires `roles/bigquery.metadataViewer` on relevant datasets/projects
 - **Impersonation:** `roles/iam.serviceAccountTokenCreator` on the target service account
 
-Catalog commands use OAuth scope `https://www.googleapis.com/auth/dataplex.readonly`.
+Catalog commands use OAuth scope `https://www.googleapis.com/auth/cloud-platform` (required by Dataplex Universal Catalog REST methods such as `lookupEntry` and `searchEntries`).
 
 **Empty search results** are successful (not an error). They may indicate no matches, narrow scope, missing source-system metadata visibility, or VPC Service Controls boundaries.
 
@@ -339,7 +339,7 @@ The CLI uses the official **BigQuery** client with **Application Default Credent
 
 - **Default:** credentials are scoped to `https://www.googleapis.com/auth/bigquery.readonly` for BigQuery job and catalog commands.
 - **Lineage commands** (`lineage links`, `lineage graph`) use `https://www.googleapis.com/auth/cloud-platform` (required by the Data Lineage `searchLinks` API; requested only when those commands run).
-- **Knowledge Catalog commands** (`catalog …`) use `https://www.googleapis.com/auth/dataplex.readonly`.
+- **Knowledge Catalog commands** (`catalog …`) use `https://www.googleapis.com/auth/cloud-platform` (required by Dataplex Universal Catalog REST APIs).
 - **Impersonation:** set `impersonateServiceAccount` (and optional `impersonateDelegates`) in `--params`. The source principal must have **Service Account Token Creator** on the target (and on each delegate). While impersonating, access is still requested with `bigquery.readonly` on the **target** identity. The source ADC client uses `https://www.googleapis.com/auth/cloud-platform` only for the token exchange path.
 
 Example params fragment:

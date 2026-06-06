@@ -12,6 +12,7 @@ from bq_inspector.knowledge_catalog.resource_specs import (
     knowledge_catalog_command_id,
     knowledge_catalog_export_name,
 )
+from bq_inspector.schemas.command_schemas import get_command_schema
 from bq_inspector.schemas.knowledge_catalog_schemas import build_knowledge_catalog_command_schemas
 
 
@@ -86,6 +87,23 @@ def test_catalog_inspection_client_exposes_generic_resource_methods() -> None:
         "get_named_resource",
         "list_parent_resources",
     }
+
+
+def test_entries_list_spec_disables_order_by() -> None:
+    entries_spec = next(
+        spec for spec in KNOWLEDGE_CATALOG_LIST_RESOURCES if spec.subgroup == "entries"
+    )
+    assert entries_spec.supports_order_by is False
+    assert all(
+        spec.supports_order_by
+        for spec in KNOWLEDGE_CATALOG_LIST_RESOURCES
+        if spec.subgroup != "entries"
+    )
+
+
+def test_entries_list_input_schema_omits_order_by() -> None:
+    schema = get_command_schema("catalog entries list", "input")
+    assert "orderBy" not in schema["properties"]
 
 
 def test_command_ids_align_with_derived_schemas() -> None:

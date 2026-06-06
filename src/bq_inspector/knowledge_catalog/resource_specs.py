@@ -35,6 +35,7 @@ class KnowledgeCatalogListResourceSpec:
     sdk_method: str
     api: str
     items_attr: str
+    supports_order_by: bool = True
 
 
 CATALOG_GET_EXAMPLE = '{"name":"projects/analytics-prod/locations/us/entryTypes/example-type"}'
@@ -127,6 +128,7 @@ KNOWLEDGE_CATALOG_LIST_RESOURCES: tuple[KnowledgeCatalogListResourceSpec, ...] =
         "list_entries",
         "dataplex.projects.locations.entryGroups.entries.list",
         "entries",
+        supports_order_by=False,
     ),
     KnowledgeCatalogListResourceSpec(
         "entry-groups",

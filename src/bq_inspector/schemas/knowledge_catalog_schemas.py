@@ -46,12 +46,25 @@ def make_knowledge_catalog_get_input_schema(
     }
 
 
-def make_knowledge_catalog_list_input_schema(subgroup: str) -> dict[str, Any]:
+def make_knowledge_catalog_list_input_schema(
+    subgroup: str,
+    *,
+    supports_order_by: bool = True,
+) -> dict[str, Any]:
     """Build a list-by-parent Knowledge Catalog input schema."""
-    return {
+    schema = {
         **CATALOG_LIST_BY_PARENT_INPUT_SCHEMA,
         "title": f"bq-inspector catalog {subgroup} list input",
     }
+    if supports_order_by:
+        return schema
+
+    properties = {
+        key: value
+        for key, value in schema["properties"].items()
+        if key != "orderBy"
+    }
+    return {**schema, "properties": properties}
 
 
 def build_knowledge_catalog_command_schemas() -> dict[str, Any]:
@@ -68,7 +81,10 @@ def build_knowledge_catalog_command_schemas() -> dict[str, Any]:
         )
     for spec in KNOWLEDGE_CATALOG_LIST_RESOURCES:
         command_id = f"catalog {spec.subgroup} list"
-        schemas[f"{command_id}:input"] = make_knowledge_catalog_list_input_schema(spec.subgroup)
+        schemas[f"{command_id}:input"] = make_knowledge_catalog_list_input_schema(
+            spec.subgroup,
+            supports_order_by=spec.supports_order_by,
+        )
         schemas[f"{command_id}:output"] = make_catalog_list_output_schema(
             f"bq-inspector catalog {spec.subgroup} list output",
             spec.collection_key,

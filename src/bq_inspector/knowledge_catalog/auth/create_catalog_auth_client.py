@@ -12,7 +12,7 @@ from bq_inspector.core.shared.normalize import normalize_delegate_list, normaliz
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
 
-DATAPLEX_READONLY_SCOPE = "https://www.googleapis.com/auth/dataplex.readonly"
+CLOUD_PLATFORM_SCOPE = "https://www.googleapis.com/auth/cloud-platform"
 
 
 class CatalogAuthClientOptions(TypedDict, total=False):
@@ -23,20 +23,25 @@ class CatalogAuthClientOptions(TypedDict, total=False):
 async def create_catalog_auth_client(
     options: CatalogAuthClientOptions | None = None,
 ) -> Credentials:
-    """Build credentials for Knowledge Catalog (Dataplex) API access."""
+    """Build credentials for Knowledge Catalog (Dataplex) API access.
+
+    Universal Catalog REST methods such as lookupEntry, searchEntries, and
+    entryGroups.list require the cloud-platform OAuth scope (see Dataplex REST
+    docs). Impersonation uses the same scope on source and target credentials.
+    """
     resolved = options or {}
     target_principal = normalize_optional_trimmed(resolved.get("impersonateServiceAccount"))
 
     if target_principal is None:
         credentials, _ = await asyncio.to_thread(
             auth_default,
-            scopes=[DATAPLEX_READONLY_SCOPE],
+            scopes=[CLOUD_PLATFORM_SCOPE],
         )
         return credentials
 
     source_credentials, _ = await asyncio.to_thread(
         auth_default,
-        scopes=[DATAPLEX_READONLY_SCOPE],
+        scopes=[CLOUD_PLATFORM_SCOPE],
     )
     delegates = normalize_delegate_list(resolved.get("impersonateDelegates"))
 
@@ -44,7 +49,7 @@ async def create_catalog_auth_client(
         return impersonated_credentials.Credentials(
             source_credentials=source_credentials,
             target_principal=target_principal,
-            target_scopes=[DATAPLEX_READONLY_SCOPE],
+            target_scopes=[CLOUD_PLATFORM_SCOPE],
             delegates=delegates,
         )
 
