@@ -20,13 +20,13 @@ def _unique_values(values: tuple[str, ...]) -> set[str]:
     return set(values)
 
 
-def test_get_resource_client_methods_are_unique() -> None:
-    methods = tuple(spec.client_method for spec in KNOWLEDGE_CATALOG_GET_RESOURCES)
+def test_get_dispatch_sdk_methods_are_unique() -> None:
+    methods = tuple(spec.dispatch.sdk_method for spec in KNOWLEDGE_CATALOG_GET_RESOURCES)
     assert len(methods) == len(_unique_values(methods))
 
 
-def test_list_resource_client_methods_are_unique() -> None:
-    methods = tuple(spec.client_method for spec in KNOWLEDGE_CATALOG_LIST_RESOURCES)
+def test_list_dispatch_sdk_methods_are_unique() -> None:
+    methods = tuple(spec.dispatch.sdk_method for spec in KNOWLEDGE_CATALOG_LIST_RESOURCES)
     assert len(methods) == len(_unique_values(methods))
 
 
@@ -38,13 +38,6 @@ def test_get_resource_subgroups_are_unique() -> None:
 def test_list_resource_subgroups_are_unique() -> None:
     subgroups = tuple(spec.subgroup for spec in KNOWLEDGE_CATALOG_LIST_RESOURCES)
     assert len(subgroups) == len(_unique_values(subgroups))
-
-
-def test_client_method_matches_sdk_method() -> None:
-    for spec in KNOWLEDGE_CATALOG_GET_RESOURCES:
-        assert spec.client_method == spec.sdk_method
-    for spec in KNOWLEDGE_CATALOG_LIST_RESOURCES:
-        assert spec.client_method == spec.sdk_method
 
 
 def test_list_subgroups_are_subset_of_get_subgroups() -> None:

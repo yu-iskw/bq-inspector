@@ -11,13 +11,10 @@ from bq_inspector.core.knowledge_catalog.request_build import (
 from bq_inspector.core.knowledge_catalog.search_runner import run_catalog_use_case
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from bq_inspector.core.shared.types import BqInspectSchemaVersion, ToolBlock
     from bq_inspector.input.parsed_input_types import ParsedKnowledgeCatalogListInput
     from bq_inspector.knowledge_catalog.port.catalog_client import CatalogInspectionClient
-    from bq_inspector.knowledge_catalog.types.requests import ListByParentRequest
-    from bq_inspector.knowledge_catalog.types.responses import ListResourcesPage
+    from bq_inspector.knowledge_catalog.resource_specs import KnowledgeCatalogListDispatch
 
 
 async def list_catalog_resources(
@@ -26,7 +23,7 @@ async def list_catalog_resources(
     client: CatalogInspectionClient,
     tool_version: str,
     collection_key: str,
-    fetch: Callable[[CatalogInspectionClient, ListByParentRequest], Any],
+    dispatch: KnowledgeCatalogListDispatch,
 ) -> dict[str, Any]:
     """List Knowledge Catalog resources and return a stable JSON envelope."""
     request_echo = build_list_request_echo(params)
@@ -36,7 +33,7 @@ async def list_catalog_resources(
         schema_version: BqInspectSchemaVersion,
         tool: ToolBlock,
     ) -> dict[str, Any]:
-        page: ListResourcesPage = await fetch(client, sdk_request)
+        page = await client.list_parent_resources(sdk_request, dispatch=dispatch)
         next_page_token = page.get("nextPageToken")
         return {
             "schemaVersion": schema_version,

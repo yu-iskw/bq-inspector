@@ -9,12 +9,9 @@ CatalogServiceKind = Literal["catalog", "glossary"]
 
 
 @dataclass(frozen=True)
-class KnowledgeCatalogGetResourceSpec:
-    """Get-by-name Knowledge Catalog CLI command and SDK metadata."""
+class KnowledgeCatalogGetDispatch:
+    """SDK dispatch metadata for get-by-name catalog resources."""
 
-    subgroup: str
-    client_method: str
-    example_file: str
     request_type_name: str
     service: CatalogServiceKind
     sdk_method: str
@@ -23,13 +20,9 @@ class KnowledgeCatalogGetResourceSpec:
 
 
 @dataclass(frozen=True)
-class KnowledgeCatalogListResourceSpec:
-    """List-by-parent Knowledge Catalog CLI command and SDK metadata."""
+class KnowledgeCatalogListDispatch:
+    """SDK dispatch metadata for list-by-parent catalog resources."""
 
-    subgroup: str
-    collection_key: str
-    client_method: str
-    example_file: str
     request_type_name: str
     service: CatalogServiceKind
     sdk_method: str
@@ -38,163 +31,205 @@ class KnowledgeCatalogListResourceSpec:
     supports_order_by: bool = True
 
 
+@dataclass(frozen=True)
+class KnowledgeCatalogGetCommandSpec:
+    """CLI registration metadata for a catalog get command."""
+
+    subgroup: str
+    example_file: str
+    dispatch: KnowledgeCatalogGetDispatch
+
+    @property
+    def apply_entry_view(self) -> bool:
+        return self.dispatch.apply_entry_view
+
+
+@dataclass(frozen=True)
+class KnowledgeCatalogListCommandSpec:
+    """CLI registration metadata for a catalog list command."""
+
+    subgroup: str
+    collection_key: str
+    example_file: str
+    dispatch: KnowledgeCatalogListDispatch
+
+    @property
+    def supports_order_by(self) -> bool:
+        return self.dispatch.supports_order_by
+
+
 CATALOG_GET_EXAMPLE = '{"name":"projects/analytics-prod/locations/us/entryTypes/example-type"}'
 CATALOG_LIST_EXAMPLE = '{"parent":"projects/analytics-prod/locations/us","pageSize":100}'
 
-KNOWLEDGE_CATALOG_GET_RESOURCES: tuple[KnowledgeCatalogGetResourceSpec, ...] = (
-    KnowledgeCatalogGetResourceSpec(
+KNOWLEDGE_CATALOG_GET_RESOURCES: tuple[KnowledgeCatalogGetCommandSpec, ...] = (
+    KnowledgeCatalogGetCommandSpec(
         "entries",
-        "get_entry",
         "./catalog-entries-get.json",
-        "GetEntryRequest",
-        "catalog",
-        "get_entry",
-        "dataplex.projects.locations.entryGroups.entries.get",
-        apply_entry_view=True,
+        KnowledgeCatalogGetDispatch(
+            "GetEntryRequest",
+            "catalog",
+            "get_entry",
+            "dataplex.projects.locations.entryGroups.entries.get",
+            apply_entry_view=True,
+        ),
     ),
-    KnowledgeCatalogGetResourceSpec(
+    KnowledgeCatalogGetCommandSpec(
         "entry-groups",
-        "get_entry_group",
         "./catalog-entry-groups-get.json",
-        "GetEntryGroupRequest",
-        "catalog",
-        "get_entry_group",
-        "dataplex.projects.locations.entryGroups.get",
+        KnowledgeCatalogGetDispatch(
+            "GetEntryGroupRequest",
+            "catalog",
+            "get_entry_group",
+            "dataplex.projects.locations.entryGroups.get",
+        ),
     ),
-    KnowledgeCatalogGetResourceSpec(
+    KnowledgeCatalogGetCommandSpec(
         "entry-types",
-        "get_entry_type",
         "./catalog-entry-types-get.json",
-        "GetEntryTypeRequest",
-        "catalog",
-        "get_entry_type",
-        "dataplex.projects.locations.entryTypes.get",
+        KnowledgeCatalogGetDispatch(
+            "GetEntryTypeRequest",
+            "catalog",
+            "get_entry_type",
+            "dataplex.projects.locations.entryTypes.get",
+        ),
     ),
-    KnowledgeCatalogGetResourceSpec(
+    KnowledgeCatalogGetCommandSpec(
         "aspect-types",
-        "get_aspect_type",
         "./catalog-aspect-types-get.json",
-        "GetAspectTypeRequest",
-        "catalog",
-        "get_aspect_type",
-        "dataplex.projects.locations.aspectTypes.get",
+        KnowledgeCatalogGetDispatch(
+            "GetAspectTypeRequest",
+            "catalog",
+            "get_aspect_type",
+            "dataplex.projects.locations.aspectTypes.get",
+        ),
     ),
-    KnowledgeCatalogGetResourceSpec(
+    KnowledgeCatalogGetCommandSpec(
         "entry-links",
-        "get_entry_link",
         "./catalog-entry-links-get.json",
-        "GetEntryLinkRequest",
-        "catalog",
-        "get_entry_link",
-        "dataplex.projects.locations.entryGroups.entryLinks.get",
+        KnowledgeCatalogGetDispatch(
+            "GetEntryLinkRequest",
+            "catalog",
+            "get_entry_link",
+            "dataplex.projects.locations.entryGroups.entryLinks.get",
+        ),
     ),
-    KnowledgeCatalogGetResourceSpec(
+    KnowledgeCatalogGetCommandSpec(
         "glossaries",
-        "get_glossary",
         "./catalog-glossaries-get.json",
-        "GetGlossaryRequest",
-        "glossary",
-        "get_glossary",
-        "dataplex.projects.locations.glossaries.get",
+        KnowledgeCatalogGetDispatch(
+            "GetGlossaryRequest",
+            "glossary",
+            "get_glossary",
+            "dataplex.projects.locations.glossaries.get",
+        ),
     ),
-    KnowledgeCatalogGetResourceSpec(
+    KnowledgeCatalogGetCommandSpec(
         "glossary-categories",
-        "get_glossary_category",
         "./catalog-glossary-categories-get.json",
-        "GetGlossaryCategoryRequest",
-        "glossary",
-        "get_glossary_category",
-        "dataplex.projects.locations.glossaries.categories.get",
+        KnowledgeCatalogGetDispatch(
+            "GetGlossaryCategoryRequest",
+            "glossary",
+            "get_glossary_category",
+            "dataplex.projects.locations.glossaries.categories.get",
+        ),
     ),
-    KnowledgeCatalogGetResourceSpec(
+    KnowledgeCatalogGetCommandSpec(
         "glossary-terms",
-        "get_glossary_term",
         "./catalog-glossary-terms-get.json",
-        "GetGlossaryTermRequest",
-        "glossary",
-        "get_glossary_term",
-        "dataplex.projects.locations.glossaries.terms.get",
+        KnowledgeCatalogGetDispatch(
+            "GetGlossaryTermRequest",
+            "glossary",
+            "get_glossary_term",
+            "dataplex.projects.locations.glossaries.terms.get",
+        ),
     ),
 )
 
-KNOWLEDGE_CATALOG_LIST_RESOURCES: tuple[KnowledgeCatalogListResourceSpec, ...] = (
-    KnowledgeCatalogListResourceSpec(
+KNOWLEDGE_CATALOG_LIST_RESOURCES: tuple[KnowledgeCatalogListCommandSpec, ...] = (
+    KnowledgeCatalogListCommandSpec(
         "entries",
         "entries",
-        "list_entries",
         "./catalog-entries-list.json",
-        "ListEntriesRequest",
-        "catalog",
-        "list_entries",
-        "dataplex.projects.locations.entryGroups.entries.list",
-        "entries",
-        supports_order_by=False,
+        KnowledgeCatalogListDispatch(
+            "ListEntriesRequest",
+            "catalog",
+            "list_entries",
+            "dataplex.projects.locations.entryGroups.entries.list",
+            "entries",
+            supports_order_by=False,
+        ),
     ),
-    KnowledgeCatalogListResourceSpec(
+    KnowledgeCatalogListCommandSpec(
         "entry-groups",
         "entryGroups",
-        "list_entry_groups",
         "./catalog-entry-groups-list.json",
-        "ListEntryGroupsRequest",
-        "catalog",
-        "list_entry_groups",
-        "dataplex.projects.locations.entryGroups.list",
-        "entry_groups",
+        KnowledgeCatalogListDispatch(
+            "ListEntryGroupsRequest",
+            "catalog",
+            "list_entry_groups",
+            "dataplex.projects.locations.entryGroups.list",
+            "entry_groups",
+        ),
     ),
-    KnowledgeCatalogListResourceSpec(
+    KnowledgeCatalogListCommandSpec(
         "entry-types",
         "entryTypes",
-        "list_entry_types",
         "./catalog-entry-types-list.json",
-        "ListEntryTypesRequest",
-        "catalog",
-        "list_entry_types",
-        "dataplex.projects.locations.entryTypes.list",
-        "entry_types",
+        KnowledgeCatalogListDispatch(
+            "ListEntryTypesRequest",
+            "catalog",
+            "list_entry_types",
+            "dataplex.projects.locations.entryTypes.list",
+            "entry_types",
+        ),
     ),
-    KnowledgeCatalogListResourceSpec(
+    KnowledgeCatalogListCommandSpec(
         "aspect-types",
         "aspectTypes",
-        "list_aspect_types",
         "./catalog-aspect-types-list.json",
-        "ListAspectTypesRequest",
-        "catalog",
-        "list_aspect_types",
-        "dataplex.projects.locations.aspectTypes.list",
-        "aspect_types",
+        KnowledgeCatalogListDispatch(
+            "ListAspectTypesRequest",
+            "catalog",
+            "list_aspect_types",
+            "dataplex.projects.locations.aspectTypes.list",
+            "aspect_types",
+        ),
     ),
-    KnowledgeCatalogListResourceSpec(
+    KnowledgeCatalogListCommandSpec(
         "glossaries",
         "glossaries",
-        "list_glossaries",
         "./catalog-glossaries-list.json",
-        "ListGlossariesRequest",
-        "glossary",
-        "list_glossaries",
-        "dataplex.projects.locations.glossaries.list",
-        "glossaries",
+        KnowledgeCatalogListDispatch(
+            "ListGlossariesRequest",
+            "glossary",
+            "list_glossaries",
+            "dataplex.projects.locations.glossaries.list",
+            "glossaries",
+        ),
     ),
-    KnowledgeCatalogListResourceSpec(
+    KnowledgeCatalogListCommandSpec(
         "glossary-categories",
         "categories",
-        "list_glossary_categories",
         "./catalog-glossary-categories-list.json",
-        "ListGlossaryCategoriesRequest",
-        "glossary",
-        "list_glossary_categories",
-        "dataplex.projects.locations.glossaries.categories.list",
-        "categories",
+        KnowledgeCatalogListDispatch(
+            "ListGlossaryCategoriesRequest",
+            "glossary",
+            "list_glossary_categories",
+            "dataplex.projects.locations.glossaries.categories.list",
+            "categories",
+        ),
     ),
-    KnowledgeCatalogListResourceSpec(
+    KnowledgeCatalogListCommandSpec(
         "glossary-terms",
         "terms",
-        "list_glossary_terms",
         "./catalog-glossary-terms-list.json",
-        "ListGlossaryTermsRequest",
-        "glossary",
-        "list_glossary_terms",
-        "dataplex.projects.locations.glossaries.terms.list",
-        "terms",
+        KnowledgeCatalogListDispatch(
+            "ListGlossaryTermsRequest",
+            "glossary",
+            "list_glossary_terms",
+            "dataplex.projects.locations.glossaries.terms.list",
+            "terms",
+        ),
     ),
 )
 

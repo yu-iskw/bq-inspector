@@ -6,7 +6,10 @@ import json
 
 import pytest
 
-from bq_inspector.commands.catalog.commands import catalog_search_command
+from bq_inspector.commands.catalog.commands import (
+    build_knowledge_catalog_command_runners,
+    catalog_search_command,
+)
 from bq_inspector.commands.command_shared import InspectionCommandOptions
 from bq_inspector.schemas.command_schemas import get_command_schema
 from bq_inspector.tests.test_support.fixture_catalog_client import (
@@ -82,6 +85,31 @@ async def test_run_catalog_search_with_fixture_client() -> None:
 async def test_catalog_entries_lookup_input_schema() -> None:
     schema = get_command_schema("catalog entries lookup", "input")
     assert schema["required"] == ["projectId", "location", "entry"]
+
+
+@pytest.mark.asyncio
+async def test_run_catalog_entries_get_with_fixture_client() -> None:
+    runners = build_knowledge_catalog_command_runners()
+    entries_get = runners["catalog_entries_get_command"]
+    client = FixtureCatalogClient(
+        FixtureCatalogInput(
+            get_by_name={
+                _ENTRY_NAME: {
+                    "name": _ENTRY_NAME,
+                    "fullyQualifiedName": "bigquery:analytics-prod.sales.orders",
+                }
+            }
+        )
+    )
+
+    response = await entries_get.run_argv(
+        ["--params", json.dumps({"name": _ENTRY_NAME})],
+        InspectionCommandOptions(catalog_client=client, tool_version="0.1.0"),
+    )
+
+    assert response["resource"]["fullyQualifiedName"] == "bigquery:analytics-prod.sales.orders"
+    assert response["errors"] == []
+    assert client.calls[0][0] == "get_entry"
 
 
 @pytest.mark.asyncio

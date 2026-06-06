@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from google.cloud import dataplex_v1
 
+from bq_inspector.core.shared.errors import create_input_failure
 from bq_inspector.core.shared.invoke_sync import invoke_sync
 from bq_inspector.core.shared.pagination import read_next_page_token
 from bq_inspector.core.shared.protobuf_dict import message_to_dict
@@ -14,8 +15,8 @@ if TYPE_CHECKING:
     from google.auth.credentials import Credentials
 
     from bq_inspector.knowledge_catalog.resource_specs import (
-        KnowledgeCatalogGetResourceSpec,
-        KnowledgeCatalogListResourceSpec,
+        KnowledgeCatalogGetDispatch,
+        KnowledgeCatalogListDispatch,
     )
     from bq_inspector.knowledge_catalog.types.requests import (
         GetByNameRequest,
@@ -43,29 +44,36 @@ def _catalog_dict(message: object) -> dict[str, object]:
 def _resolve_entry_view(view: str | None) -> dataplex_v1.EntryView | None:
     if view is None:
         return None
-    return _ENTRY_VIEW_MAP.get(view)
+    resolved = _ENTRY_VIEW_MAP.get(view)
+    if resolved is None:
+        raise create_input_failure('view must be "BASIC", "FULL", "CUSTOM", or "ALL".')
+    return resolved
+
+
+def _set_sdk_field(sdk_request: object, field_name: str, value: object) -> None:
+    setattr(sdk_request, field_name, value)  # type: ignore[attr-defined]
 
 
 def _apply_search_options(sdk_request: object, request: SearchEntriesRequest) -> None:
     page_size = request.get("pageSize")
     if page_size is not None:
-        sdk_request.page_size = page_size  # type: ignore[attr-defined]
+        _set_sdk_field(sdk_request, "page_size", page_size)
 
     page_token = request.get("pageToken")
     if page_token is not None:
-        sdk_request.page_token = page_token  # type: ignore[attr-defined]
+        _set_sdk_field(sdk_request, "page_token", page_token)
 
     scope = request.get("scope")
     if scope is not None:
-        sdk_request.scope = scope  # type: ignore[attr-defined]
+        _set_sdk_field(sdk_request, "scope", scope)
 
     order_by = request.get("orderBy")
     if order_by is not None:
-        sdk_request.order_by = order_by  # type: ignore[attr-defined]
+        _set_sdk_field(sdk_request, "order_by", order_by)
 
     semantic_search = request.get("semanticSearch")
     if semantic_search is not None:
-        sdk_request.semantic_search = semantic_search  # type: ignore[attr-defined]
+        _set_sdk_field(sdk_request, "semantic_search", semantic_search)
 
 
 def _apply_entry_view_fields(
@@ -74,7 +82,7 @@ def _apply_entry_view_fields(
 ) -> None:
     view = _resolve_entry_view(request.get("view"))
     if view is not None:
-        sdk_request.view = view  # type: ignore[attr-defined]
+        _set_sdk_field(sdk_request, "view", view)
 
     aspect_types = request.get("aspectTypes")
     if aspect_types is not None:
@@ -93,20 +101,20 @@ def _apply_list_pagination(
 ) -> None:
     page_size = request.get("pageSize")
     if page_size is not None:
-        sdk_request.page_size = page_size  # type: ignore[attr-defined]
+        _set_sdk_field(sdk_request, "page_size", page_size)
 
     page_token = request.get("pageToken")
     if page_token is not None:
-        sdk_request.page_token = page_token  # type: ignore[attr-defined]
+        _set_sdk_field(sdk_request, "page_token", page_token)
 
     filter_value = request.get("filter")
     if filter_value is not None:
-        sdk_request.filter = filter_value  # type: ignore[attr-defined]
+        _set_sdk_field(sdk_request, "filter", filter_value)
 
     if supports_order_by:
         order_by = request.get("orderBy")
         if order_by is not None:
-            sdk_request.order_by = order_by  # type: ignore[attr-defined]
+            _set_sdk_field(sdk_request, "order_by", order_by)
 
 
 def _list_page_from_pager(
@@ -147,40 +155,44 @@ class SdkCatalogClient:
         self,
         request: GetByNameRequest,
         *,
-        spec: KnowledgeCatalogGetResourceSpec,
+        dispatch: KnowledgeCatalogGetDispatch,
     ) -> dict[str, object]:
-        request_cls = getattr(dataplex_v1, spec.request_type_name)
+        request_cls = getattr(dataplex_v1, dispatch.request_type_name)
         sdk_request = request_cls(name=request["name"])
-        if spec.apply_entry_view:
+        if dispatch.apply_entry_view:
             _apply_entry_view_fields(sdk_request, request)
 
-        service = self.service_for_kind(spec.service)
-        method = getattr(service, spec.sdk_method)
+        service = self.service_for_kind(dispatch.service)
+        method = getattr(service, dispatch.sdk_method)
 
         def _call() -> object:
             return method(request=sdk_request)
 
-        resource = await invoke_sync(_call, api=spec.api)
+        resource = await invoke_sync(_call, api=dispatch.api)
         return _catalog_dict(resource)
 
     async def list_parent_resources(
         self,
         request: ListByParentRequest,
         *,
-        spec: KnowledgeCatalogListResourceSpec,
+        dispatch: KnowledgeCatalogListDispatch,
     ) -> ListResourcesPage:
-        request_cls = getattr(dataplex_v1, spec.request_type_name)
+        request_cls = getattr(dataplex_v1, dispatch.request_type_name)
         sdk_request = request_cls(parent=request["parent"])
-        _apply_list_pagination(sdk_request, request, supports_order_by=spec.supports_order_by)
+        _apply_list_pagination(
+            sdk_request,
+            request,
+            supports_order_by=dispatch.supports_order_by,
+        )
 
-        service = self.service_for_kind(spec.service)
-        method = getattr(service, spec.sdk_method)
+        service = self.service_for_kind(dispatch.service)
+        method = getattr(service, dispatch.sdk_method)
 
         def _call() -> object:
             return method(request=sdk_request)
 
-        pager = await invoke_sync(_call, api=spec.api)
-        return _list_page_from_pager(pager, items_attr=spec.items_attr)
+        pager = await invoke_sync(_call, api=dispatch.api)
+        return _list_page_from_pager(pager, items_attr=dispatch.items_attr)
 
     async def search_entries(self, request: SearchEntriesRequest) -> SearchEntriesPage:
         sdk_request = dataplex_v1.SearchEntriesRequest(

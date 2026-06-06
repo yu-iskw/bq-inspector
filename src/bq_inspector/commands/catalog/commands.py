@@ -19,57 +19,22 @@ from bq_inspector.input.input_parsers import (
 from bq_inspector.knowledge_catalog.resource_specs import (
     KNOWLEDGE_CATALOG_GET_RESOURCES,
     KNOWLEDGE_CATALOG_LIST_RESOURCES,
-    KnowledgeCatalogGetResourceSpec,
-    KnowledgeCatalogListResourceSpec,
+    KnowledgeCatalogGetCommandSpec,
+    KnowledgeCatalogListCommandSpec,
     knowledge_catalog_command_id,
     knowledge_catalog_export_name,
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable
-
     from bq_inspector.commands.command_shared import ParamsCommandRunner
     from bq_inspector.input.parsed_input_types import (
         ParsedKnowledgeCatalogGetInput,
         ParsedKnowledgeCatalogListInput,
     )
-    from bq_inspector.knowledge_catalog.port.catalog_client import CatalogInspectionClient
-    from bq_inspector.knowledge_catalog.types.requests import GetByNameRequest, ListByParentRequest
-    from bq_inspector.knowledge_catalog.types.responses import ListResourcesPage
     from bq_inspector.schemas.command_schemas import CommandId
 
 
-def _client_get_fetch(
-    spec: KnowledgeCatalogGetResourceSpec,
-) -> Callable[
-    [CatalogInspectionClient, GetByNameRequest],
-    Awaitable[dict[str, object]],
-]:
-    async def fetch(
-        client: CatalogInspectionClient,
-        request: GetByNameRequest,
-    ) -> dict[str, object]:
-        return await client.get_named_resource(request, spec=spec)
-
-    return fetch
-
-
-def _client_list_fetch(
-    spec: KnowledgeCatalogListResourceSpec,
-) -> Callable[
-    [CatalogInspectionClient, ListByParentRequest],
-    Awaitable[ListResourcesPage],
-]:
-    async def fetch(
-        client: CatalogInspectionClient,
-        request: ListByParentRequest,
-    ) -> ListResourcesPage:
-        return await client.list_parent_resources(request, spec=spec)
-
-    return fetch
-
-
-def _build_get_command(spec: KnowledgeCatalogGetResourceSpec) -> ParamsCommandRunner:
+def _build_get_command(spec: KnowledgeCatalogGetCommandSpec) -> ParamsCommandRunner:
     command_id = cast(
         "CommandId",
         knowledge_catalog_command_id(spec.subgroup, "get"),
@@ -81,11 +46,11 @@ def _build_get_command(spec: KnowledgeCatalogGetResourceSpec) -> ParamsCommandRu
     return create_catalog_get_command(
         command_id,
         parse,
-        fetch=_client_get_fetch(spec),
+        dispatch=spec.dispatch,
     )
 
 
-def _build_list_command(spec: KnowledgeCatalogListResourceSpec) -> ParamsCommandRunner:
+def _build_list_command(spec: KnowledgeCatalogListCommandSpec) -> ParamsCommandRunner:
     command_id = cast(
         "CommandId",
         knowledge_catalog_command_id(spec.subgroup, "list"),
@@ -98,7 +63,7 @@ def _build_list_command(spec: KnowledgeCatalogListResourceSpec) -> ParamsCommand
         command_id,
         parse,
         collection_key=spec.collection_key,
-        fetch=_client_list_fetch(spec),
+        dispatch=spec.dispatch,
     )
 
 

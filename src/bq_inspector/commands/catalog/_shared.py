@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from bq_inspector.commands.command_shared import (
     InspectionCommandOptions,
@@ -25,6 +25,10 @@ if TYPE_CHECKING:
 
     from bq_inspector.commands.command_shared import ParamsCommandRunner
     from bq_inspector.knowledge_catalog.port.catalog_client import CatalogInspectionClient
+    from bq_inspector.knowledge_catalog.resource_specs import (
+        KnowledgeCatalogGetDispatch,
+        KnowledgeCatalogListDispatch,
+    )
     from bq_inspector.schemas.command_schemas import CommandId
 
 _CatalogInput = (
@@ -42,7 +46,7 @@ async def _resolve_catalog_client(
     client = command_options.catalog_client
     if client is None:
         client = await create_sdk_catalog_client_from_input(input_data)
-    return cast("CatalogInspectionClient", client)
+    return client
 
 
 async def run_catalog_command(
@@ -103,7 +107,8 @@ def create_catalog_lookup_command(
 def create_catalog_get_command(
     command_id: CommandId,
     parse_fn: Callable[[object], ParsedKnowledgeCatalogGetInput],
-    fetch: Callable[..., Any],
+    *,
+    dispatch: KnowledgeCatalogGetDispatch,
 ) -> ParamsCommandRunner:
     """Build a params command runner for a catalog get use case."""
 
@@ -115,7 +120,7 @@ def create_catalog_get_command(
             input_data,
             command_options,
             use_case=get_catalog_resource,
-            fetch=fetch,
+            dispatch=dispatch,
         )
 
     return create_run_params_command(command_id, parse_fn, execute)
@@ -126,7 +131,7 @@ def create_catalog_list_command(
     parse_fn: Callable[[object], ParsedKnowledgeCatalogListInput],
     *,
     collection_key: str,
-    fetch: Callable[..., Any],
+    dispatch: KnowledgeCatalogListDispatch,
 ) -> ParamsCommandRunner:
     """Build a params command runner for a catalog list use case."""
 
@@ -139,7 +144,7 @@ def create_catalog_list_command(
             command_options,
             use_case=list_catalog_resources,
             collection_key=collection_key,
-            fetch=fetch,
+            dispatch=dispatch,
         )
 
     return create_run_params_command(command_id, parse_fn, execute)

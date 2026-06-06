@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from bq_inspector.knowledge_catalog.resource_specs import (
-        KnowledgeCatalogGetResourceSpec,
-        KnowledgeCatalogListResourceSpec,
+        KnowledgeCatalogGetDispatch,
+        KnowledgeCatalogListDispatch,
     )
     from bq_inspector.knowledge_catalog.types.requests import (
         GetByNameRequest,
@@ -43,18 +43,18 @@ class FixtureCatalogClient:
         self,
         request: GetByNameRequest,
         *,
-        spec: KnowledgeCatalogGetResourceSpec,
+        dispatch: KnowledgeCatalogGetDispatch,
     ) -> dict[str, object]:
-        self.calls.append((spec.client_method, request))
+        self.calls.append((dispatch.sdk_method, request))
         return self._fixture.get_by_name.get(request["name"], {"name": request["name"]})
 
     async def list_parent_resources(
         self,
         request: ListByParentRequest,
         *,
-        spec: KnowledgeCatalogListResourceSpec,
+        dispatch: KnowledgeCatalogListDispatch,
     ) -> ListResourcesPage:
-        self.calls.append((spec.client_method, request))
+        self.calls.append((dispatch.sdk_method, request))
         return self._fixture.list_by_parent.get(request["parent"], {"resources": []})
 
     async def search_entries(self, request: SearchEntriesRequest) -> SearchEntriesPage:

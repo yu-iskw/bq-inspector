@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
     from bq_inspector.knowledge_catalog.resource_specs import (
-        KnowledgeCatalogGetResourceSpec,
-        KnowledgeCatalogListResourceSpec,
+        KnowledgeCatalogGetDispatch,
+        KnowledgeCatalogListDispatch,
     )
     from bq_inspector.knowledge_catalog.types.requests import (
         GetByNameRequest,
@@ -36,7 +36,7 @@ class CatalogInspectionClient(Protocol):
         self,
         request: GetByNameRequest,
         *,
-        spec: KnowledgeCatalogGetResourceSpec,
+        dispatch: KnowledgeCatalogGetDispatch,
     ) -> dict[str, object]:
         """Retrieve a catalog resource by canonical name."""
         raise NotImplementedError
@@ -45,7 +45,7 @@ class CatalogInspectionClient(Protocol):
         self,
         request: ListByParentRequest,
         *,
-        spec: KnowledgeCatalogListResourceSpec,
+        dispatch: KnowledgeCatalogListDispatch,
     ) -> ListResourcesPage:
         """List catalog resources under a parent."""
         raise NotImplementedError
