@@ -31,7 +31,7 @@ async def test_run_datasets_get_with_fixture_client() -> None:
             "--params",
             json.dumps({"projectId": "analytics-prod", "datasetId": "analytics"}),
         ],
-        InspectionCommandOptions(client=client, tool_version="0.1.0"),
+        InspectionCommandOptions(client=client, tool_version="0.2.0"),
     )
 
     assert response["schemaVersion"] == "bq-inspector.v1"
@@ -54,7 +54,7 @@ async def test_run_tables_list_with_fixture_client() -> None:
             "--params",
             json.dumps({"projectId": "analytics-prod", "datasetId": "analytics"}),
         ],
-        InspectionCommandOptions(client=client, tool_version="0.1.0"),
+        InspectionCommandOptions(client=client, tool_version="0.2.0"),
     )
 
     assert response["schemaVersion"] == "bq-inspector.v1"
@@ -84,7 +84,7 @@ async def test_run_tables_get_with_fixture_client() -> None:
                 }
             ),
         ],
-        InspectionCommandOptions(client=client, tool_version="0.1.0"),
+        InspectionCommandOptions(client=client, tool_version="0.2.0"),
     )
 
     assert response["schemaVersion"] == "bq-inspector.v1"

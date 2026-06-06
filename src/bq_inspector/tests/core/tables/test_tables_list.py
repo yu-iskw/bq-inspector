@@ -23,7 +23,7 @@ async def test_returns_tables_list() -> None:
     response = await list_tables_metadata(
         {"projectId": "p", "datasetId": "d1"},
         client=client,
-        tool_version="0.1.0",
+        tool_version="0.2.0",
     )
 
     assert len(response["tables"]) == 1
@@ -63,7 +63,7 @@ async def test_returns_errors_for_list_tables_failures() -> None:
     response = await list_tables_metadata(
         {"projectId": "p", "datasetId": "d1"},
         client=DenyClient(),
-        tool_version="0.1.0",
+        tool_version="0.2.0",
     )
 
     assert response["tables"] == []
@@ -99,5 +99,5 @@ async def test_rethrows_non_bq_inspector_failure_errors() -> None:
         await list_tables_metadata(
             {"projectId": "p", "datasetId": "d1"},
             client=BoomClient(),
-            tool_version="0.1.0",
+            tool_version="0.2.0",
         )

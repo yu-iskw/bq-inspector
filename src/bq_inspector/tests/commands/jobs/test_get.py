@@ -43,7 +43,7 @@ async def test_run_jobs_get_parses_multiple_jobs_from_params_json() -> None:
                 ],
             }
         ),
-        InspectionCommandOptions(client=client, tool_version="0.1.0"),
+        InspectionCommandOptions(client=client, tool_version="0.2.0"),
     )
 
     assert response["request"]["jobs"] == [
@@ -63,7 +63,7 @@ async def test_run_jobs_get_returns_full_job_payload() -> None:
                 "jobs": [{"projectId": "analytics-prod", "jobId": "job_a"}],
             }
         ),
-        InspectionCommandOptions(client=client, tool_version="0.1.0"),
+        InspectionCommandOptions(client=client, tool_version="0.2.0"),
     )
 
     job_payload = response["jobs"][0]["job"]
@@ -79,7 +79,7 @@ async def test_run_jobs_get_requires_params() -> None:
     with pytest.raises(BqInspectFailure):
         await run_jobs_get(
             [],
-            InspectionCommandOptions(client=FixtureJobClient({}), tool_version="0.1.0"),
+            InspectionCommandOptions(client=FixtureJobClient({}), tool_version="0.2.0"),
         )
 
 
@@ -88,13 +88,13 @@ async def test_run_jobs_get_rejects_unknown_operational_flags() -> None:
     with pytest.raises(BqInspectFailure):
         await run_jobs_get(
             ["--format", "ndjson", "--params", "{}"],
-            InspectionCommandOptions(client=FixtureJobClient({}), tool_version="0.1.0"),
+            InspectionCommandOptions(client=FixtureJobClient({}), tool_version="0.2.0"),
         )
 
 
 @pytest.mark.asyncio
 async def test_run_jobs_get_rejects_removed_selector_and_preset_params() -> None:
-    client = InspectionCommandOptions(client=FixtureJobClient({}), tool_version="0.1.0")
+    client = InspectionCommandOptions(client=FixtureJobClient({}), tool_version="0.2.0")
 
     with pytest.raises(BqInspectFailure):
         await run_jobs_get(
@@ -132,7 +132,7 @@ async def test_run_jobs_get_echoes_impersonation_fields_on_request_envelope() ->
                 "impersonateDelegates": ["delegate@analytics-prod.iam.gserviceaccount.com"],
             }
         ),
-        InspectionCommandOptions(client=client, tool_version="0.1.0"),
+        InspectionCommandOptions(client=client, tool_version="0.2.0"),
     )
 
     assert response["request"]["impersonateServiceAccount"] == (

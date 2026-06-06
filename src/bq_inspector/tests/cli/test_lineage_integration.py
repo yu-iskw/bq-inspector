@@ -53,7 +53,7 @@ async def test_run_lineage_links_with_fixture_client() -> None:
                 }
             ),
         ],
-        InspectionCommandOptions(lineage_client=client, tool_version="0.1.0"),
+        InspectionCommandOptions(lineage_client=client, tool_version="0.2.0"),
     )
 
     assert response["schemaVersion"] == "bq-inspector.v1"
@@ -102,7 +102,7 @@ async def test_run_lineage_graph_with_fixture_client() -> None:
                 }
             ),
         ],
-        InspectionCommandOptions(lineage_client=client, tool_version="0.1.0"),
+        InspectionCommandOptions(lineage_client=client, tool_version="0.2.0"),
     )
 
     assert response["schemaVersion"] == "bq-inspector.v1"

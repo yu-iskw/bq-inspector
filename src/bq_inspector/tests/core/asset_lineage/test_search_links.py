@@ -46,7 +46,7 @@ async def test_search_table_links_upstream() -> None:
             "direction": "UPSTREAM",
         },
         client=client,
-        tool_version="0.1.0",
+        tool_version="0.2.0",
     )
 
     assert response["schemaVersion"] == "bq-inspector.v1"
@@ -96,7 +96,7 @@ async def test_search_table_lineage_graph_merges_stream_chunks() -> None:
             "maxResults": DEFAULT_LINEAGE_GRAPH_MAX_RESULTS,
         },
         client=client,
-        tool_version="0.1.0",
+        tool_version="0.2.0",
     )
 
     assert len(response["links"]) == 2

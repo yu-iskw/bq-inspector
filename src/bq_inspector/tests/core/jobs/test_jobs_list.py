@@ -30,7 +30,7 @@ async def test_returns_filtered_jobs_and_next_page_token() -> None:
     response = await list_jobs(
         ListJobsOrchestrationInput(
             client=client,
-            tool_version="0.1.0",
+            tool_version="0.2.0",
             list_request={"projectId": "p"},
             filters=JobFilters(min_slot_ms=1000),
         )
@@ -77,7 +77,7 @@ async def test_captures_bigquery_failures_in_errors_envelope() -> None:
     response = await list_jobs(
         ListJobsOrchestrationInput(
             client=DenyClient(),
-            tool_version="0.1.0",
+            tool_version="0.2.0",
             list_request={"projectId": "p"},
             filters=JobFilters(),
         )
@@ -117,7 +117,7 @@ async def test_rethrows_non_bq_inspector_failure_errors() -> None:
         await list_jobs(
             ListJobsOrchestrationInput(
                 client=BoomClient(),
-                tool_version="0.1.0",
+                tool_version="0.2.0",
                 list_request={"projectId": "p"},
                 filters=JobFilters(),
             )
@@ -131,7 +131,7 @@ async def test_returns_empty_jobs_and_empty_page_when_api_returns_no_jobs() -> N
     response = await list_jobs(
         ListJobsOrchestrationInput(
             client=client,
-            tool_version="0.1.0",
+            tool_version="0.2.0",
             list_request={"projectId": "p"},
             filters=JobFilters(),
         )
@@ -157,7 +157,7 @@ async def test_returns_empty_jobs_when_filters_exclude_all_summaries() -> None:
     response = await list_jobs(
         ListJobsOrchestrationInput(
             client=client,
-            tool_version="0.1.0",
+            tool_version="0.2.0",
             list_request={"projectId": "p"},
             filters=JobFilters(min_slot_ms=1000),
         )
@@ -174,7 +174,7 @@ async def test_echoes_list_request_options_and_impersonation() -> None:
     response = await list_jobs(
         ListJobsOrchestrationInput(
             client=client,
-            tool_version="0.1.0",
+            tool_version="0.2.0",
             list_request={
                 "projectId": "p",
                 "allUsers": True,

@@ -23,7 +23,7 @@ async def test_returns_dataset_metadata() -> None:
     response = await get_dataset_metadata(
         {"projectId": "p", "datasetId": "d1"},
         client=client,
-        tool_version="0.1.0",
+        tool_version="0.2.0",
     )
 
     assert response["errors"] == []
@@ -64,7 +64,7 @@ async def test_returns_errors_for_dataset_metadata_failures() -> None:
     response = await get_dataset_metadata(
         {"projectId": "p", "datasetId": "d1"},
         client=DenyClient(),
-        tool_version="0.1.0",
+        tool_version="0.2.0",
     )
 
     assert "resource" not in response
