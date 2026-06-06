@@ -19,6 +19,7 @@ from bq_inspector.cli.command_registry import (
     GLOBAL_USAGE,
     GROUP_COMMAND_SPECS,
     GroupCommandSpec,
+    ParamsCommandSpec,
 )
 from bq_inspector.cli.flat_argv import flat_unknown_command_hint, normalize_flat_argv
 from bq_inspector.cli.help import resolve_help_text, strip_trailing_help_flags, write_help_text
@@ -79,6 +80,31 @@ def _register_params_command(
     params_command.__name__ = name.replace(" ", "_")  # pyright: ignore[reportAttributeAccessIssue]
 
 
+def _build_nested_subgroup(
+    name: str,
+    *,
+    parent_path: tuple[str, ...],
+    commands: tuple[ParamsCommandSpec, ...],
+) -> click.Group:
+    @click.group(
+        name,
+        cls=BqInspectGroup,
+        group_path=(*parent_path, name),
+        invoke_without_command=True,
+        add_help_option=False,
+    )
+    @click.pass_context
+    def subgroup(ctx: click.Context) -> None:
+        if ctx.invoked_subcommand is None:
+            raise create_input_failure(f"Unknown command: {' '.join((*parent_path, name))}")
+
+    for command_spec in commands:
+        _register_params_command(subgroup, command_spec.path[-1], command_spec.runner)
+
+    subgroup.__doc__ = name
+    return subgroup
+
+
 def _build_params_group(spec: GroupCommandSpec) -> click.Group:
     @click.group(
         spec.name,
@@ -92,8 +118,24 @@ def _build_params_group(spec: GroupCommandSpec) -> click.Group:
         if ctx.invoked_subcommand is None:
             raise create_input_failure(f"Unknown command: {spec.name}")
 
-    for command_spec in spec.commands:
+    direct_commands = [command for command in spec.commands if len(command.path) == 2]
+    nested_commands = [command for command in spec.commands if len(command.path) > 2]
+
+    for command_spec in direct_commands:
         _register_params_command(group, command_spec.path[-1], command_spec.runner)
+
+    subgroup_names = sorted({command.path[1] for command in nested_commands})
+    for subgroup_name in subgroup_names:
+        subgroup_specs = tuple(
+            command for command in nested_commands if command.path[1] == subgroup_name
+        )
+        group.add_command(
+            _build_nested_subgroup(
+                subgroup_name,
+                parent_path=(spec.name,),
+                commands=subgroup_specs,
+            )
+        )
 
     group.__doc__ = spec.name
     return group

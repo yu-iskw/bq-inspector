@@ -13,6 +13,12 @@ from bq_inspector.core.shared.impersonation_fields import (
 )
 from bq_inspector.datalineage.adapters.google_cloud.sdk_lineage_client import SdkLineageClient
 from bq_inspector.datalineage.auth.create_lineage_auth_client import create_lineage_auth_client
+from bq_inspector.knowledge_catalog.adapters.google_cloud.sdk_catalog_client import (
+    SdkCatalogClient,
+)
+from bq_inspector.knowledge_catalog.auth.create_catalog_auth_client import (
+    create_catalog_auth_client,
+)
 from bq_inspector.operational.params import resolve_params_value
 from bq_inspector.operational.parse_argv import parse_operational_argv
 from bq_inspector.schemas.command_schemas import CommandId, get_command_schema
@@ -22,6 +28,7 @@ if TYPE_CHECKING:
 
     from bq_inspector.bigquery.port.inspection_client import BigQueryInspectionClient
     from bq_inspector.datalineage.port.lineage_client import LineageInspectionClient
+    from bq_inspector.knowledge_catalog.port.catalog_client import CatalogInspectionClient
     from bq_inspector.operational.types import OperationalArgv
 
 
@@ -33,10 +40,12 @@ class InspectionCommandOptions:
         *,
         client: BigQueryInspectionClient | None = None,
         lineage_client: LineageInspectionClient | None = None,
+        catalog_client: CatalogInspectionClient | None = None,
         tool_version: str,
     ) -> None:
         self.client = client
         self.lineage_client = lineage_client
+        self.catalog_client = catalog_client
         self.tool_version = tool_version
 
 
@@ -64,6 +73,16 @@ async def create_sdk_lineage_client_from_input(
         auth_client_options_from_impersonation(input_data)
     )
     return SdkLineageClient(auth_client)
+
+
+async def create_sdk_catalog_client_from_input(
+    input_data: ImpersonationFields,
+) -> SdkCatalogClient:
+    """Create an SDK-backed Knowledge Catalog client from impersonation params."""
+    auth_client = await create_catalog_auth_client(
+        auth_client_options_from_impersonation(input_data)
+    )
+    return SdkCatalogClient(auth_client)
 
 
 async def run_from_operational_argv(

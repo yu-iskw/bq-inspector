@@ -24,6 +24,14 @@ _IAM_HINT_PREFIXES: tuple[tuple[tuple[str, ...], str], ...] = (
             "API there when it differs from the link-owning project(s)."
         ),
     ),
+    (
+        ("dataplex.",),
+        (
+            "Grant roles/dataplex.catalogViewer on the search request project for "
+            "dataplex.projects.search. BigQuery-backed search results also depend on "
+            "source-system metadata permissions such as roles/bigquery.metadataViewer."
+        ),
+    ),
 )
 
 

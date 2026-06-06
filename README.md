@@ -60,6 +60,8 @@ Unknown commands print global usage plus `Unknown command: <argv>`.
 
 **Catalog / asset lineage:** `tables get` → `lineage links` → `lineage graph` (Data Lineage API; see [Lineage commands](#lineage-commands))
 
+**Knowledge Catalog (Dataplex):** `catalog search` → `catalog entries lookup` → `catalog aspect-types get` (see [Knowledge Catalog commands](#knowledge-catalog-commands))
+
 **Command forms:** Nested `jobs summary` and flat `summary` are equivalent for job views and `jobs list` → `list`.
 
 **Job id formats:** Pass `jobId` alone, or a Console-style composite id in `jobId`:
@@ -89,6 +91,18 @@ Unknown commands print global usage plus `Unknown command: <argv>`.
 | Multi-hop lineage graph                       | `lineage graph` |
 
 `jobs lineage` reports what a **single job** touched. `lineage links` / `lineage graph` query platform-wide table relationships (requires Data Lineage API enabled in GCP).
+
+**Knowledge Catalog (governed metadata via Dataplex API):**
+
+| Goal | Command |
+| ---- | ------- |
+| Discover catalog entries (keyword or semantic search) | `catalog search` |
+| Resolve a discovered entry canonically | `catalog entries lookup` |
+| Retrieve entry, type, or glossary resources | `catalog entries get`, `catalog entry-types get`, … |
+| List entries, types, glossaries (one page per call) | `catalog entries list`, `catalog glossaries list`, … |
+| Retrieve a known entry link | `catalog entry-links get` |
+
+There is **no** `catalog entry-links list` command—the Dataplex API does not expose a general list method for entry links.
 
 Each view command calls `jobs.get` once per job and projects the response in memory. **`jobs get` returns the full [Job](https://cloud.google.com/bigquery/docs/reference/rest/v2/Job) resource** from the API; other commands slice it for smaller, task-focused JSON. Field names match [Job statistics](https://cloud.google.com/bigquery/docs/reference/rest/v2/Job#JobStatistics); many nested blocks (for example `statistics.mlStatistics`) appear only for matching job kinds.
 
@@ -228,6 +242,14 @@ Summaries from per-command `--help`; full types and constraints: `bq-inspector <
 - `lineage links` only: `pageSize`, `pageToken`
 - `lineage graph` only: `maxDepth` (default 5), `maxResults` (default 1000)
 
+**Knowledge Catalog** (`catalog search`, `catalog entries lookup`, …):
+
+- `catalog search`: `projectId`, `query` (required); `location` defaults to `global`; optional `scope`, `semanticSearch` (default `false`), `orderBy`, `pageSize` (default 50), `pageToken`
+- `catalog entries lookup`: `projectId`, `location`, `entry` (required); optional `view`, `aspectTypes`, `paths`
+- Get commands: canonical Dataplex `name` (required); entries get also supports `view`, `aspectTypes`, `paths`
+- List commands: `parent` (required); optional `pageSize` (default 100), `pageToken`, `filter`, `orderBy`
+- List and search commands return **one upstream API page** per invocation (no hidden auto-pagination)
+
 ## JSON Schema discovery
 
 - **Discovery:** `--input-schema` or `--output-schema` (use one at a time; prints JSON Schema on stdout and exits without calling BigQuery).
@@ -243,7 +265,32 @@ bq-inspector jobs list --input-schema
 bq-inspector datasets get --output-schema
 bq-inspector lineage links --input-schema
 bq-inspector lineage graph --output-schema
+bq-inspector catalog search --input-schema
+bq-inspector catalog entries lookup --output-schema
 ```
+
+## Knowledge Catalog commands
+
+Read-only [Knowledge Catalog](https://cloud.google.com/dataplex/docs/universal-catalog) inspection via the Dataplex API. CLI command group: `catalog`. Internal package: `knowledge_catalog`.
+
+```bash
+bq-inspector catalog search --params '{"projectId":"YOUR_SEARCH_PROJECT","query":"YOUR_TERM","pageSize":50}'
+bq-inspector catalog entries lookup --params @lookup.json
+bq-inspector catalog entry-types list --params '{"parent":"projects/YOUR_PROJECT/locations/global","pageSize":5}'
+bq-inspector catalog glossaries list --params '{"parent":"projects/YOUR_PROJECT/locations/YOUR_LOCATION","pageSize":5}'
+```
+
+**IAM (least privilege):**
+
+- **Search request project:** `roles/dataplex.catalogViewer` (includes `dataplex.projects.search`)
+- **BigQuery-backed search results:** also requires `roles/bigquery.metadataViewer` on relevant datasets/projects
+- **Impersonation:** `roles/iam.serviceAccountTokenCreator` on the target service account
+
+Catalog commands use OAuth scope `https://www.googleapis.com/auth/dataplex.readonly`.
+
+**Empty search results** are successful (not an error). They may indicate no matches, narrow scope, missing source-system metadata visibility, or VPC Service Controls boundaries.
+
+**Metadata sensitivity:** catalog output may include schemas, descriptions, ownership, classifications, and glossary terms. Treat stdout as potentially sensitive in CI and agent environments.
 
 ## Error codes
 
@@ -292,6 +339,7 @@ The CLI uses the official **BigQuery** client with **Application Default Credent
 
 - **Default:** credentials are scoped to `https://www.googleapis.com/auth/bigquery.readonly` for BigQuery job and catalog commands.
 - **Lineage commands** (`lineage links`, `lineage graph`) use `https://www.googleapis.com/auth/cloud-platform` (required by the Data Lineage `searchLinks` API; requested only when those commands run).
+- **Knowledge Catalog commands** (`catalog …`) use `https://www.googleapis.com/auth/dataplex.readonly`.
 - **Impersonation:** set `impersonateServiceAccount` (and optional `impersonateDelegates`) in `--params`. The source principal must have **Service Account Token Creator** on the target (and on each delegate). While impersonating, access is still requested with `bigquery.readonly` on the **target** identity. The source ADC client uses `https://www.googleapis.com/auth/cloud-platform` only for the token exchange path.
 
 Example params fragment:
@@ -312,6 +360,8 @@ Prefer narrow read access:
 - **Job commands / `jobs list`:** `roles/bigquery.resourceViewer` (or a custom role with `bigquery.jobs.get` / `bigquery.jobs.list`) on the **identity that calls BigQuery** (the impersonated service account when using impersonation).
 - **`datasets get` / `tables list` / `tables get`:** `roles/bigquery.metadataViewer` on the dataset or project (or a custom metadata-only role with `datasets.get`, `tables.list`, `tables.get`).
 - **`lineage links` / `lineage graph`:** `roles/datalineage.viewer` on `clientProjectId`; enable the Data Lineage API in that project.
+- **`catalog search`:** `roles/dataplex.catalogViewer` on the search request project; BigQuery-backed results also need `roles/bigquery.metadataViewer` on source datasets/projects.
+- **Other `catalog` commands:** `roles/dataplex.catalogViewer` on the relevant catalog resources.
 - Grant the calling principal `roles/iam.serviceAccountTokenCreator` on the target service account (and delegates, if any) when using impersonation.
 - Avoid `roles/bigquery.dataViewer` and `roles/bigquery.jobUser` for inspection-only workflows.
 

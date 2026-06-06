@@ -8,12 +8,32 @@ from typing import TYPE_CHECKING
 from bq_inspector.cli.usage_build import (
     ParamsBodyKind,
     ParamsCommandUsageMeta,
+    build_catalog_group_usage,
     build_datasets_group_usage,
     build_global_usage,
     build_jobs_group_usage,
     build_lineage_group_usage,
     build_params_command_usage,
     build_tables_group_usage,
+)
+from bq_inspector.commands.catalog.commands import (
+    catalog_aspect_types_get_command,
+    catalog_aspect_types_list_command,
+    catalog_entries_get_command,
+    catalog_entries_list_command,
+    catalog_entries_lookup_command,
+    catalog_entry_groups_get_command,
+    catalog_entry_groups_list_command,
+    catalog_entry_links_get_command,
+    catalog_entry_types_get_command,
+    catalog_entry_types_list_command,
+    catalog_glossaries_get_command,
+    catalog_glossaries_list_command,
+    catalog_glossary_categories_get_command,
+    catalog_glossary_categories_list_command,
+    catalog_glossary_terms_get_command,
+    catalog_glossary_terms_list_command,
+    catalog_search_command,
 )
 from bq_inspector.commands.datasets.get import datasets_get_command
 from bq_inspector.commands.jobs.list import run_jobs_list_command
@@ -72,6 +92,18 @@ _LINEAGE_TABLE_EXAMPLE = (
 )
 _LINEAGE_LINKS_EXAMPLE = "{" + _LINEAGE_TABLE_EXAMPLE + ',"direction":"UPSTREAM"}'
 _LINEAGE_GRAPH_EXAMPLE = "{" + _LINEAGE_TABLE_EXAMPLE + ',"direction":"DOWNSTREAM"}'
+
+_CATALOG_SEARCH_EXAMPLE = (
+    '{"projectId":"my-proj","query":"customer orders","scope":"projects/analytics-prod"}'
+)
+_CATALOG_LOOKUP_EXAMPLE = (
+    '{"projectId":"my-proj","location":"global",'
+    '"entry":"projects/analytics-prod/locations/us/entryGroups/@bigquery/entries/example"}'
+)
+_CATALOG_GET_EXAMPLE = (
+    '{"name":"projects/analytics-prod/locations/us/entryTypes/example-type"}'
+)
+_CATALOG_LIST_EXAMPLE = '{"parent":"projects/analytics-prod/locations/us","pageSize":100}'
 
 
 _PARAMS_COMMAND_REGISTRATIONS: tuple[ParamsCommandRegistration, ...] = (
@@ -183,6 +215,159 @@ _PARAMS_COMMAND_REGISTRATIONS: tuple[ParamsCommandRegistration, ...] = (
         ),
         lineage_graph_command,
     ),
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("catalog", "search"),
+            ParamsBodyKind.CATALOG_SEARCH,
+            _CATALOG_SEARCH_EXAMPLE,
+            "./catalog-search.json",
+        ),
+        catalog_search_command,
+    ),
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("catalog", "entries", "lookup"),
+            ParamsBodyKind.CATALOG_LOOKUP,
+            _CATALOG_LOOKUP_EXAMPLE,
+            "./catalog-entries-lookup.json",
+        ),
+        catalog_entries_lookup_command,
+    ),
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("catalog", "entries", "get"),
+            ParamsBodyKind.CATALOG_GET,
+            _CATALOG_GET_EXAMPLE,
+            "./catalog-entries-get.json",
+        ),
+        catalog_entries_get_command,
+    ),
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("catalog", "entries", "list"),
+            ParamsBodyKind.CATALOG_LIST,
+            _CATALOG_LIST_EXAMPLE,
+            "./catalog-entries-list.json",
+        ),
+        catalog_entries_list_command,
+    ),
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("catalog", "entry-groups", "get"),
+            ParamsBodyKind.CATALOG_GET,
+            _CATALOG_GET_EXAMPLE,
+            "./catalog-entry-groups-get.json",
+        ),
+        catalog_entry_groups_get_command,
+    ),
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("catalog", "entry-groups", "list"),
+            ParamsBodyKind.CATALOG_LIST,
+            _CATALOG_LIST_EXAMPLE,
+            "./catalog-entry-groups-list.json",
+        ),
+        catalog_entry_groups_list_command,
+    ),
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("catalog", "entry-types", "get"),
+            ParamsBodyKind.CATALOG_GET,
+            _CATALOG_GET_EXAMPLE,
+            "./catalog-entry-types-get.json",
+        ),
+        catalog_entry_types_get_command,
+    ),
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("catalog", "entry-types", "list"),
+            ParamsBodyKind.CATALOG_LIST,
+            _CATALOG_LIST_EXAMPLE,
+            "./catalog-entry-types-list.json",
+        ),
+        catalog_entry_types_list_command,
+    ),
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("catalog", "aspect-types", "get"),
+            ParamsBodyKind.CATALOG_GET,
+            _CATALOG_GET_EXAMPLE,
+            "./catalog-aspect-types-get.json",
+        ),
+        catalog_aspect_types_get_command,
+    ),
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("catalog", "aspect-types", "list"),
+            ParamsBodyKind.CATALOG_LIST,
+            _CATALOG_LIST_EXAMPLE,
+            "./catalog-aspect-types-list.json",
+        ),
+        catalog_aspect_types_list_command,
+    ),
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("catalog", "entry-links", "get"),
+            ParamsBodyKind.CATALOG_GET,
+            _CATALOG_GET_EXAMPLE,
+            "./catalog-entry-links-get.json",
+        ),
+        catalog_entry_links_get_command,
+    ),
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("catalog", "glossaries", "get"),
+            ParamsBodyKind.CATALOG_GET,
+            _CATALOG_GET_EXAMPLE,
+            "./catalog-glossaries-get.json",
+        ),
+        catalog_glossaries_get_command,
+    ),
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("catalog", "glossaries", "list"),
+            ParamsBodyKind.CATALOG_LIST,
+            _CATALOG_LIST_EXAMPLE,
+            "./catalog-glossaries-list.json",
+        ),
+        catalog_glossaries_list_command,
+    ),
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("catalog", "glossary-categories", "get"),
+            ParamsBodyKind.CATALOG_GET,
+            _CATALOG_GET_EXAMPLE,
+            "./catalog-glossary-categories-get.json",
+        ),
+        catalog_glossary_categories_get_command,
+    ),
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("catalog", "glossary-categories", "list"),
+            ParamsBodyKind.CATALOG_LIST,
+            _CATALOG_LIST_EXAMPLE,
+            "./catalog-glossary-categories-list.json",
+        ),
+        catalog_glossary_categories_list_command,
+    ),
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("catalog", "glossary-terms", "get"),
+            ParamsBodyKind.CATALOG_GET,
+            _CATALOG_GET_EXAMPLE,
+            "./catalog-glossary-terms-get.json",
+        ),
+        catalog_glossary_terms_get_command,
+    ),
+    ParamsCommandRegistration(
+        ParamsCommandUsageMeta(
+            ("catalog", "glossary-terms", "list"),
+            ParamsBodyKind.CATALOG_LIST,
+            _CATALOG_LIST_EXAMPLE,
+            "./catalog-glossary-terms-list.json",
+        ),
+        catalog_glossary_terms_list_command,
+    ),
 )
 
 PARAMS_COMMAND_SPECS: tuple[ParamsCommandSpec, ...] = tuple(
@@ -214,6 +399,11 @@ GROUP_COMMAND_SPECS: tuple[GroupCommandSpec, ...] = (
         "lineage",
         build_lineage_group_usage(),
         tuple(spec for spec in PARAMS_COMMAND_SPECS if spec.path[0] == "lineage"),
+    ),
+    GroupCommandSpec(
+        "catalog",
+        build_catalog_group_usage(),
+        tuple(spec for spec in PARAMS_COMMAND_SPECS if spec.path[0] == "catalog"),
     ),
 )
 

@@ -44,3 +44,38 @@ class ParsedLineageInput(ImpersonationFields):
 class ParsedLineageGraphInput(ParsedLineageInput):
     maxDepth: NotRequired[int]
     maxResults: NotRequired[int]
+
+
+class ParsedKnowledgeCatalogSearchInput(ImpersonationFields):
+    projectId: str
+    location: str
+    query: str
+    scope: NotRequired[str]
+    semanticSearch: NotRequired[bool]
+    orderBy: NotRequired[str]
+    pageSize: NotRequired[int]
+    pageToken: NotRequired[str]
+
+
+class ParsedKnowledgeCatalogLookupInput(ImpersonationFields):
+    projectId: str
+    location: str
+    entry: str
+    view: NotRequired[str]
+    aspectTypes: NotRequired[list[str]]
+    paths: NotRequired[list[str]]
+
+
+class ParsedKnowledgeCatalogGetInput(ImpersonationFields):
+    name: str
+    view: NotRequired[str]
+    aspectTypes: NotRequired[list[str]]
+    paths: NotRequired[list[str]]
+
+
+class ParsedKnowledgeCatalogListInput(ImpersonationFields):
+    parent: str
+    pageSize: NotRequired[int]
+    pageToken: NotRequired[str]
+    filter: NotRequired[str]
+    orderBy: NotRequired[str]

@@ -258,3 +258,199 @@ LINEAGE_GRAPH_INPUT_SCHEMA: dict[str, Any] = {
         "maxResults": {"type": "integer", "minimum": 1, "maximum": 10000},
     },
 }
+
+_IMPERSONATION_PROPERTIES: dict[str, Any] = {
+    "impersonateServiceAccount": {"type": "string", "minLength": 1},
+    "impersonateDelegates": {
+        "type": "array",
+        "items": {"type": "string", "minLength": 1},
+    },
+}
+
+CATALOG_SEARCH_INPUT_SCHEMA: dict[str, Any] = {
+    "$schema": JSON_SCHEMA_DRAFT_2020_12,
+    "title": "bq-inspector catalog search input",
+    "type": "object",
+    "required": ["projectId", "query"],
+    "additionalProperties": False,
+    "properties": {
+        "projectId": {
+            "type": "string",
+            "minLength": 1,
+            "description": (
+                "Project used for the Dataplex search request path, billing, quota, "
+                "and dataplex.projects.search permission check."
+            ),
+        },
+        "location": {
+            "type": "string",
+            "const": "global",
+            "default": "global",
+            "description": "Knowledge Catalog search location. P0 supports global search.",
+        },
+        "query": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Opaque Knowledge Catalog search query.",
+        },
+        "scope": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Optional search scope such as a project or organization resource.",
+        },
+        "semanticSearch": {
+            "type": "boolean",
+            "default": False,
+            "description": "Enable natural-language semantic search explicitly.",
+        },
+        "orderBy": {
+            "type": "string",
+            "enum": ["relevance", "last_modified_timestamp", "last_modified_timestamp asc"],
+        },
+        "pageSize": {"type": "integer", "minimum": 1, "maximum": 1000, "default": 50},
+        "pageToken": {"type": "string", "minLength": 1},
+        **_IMPERSONATION_PROPERTIES,
+    },
+}
+
+_CATALOG_ENTRY_VIEW_PROPERTIES: dict[str, Any] = {
+    "view": {
+        "type": "string",
+        "enum": ["BASIC", "FULL", "CUSTOM", "ALL"],
+    },
+    "aspectTypes": {
+        "type": "array",
+        "items": {"type": "string", "minLength": 1},
+    },
+    "paths": {
+        "type": "array",
+        "items": {"type": "string", "minLength": 1},
+    },
+}
+
+CATALOG_ENTRIES_LOOKUP_INPUT_SCHEMA: dict[str, Any] = {
+    "$schema": JSON_SCHEMA_DRAFT_2020_12,
+    "title": "bq-inspector catalog entries lookup input",
+    "type": "object",
+    "required": ["projectId", "location", "entry"],
+    "additionalProperties": False,
+    "properties": {
+        "projectId": {"type": "string", "minLength": 1},
+        "location": {"type": "string", "minLength": 1},
+        "entry": {"type": "string", "minLength": 1},
+        **_CATALOG_ENTRY_VIEW_PROPERTIES,
+        **_IMPERSONATION_PROPERTIES,
+    },
+}
+
+CATALOG_GET_BY_NAME_INPUT_SCHEMA: dict[str, Any] = {
+    "$schema": JSON_SCHEMA_DRAFT_2020_12,
+    "title": "bq-inspector catalog get by name input",
+    "type": "object",
+    "required": ["name"],
+    "additionalProperties": False,
+    "properties": {
+        "name": {"type": "string", "minLength": 1},
+        **_CATALOG_ENTRY_VIEW_PROPERTIES,
+        **_IMPERSONATION_PROPERTIES,
+    },
+}
+
+CATALOG_LIST_BY_PARENT_INPUT_SCHEMA: dict[str, Any] = {
+    "$schema": JSON_SCHEMA_DRAFT_2020_12,
+    "title": "bq-inspector catalog list by parent input",
+    "type": "object",
+    "required": ["parent"],
+    "additionalProperties": False,
+    "properties": {
+        "parent": {"type": "string", "minLength": 1},
+        "pageSize": {"type": "integer", "minimum": 1},
+        "pageToken": {"type": "string", "minLength": 1},
+        "filter": {"type": "string", "minLength": 1},
+        "orderBy": {"type": "string", "minLength": 1},
+        **_IMPERSONATION_PROPERTIES,
+    },
+}
+
+CATALOG_ENTRIES_GET_INPUT_SCHEMA: dict[str, Any] = {
+    **CATALOG_GET_BY_NAME_INPUT_SCHEMA,
+    "title": "bq-inspector catalog entries get input",
+}
+
+CATALOG_ENTRY_GROUPS_GET_INPUT_SCHEMA: dict[str, Any] = {
+    **{k: v for k, v in CATALOG_GET_BY_NAME_INPUT_SCHEMA.items() if k != "title"},
+    "title": "bq-inspector catalog entry-groups get input",
+    "properties": {
+        "name": {"type": "string", "minLength": 1},
+        **_IMPERSONATION_PROPERTIES,
+    },
+}
+
+CATALOG_ENTRY_LINKS_GET_INPUT_SCHEMA: dict[str, Any] = {
+    **{k: v for k, v in CATALOG_GET_BY_NAME_INPUT_SCHEMA.items() if k != "title"},
+    "title": "bq-inspector catalog entry-links get input",
+    "properties": {
+        "name": {"type": "string", "minLength": 1},
+        **_IMPERSONATION_PROPERTIES,
+    },
+}
+
+CATALOG_ENTRIES_LIST_INPUT_SCHEMA: dict[str, Any] = {
+    **CATALOG_LIST_BY_PARENT_INPUT_SCHEMA,
+    "title": "bq-inspector catalog entries list input",
+}
+
+CATALOG_ENTRY_GROUPS_LIST_INPUT_SCHEMA: dict[str, Any] = {
+    **CATALOG_LIST_BY_PARENT_INPUT_SCHEMA,
+    "title": "bq-inspector catalog entry-groups list input",
+}
+
+CATALOG_ENTRY_TYPES_LIST_INPUT_SCHEMA: dict[str, Any] = {
+    **CATALOG_LIST_BY_PARENT_INPUT_SCHEMA,
+    "title": "bq-inspector catalog entry-types list input",
+}
+
+CATALOG_ASPECT_TYPES_LIST_INPUT_SCHEMA: dict[str, Any] = {
+    **CATALOG_LIST_BY_PARENT_INPUT_SCHEMA,
+    "title": "bq-inspector catalog aspect-types list input",
+}
+
+CATALOG_GLOSSARIES_LIST_INPUT_SCHEMA: dict[str, Any] = {
+    **CATALOG_LIST_BY_PARENT_INPUT_SCHEMA,
+    "title": "bq-inspector catalog glossaries list input",
+}
+
+CATALOG_GLOSSARY_CATEGORIES_LIST_INPUT_SCHEMA: dict[str, Any] = {
+    **CATALOG_LIST_BY_PARENT_INPUT_SCHEMA,
+    "title": "bq-inspector catalog glossary-categories list input",
+}
+
+CATALOG_GLOSSARY_TERMS_LIST_INPUT_SCHEMA: dict[str, Any] = {
+    **CATALOG_LIST_BY_PARENT_INPUT_SCHEMA,
+    "title": "bq-inspector catalog glossary-terms list input",
+}
+
+CATALOG_ENTRY_TYPES_GET_INPUT_SCHEMA: dict[str, Any] = {
+    **CATALOG_ENTRY_GROUPS_GET_INPUT_SCHEMA,
+    "title": "bq-inspector catalog entry-types get input",
+}
+
+CATALOG_ASPECT_TYPES_GET_INPUT_SCHEMA: dict[str, Any] = {
+    **CATALOG_ENTRY_GROUPS_GET_INPUT_SCHEMA,
+    "title": "bq-inspector catalog aspect-types get input",
+}
+
+CATALOG_GLOSSARIES_GET_INPUT_SCHEMA: dict[str, Any] = {
+    **CATALOG_ENTRY_GROUPS_GET_INPUT_SCHEMA,
+    "title": "bq-inspector catalog glossaries get input",
+}
+
+CATALOG_GLOSSARY_CATEGORIES_GET_INPUT_SCHEMA: dict[str, Any] = {
+    **CATALOG_ENTRY_GROUPS_GET_INPUT_SCHEMA,
+    "title": "bq-inspector catalog glossary-categories get input",
+}
+
+CATALOG_GLOSSARY_TERMS_GET_INPUT_SCHEMA: dict[str, Any] = {
+    **CATALOG_ENTRY_GROUPS_GET_INPUT_SCHEMA,
+    "title": "bq-inspector catalog glossary-terms get input",
+}
