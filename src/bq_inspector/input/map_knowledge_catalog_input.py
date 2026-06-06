@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from bq_inspector.core.shared.errors import create_input_failure
 from bq_inspector.input.map_input import _parse_impersonation_fields
 from bq_inspector.knowledge_catalog.defaults import (
     CATALOG_SEARCH_LOCATION,
     DEFAULT_CATALOG_LIST_PAGE_SIZE,
     DEFAULT_CATALOG_SEARCH_PAGE_SIZE,
 )
-from bq_inspector.knowledge_catalog.types.requests import CatalogEntryView
 
 if TYPE_CHECKING:
     from bq_inspector.input.parsed_input_types import (
@@ -19,19 +19,46 @@ if TYPE_CHECKING:
         ParsedKnowledgeCatalogLookupInput,
         ParsedKnowledgeCatalogSearchInput,
     )
+    from bq_inspector.knowledge_catalog.types.requests import CatalogEntryView
 
 
 def _parse_entry_view(raw: object) -> CatalogEntryView:
     view = str(raw).strip()
     if view in ("BASIC", "FULL", "CUSTOM", "ALL"):
         return view  # type: ignore[return-value]
-    raise ValueError(f"view must be BASIC, FULL, CUSTOM, or ALL; got {view!r}")
+    raise create_input_failure('view must be "BASIC", "FULL", "CUSTOM", or "ALL".')
 
 
 def _parse_string_list(raw: object) -> list[str]:
     if not isinstance(raw, list):
         return []
     return [str(item).strip() for item in raw if str(item).strip()]
+
+
+def _set_trimmed_string(
+    obj: dict[str, Any],
+    result: ParsedKnowledgeCatalogSearchInput,
+    key: str,
+) -> None:
+    value = obj.get(key)
+    if isinstance(value, str) and value.strip():
+        result[key] = value.strip()  # type: ignore[literal-required]
+
+
+def _apply_optional_search_fields(
+    obj: dict[str, Any],
+    result: ParsedKnowledgeCatalogSearchInput,
+) -> None:
+    for key in ("location", "scope", "orderBy", "pageToken"):
+        _set_trimmed_string(obj, result, key)
+
+    semantic_search = obj.get("semanticSearch")
+    if isinstance(semantic_search, bool):
+        result["semanticSearch"] = semantic_search
+
+    page_size = obj.get("pageSize")
+    if isinstance(page_size, int):
+        result["pageSize"] = page_size
 
 
 def map_knowledge_catalog_search_input(obj: dict[str, Any]) -> ParsedKnowledgeCatalogSearchInput:
@@ -44,31 +71,7 @@ def map_knowledge_catalog_search_input(obj: dict[str, Any]) -> ParsedKnowledgeCa
         "pageSize": DEFAULT_CATALOG_SEARCH_PAGE_SIZE,
         **_parse_impersonation_fields(obj),
     }
-
-    location = obj.get("location")
-    if isinstance(location, str) and location.strip():
-        result["location"] = location.strip()
-
-    scope = obj.get("scope")
-    if isinstance(scope, str) and scope.strip():
-        result["scope"] = scope.strip()
-
-    semantic_search = obj.get("semanticSearch")
-    if isinstance(semantic_search, bool):
-        result["semanticSearch"] = semantic_search
-
-    order_by = obj.get("orderBy")
-    if isinstance(order_by, str) and order_by.strip():
-        result["orderBy"] = order_by.strip()
-
-    page_size = obj.get("pageSize")
-    if isinstance(page_size, int):
-        result["pageSize"] = page_size
-
-    page_token = obj.get("pageToken")
-    if isinstance(page_token, str) and page_token.strip():
-        result["pageToken"] = page_token.strip()
-
+    _apply_optional_search_fields(obj, result)
     return result
 
 

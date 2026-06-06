@@ -118,8 +118,13 @@ def _build_params_group(spec: GroupCommandSpec) -> click.Group:
         if ctx.invoked_subcommand is None:
             raise create_input_failure(f"Unknown command: {spec.name}")
 
-    direct_commands = [command for command in spec.commands if len(command.path) == 2]
-    nested_commands = [command for command in spec.commands if len(command.path) > 2]
+    top_level_command_depth = 2
+    direct_commands = [
+        command for command in spec.commands if len(command.path) == top_level_command_depth
+    ]
+    nested_commands = [
+        command for command in spec.commands if len(command.path) > top_level_command_depth
+    ]
 
     for command_spec in direct_commands:
         _register_params_command(group, command_spec.path[-1], command_spec.runner)

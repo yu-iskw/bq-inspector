@@ -55,7 +55,7 @@ def _resolve_entry_view(view: str | None) -> dataplex_v1.EntryView | None:
     return _ENTRY_VIEW_MAP.get(view)
 
 
-def _apply_search_options(sdk_request: object, request: dict[str, object]) -> None:
+def _apply_search_options(sdk_request: object, request: SearchEntriesRequest) -> None:
     page_size = request.get("pageSize")
     if page_size is not None:
         sdk_request.page_size = page_size  # type: ignore[attr-defined]

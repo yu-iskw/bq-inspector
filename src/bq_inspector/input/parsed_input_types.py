@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from bq_inspector.core.jobs.filter import JobFilters
     from bq_inspector.core.shared.types import JobRef
     from bq_inspector.datalineage.types.requests import LineageDirection
+    from bq_inspector.knowledge_catalog.types.requests import CatalogEntryView
 
 
 class ParsedJobsViewInput(ImpersonationFields):
@@ -61,14 +62,14 @@ class ParsedKnowledgeCatalogLookupInput(ImpersonationFields):
     projectId: str
     location: str
     entry: str
-    view: NotRequired[str]
+    view: NotRequired[CatalogEntryView]
     aspectTypes: NotRequired[list[str]]
     paths: NotRequired[list[str]]
 
 
 class ParsedKnowledgeCatalogGetInput(ImpersonationFields):
     name: str
-    view: NotRequired[str]
+    view: NotRequired[CatalogEntryView]
     aspectTypes: NotRequired[list[str]]
     paths: NotRequired[list[str]]
 
