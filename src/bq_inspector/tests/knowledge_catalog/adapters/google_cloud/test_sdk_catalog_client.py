@@ -32,7 +32,7 @@ async def test_search_entries_returns_first_page_only() -> None:
         ) as dataplex_v1,
         patch(
             "bq_inspector.knowledge_catalog.adapters.google_cloud.sdk_catalog_client."
-            "MessageToDict",
+            "message_to_dict",
             return_value={"name": "example-entry"},
         ),
         patch(

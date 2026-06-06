@@ -2,135 +2,105 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any
+
 from bq_inspector.commands.catalog._shared import (
     create_catalog_get_command,
     create_catalog_list_command,
     create_catalog_lookup_command,
     create_catalog_search_command,
 )
-from bq_inspector.input.input_parsers import (
-    parse_catalog_aspect_types_get_input,
-    parse_catalog_aspect_types_list_input,
-    parse_catalog_entries_get_input,
-    parse_catalog_entries_list_input,
-    parse_catalog_entries_lookup_input,
-    parse_catalog_entry_groups_get_input,
-    parse_catalog_entry_groups_list_input,
-    parse_catalog_entry_links_get_input,
-    parse_catalog_entry_types_get_input,
-    parse_catalog_entry_types_list_input,
-    parse_catalog_glossaries_get_input,
-    parse_catalog_glossaries_list_input,
-    parse_catalog_glossary_categories_get_input,
-    parse_catalog_glossary_categories_list_input,
-    parse_catalog_glossary_terms_get_input,
-    parse_catalog_glossary_terms_list_input,
-    parse_catalog_search_input,
+from bq_inspector.commands.catalog.resource_specs import (
+    KNOWLEDGE_CATALOG_GET_COMMANDS,
+    KNOWLEDGE_CATALOG_LIST_COMMANDS,
+    knowledge_catalog_command_id,
+    knowledge_catalog_export_name,
 )
+from bq_inspector.input.input_parsers import (
+    parse_knowledge_catalog_get_input,
+    parse_knowledge_catalog_list_input,
+    parse_knowledge_catalog_lookup_input,
+    parse_knowledge_catalog_search_input,
+)
+
+if TYPE_CHECKING:
+    from bq_inspector.commands.command_shared import ParamsCommandRunner
+    from bq_inspector.knowledge_catalog.port.catalog_client import CatalogInspectionClient
+    from bq_inspector.knowledge_catalog.types.requests import GetByNameRequest, ListByParentRequest
+
+
+def _client_get_fetch(client_method: str) -> Any:
+    async def fetch(
+        client: CatalogInspectionClient,
+        request: GetByNameRequest,
+    ) -> dict[str, object]:
+        method = getattr(client, client_method)
+        return await method(request)
+
+    return fetch
+
+
+def _client_list_fetch(client_method: str) -> Any:
+    async def fetch(
+        client: CatalogInspectionClient,
+        request: ListByParentRequest,
+    ) -> dict[str, object]:
+        method = getattr(client, client_method)
+        return await method(request)
+
+    return fetch
+
+
+def _build_get_command(spec: Any) -> ParamsCommandRunner:
+    command_id = knowledge_catalog_command_id(spec.subgroup, "get")
+
+    def parse(raw: object) -> Any:
+        return parse_knowledge_catalog_get_input(command_id, raw)
+
+    return create_catalog_get_command(
+        command_id,
+        parse,
+        fetch=_client_get_fetch(spec.client_method),
+    )
+
+
+def _build_list_command(spec: Any) -> ParamsCommandRunner:
+    command_id = knowledge_catalog_command_id(spec.subgroup, "list")
+
+    def parse(raw: object) -> Any:
+        return parse_knowledge_catalog_list_input(command_id, raw)
+
+    return create_catalog_list_command(
+        command_id,
+        parse,
+        collection_key=spec.collection_key,
+        fetch=_client_list_fetch(spec.client_method),
+    )
+
 
 catalog_search_command = create_catalog_search_command(
     "catalog search",
-    parse_catalog_search_input,
+    parse_knowledge_catalog_search_input,
 )
 
 catalog_entries_lookup_command = create_catalog_lookup_command(
     "catalog entries lookup",
-    parse_catalog_entries_lookup_input,
+    parse_knowledge_catalog_lookup_input,
 )
 
-catalog_entries_get_command = create_catalog_get_command(
-    "catalog entries get",
-    parse_catalog_entries_get_input,
-    fetch=lambda client, request: client.get_entry(request),
-)
+_COMMAND_EXPORTS: dict[str, ParamsCommandRunner] = {
+    "catalog_search_command": catalog_search_command,
+    "catalog_entries_lookup_command": catalog_entries_lookup_command,
+}
 
-catalog_entries_list_command = create_catalog_list_command(
-    "catalog entries list",
-    parse_catalog_entries_list_input,
-    collection_key="entries",
-    fetch=lambda client, request: client.list_entries(request),
-)
+for _get_spec in KNOWLEDGE_CATALOG_GET_COMMANDS:
+    _COMMAND_EXPORTS[knowledge_catalog_export_name(_get_spec.subgroup, "get")] = _build_get_command(
+        _get_spec
+    )
 
-catalog_entry_groups_get_command = create_catalog_get_command(
-    "catalog entry-groups get",
-    parse_catalog_entry_groups_get_input,
-    fetch=lambda client, request: client.get_entry_group(request),
-)
+for _list_spec in KNOWLEDGE_CATALOG_LIST_COMMANDS:
+    _COMMAND_EXPORTS[knowledge_catalog_export_name(_list_spec.subgroup, "list")] = (
+        _build_list_command(_list_spec)
+    )
 
-catalog_entry_groups_list_command = create_catalog_list_command(
-    "catalog entry-groups list",
-    parse_catalog_entry_groups_list_input,
-    collection_key="entryGroups",
-    fetch=lambda client, request: client.list_entry_groups(request),
-)
-
-catalog_entry_types_get_command = create_catalog_get_command(
-    "catalog entry-types get",
-    parse_catalog_entry_types_get_input,
-    fetch=lambda client, request: client.get_entry_type(request),
-)
-
-catalog_entry_types_list_command = create_catalog_list_command(
-    "catalog entry-types list",
-    parse_catalog_entry_types_list_input,
-    collection_key="entryTypes",
-    fetch=lambda client, request: client.list_entry_types(request),
-)
-
-catalog_aspect_types_get_command = create_catalog_get_command(
-    "catalog aspect-types get",
-    parse_catalog_aspect_types_get_input,
-    fetch=lambda client, request: client.get_aspect_type(request),
-)
-
-catalog_aspect_types_list_command = create_catalog_list_command(
-    "catalog aspect-types list",
-    parse_catalog_aspect_types_list_input,
-    collection_key="aspectTypes",
-    fetch=lambda client, request: client.list_aspect_types(request),
-)
-
-catalog_entry_links_get_command = create_catalog_get_command(
-    "catalog entry-links get",
-    parse_catalog_entry_links_get_input,
-    fetch=lambda client, request: client.get_entry_link(request),
-)
-
-catalog_glossaries_get_command = create_catalog_get_command(
-    "catalog glossaries get",
-    parse_catalog_glossaries_get_input,
-    fetch=lambda client, request: client.get_glossary(request),
-)
-
-catalog_glossaries_list_command = create_catalog_list_command(
-    "catalog glossaries list",
-    parse_catalog_glossaries_list_input,
-    collection_key="glossaries",
-    fetch=lambda client, request: client.list_glossaries(request),
-)
-
-catalog_glossary_categories_get_command = create_catalog_get_command(
-    "catalog glossary-categories get",
-    parse_catalog_glossary_categories_get_input,
-    fetch=lambda client, request: client.get_glossary_category(request),
-)
-
-catalog_glossary_categories_list_command = create_catalog_list_command(
-    "catalog glossary-categories list",
-    parse_catalog_glossary_categories_list_input,
-    collection_key="categories",
-    fetch=lambda client, request: client.list_glossary_categories(request),
-)
-
-catalog_glossary_terms_get_command = create_catalog_get_command(
-    "catalog glossary-terms get",
-    parse_catalog_glossary_terms_get_input,
-    fetch=lambda client, request: client.get_glossary_term(request),
-)
-
-catalog_glossary_terms_list_command = create_catalog_list_command(
-    "catalog glossary-terms list",
-    parse_catalog_glossary_terms_list_input,
-    collection_key="terms",
-    fetch=lambda client, request: client.list_glossary_terms(request),
-)
+globals().update(_COMMAND_EXPORTS)

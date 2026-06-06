@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 from bq_inspector.commands.command_shared import (
     InspectionCommandOptions,
-    create_run_catalog_command,
+    create_run_params_command,
     create_sdk_inspection_client_from_input,
 )
 from bq_inspector.core.shared.errors import create_input_failure
@@ -14,11 +14,11 @@ from bq_inspector.core.tables.get import get_table_metadata
 from bq_inspector.input.input_parsers import parse_tables_get_input
 
 if TYPE_CHECKING:
-    from bq_inspector.input.parsed_input_types import ParsedCatalogInput
+    from bq_inspector.input.parsed_input_types import ParsedDatasetTableInput
 
 
 async def _execute_tables_get(
-    input_data: ParsedCatalogInput,
+    input_data: ParsedDatasetTableInput,
     command_options: InspectionCommandOptions,
 ) -> Any:
     table_id = input_data.get("tableId")
@@ -40,7 +40,7 @@ async def _execute_tables_get(
     )
 
 
-tables_get_command = create_run_catalog_command(
+tables_get_command = create_run_params_command(
     "tables get",
     parse_tables_get_input,
     _execute_tables_get,

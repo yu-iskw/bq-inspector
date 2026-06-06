@@ -118,6 +118,7 @@ def _build_params_group(spec: GroupCommandSpec) -> click.Group:
         if ctx.invoked_subcommand is None:
             raise create_input_failure(f"Unknown command: {spec.name}")
 
+    # Catalog (and future groups) nest resources as group -> subgroup -> verb (depth 3).
     top_level_command_depth = 2
     direct_commands = [
         command for command in spec.commands if len(command.path) == top_level_command_depth

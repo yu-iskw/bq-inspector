@@ -25,7 +25,7 @@ class ParsedJobsListInput(ImpersonationFields):
     filters: JobFilters
 
 
-class ParsedCatalogInput(ImpersonationFields):
+class ParsedDatasetTableInput(ImpersonationFields):
     projectId: str
     datasetId: str
     tableId: NotRequired[str]

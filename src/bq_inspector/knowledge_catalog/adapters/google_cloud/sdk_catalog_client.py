@@ -5,10 +5,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from google.cloud import dataplex_v1
-from google.protobuf.json_format import MessageToDict
-from google.protobuf.message import Message
 
 from bq_inspector.core.shared.invoke_sync import invoke_sync
+from bq_inspector.core.shared.protobuf_dict import message_to_dict
 
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
@@ -32,14 +31,8 @@ _ENTRY_VIEW_MAP: dict[str, dataplex_v1.EntryView] = {
 }
 
 
-def _message_to_dict(message: object) -> dict[str, object]:
-    protobuf = getattr(message, "_pb", message)
-    if not isinstance(protobuf, Message):
-        raise TypeError("Expected protobuf message convertible to dict")
-    result = MessageToDict(protobuf, preserving_proto_field_name=False)
-    if isinstance(result, dict):
-        return result
-    raise TypeError("Expected protobuf message convertible to dict")
+def _catalog_dict(message: object) -> dict[str, object]:
+    return message_to_dict(message, preserving_proto_field_name=False)
 
 
 def _read_next_page_token(pager: object) -> str | None:
@@ -119,11 +112,68 @@ def _list_page_from_pager(
 ) -> ListResourcesPage:
     items = getattr(pager, items_attr, [])
     page: ListResourcesPage = {
-        "resources": [_message_to_dict(item) for item in items],
+        "resources": [_catalog_dict(item) for item in items],
     }
     if token := _read_next_page_token(pager):
         page["nextPageToken"] = token
     return page
+
+
+def _service_for_spec(client: SdkCatalogClient, service: str) -> object:
+    if service == "catalog":
+        return client._catalog
+    return client._glossary
+
+
+def _make_get_method(spec: Any) -> Any:
+    async def method(self: SdkCatalogClient, request: GetByNameRequest) -> dict[str, object]:
+        return await self._get_resource(
+            request,
+            request_cls=getattr(dataplex_v1, spec.request_type_name),
+            service=_service_for_spec(self, spec.service),
+            method_name=spec.sdk_method,
+            api=spec.api,
+            apply_entry_view=spec.apply_entry_view,
+        )
+
+    method.__name__ = spec.client_method
+    return method
+
+
+def _make_list_method(spec: Any) -> Any:
+    async def method(self: SdkCatalogClient, request: ListByParentRequest) -> ListResourcesPage:
+        return await self._list_resources(
+            request,
+            request_cls=getattr(dataplex_v1, spec.request_type_name),
+            service=_service_for_spec(self, spec.service),
+            method_name=spec.sdk_method,
+            api=spec.api,
+            items_attr=spec.items_attr,
+        )
+
+    method.__name__ = spec.client_method
+    return method
+
+
+_SDK_METHODS_ATTACHED = False
+
+
+def _attach_sdk_methods() -> None:
+    global _SDK_METHODS_ATTACHED  # noqa: PLW0603
+    if _SDK_METHODS_ATTACHED:
+        return
+    from bq_inspector.commands.catalog.resource_specs import (  # noqa: PLC0415
+        KNOWLEDGE_CATALOG_GET_SDK_SPECS,
+        KNOWLEDGE_CATALOG_LIST_SDK_SPECS,
+    )
+
+    for get_spec in KNOWLEDGE_CATALOG_GET_SDK_SPECS:
+        setattr(SdkCatalogClient, get_spec.client_method, _make_get_method(get_spec))
+
+    for list_spec in KNOWLEDGE_CATALOG_LIST_SDK_SPECS:
+        setattr(SdkCatalogClient, list_spec.client_method, _make_list_method(list_spec))
+
+    _SDK_METHODS_ATTACHED = True
 
 
 class SdkCatalogClient:
@@ -153,7 +203,7 @@ class SdkCatalogClient:
             return method(request=sdk_request)
 
         resource = await invoke_sync(_call, api=api)
-        return _message_to_dict(resource)
+        return _catalog_dict(resource)
 
     async def _list_resources(  # noqa: PLR0913
         self,
@@ -188,7 +238,7 @@ class SdkCatalogClient:
         pager = await invoke_sync(_call, api="dataplex.projects.locations.searchEntries")
         page: SearchEntriesPage = {
             "entries": [
-                {"entry": _message_to_dict(result.dataplex_entry)}
+                {"entry": _catalog_dict(result.dataplex_entry)}
                 for result in pager.results  # type: ignore[attr-defined]
             ],
             "totalSize": pager.total_size,  # type: ignore[attr-defined]
@@ -209,147 +259,7 @@ class SdkCatalogClient:
             return self._catalog.lookup_entry(request=sdk_request)
 
         entry = await invoke_sync(_call, api="dataplex.projects.locations.lookupEntry")
-        return _message_to_dict(entry)
+        return _catalog_dict(entry)
 
-    async def get_entry(self, request: GetByNameRequest) -> dict[str, object]:
-        return await self._get_resource(
-            request,
-            request_cls=dataplex_v1.GetEntryRequest,
-            service=self._catalog,
-            method_name="get_entry",
-            api="dataplex.projects.locations.entryGroups.entries.get",
-            apply_entry_view=True,
-        )
 
-    async def list_entries(self, request: ListByParentRequest) -> ListResourcesPage:
-        return await self._list_resources(
-            request,
-            request_cls=dataplex_v1.ListEntriesRequest,
-            service=self._catalog,
-            method_name="list_entries",
-            api="dataplex.projects.locations.entryGroups.entries.list",
-            items_attr="entries",
-        )
-
-    async def get_entry_group(self, request: GetByNameRequest) -> dict[str, object]:
-        return await self._get_resource(
-            request,
-            request_cls=dataplex_v1.GetEntryGroupRequest,
-            service=self._catalog,
-            method_name="get_entry_group",
-            api="dataplex.projects.locations.entryGroups.get",
-        )
-
-    async def list_entry_groups(self, request: ListByParentRequest) -> ListResourcesPage:
-        return await self._list_resources(
-            request,
-            request_cls=dataplex_v1.ListEntryGroupsRequest,
-            service=self._catalog,
-            method_name="list_entry_groups",
-            api="dataplex.projects.locations.entryGroups.list",
-            items_attr="entry_groups",
-        )
-
-    async def get_entry_type(self, request: GetByNameRequest) -> dict[str, object]:
-        return await self._get_resource(
-            request,
-            request_cls=dataplex_v1.GetEntryTypeRequest,
-            service=self._catalog,
-            method_name="get_entry_type",
-            api="dataplex.projects.locations.entryTypes.get",
-        )
-
-    async def list_entry_types(self, request: ListByParentRequest) -> ListResourcesPage:
-        return await self._list_resources(
-            request,
-            request_cls=dataplex_v1.ListEntryTypesRequest,
-            service=self._catalog,
-            method_name="list_entry_types",
-            api="dataplex.projects.locations.entryTypes.list",
-            items_attr="entry_types",
-        )
-
-    async def get_aspect_type(self, request: GetByNameRequest) -> dict[str, object]:
-        return await self._get_resource(
-            request,
-            request_cls=dataplex_v1.GetAspectTypeRequest,
-            service=self._catalog,
-            method_name="get_aspect_type",
-            api="dataplex.projects.locations.aspectTypes.get",
-        )
-
-    async def list_aspect_types(self, request: ListByParentRequest) -> ListResourcesPage:
-        return await self._list_resources(
-            request,
-            request_cls=dataplex_v1.ListAspectTypesRequest,
-            service=self._catalog,
-            method_name="list_aspect_types",
-            api="dataplex.projects.locations.aspectTypes.list",
-            items_attr="aspect_types",
-        )
-
-    async def get_entry_link(self, request: GetByNameRequest) -> dict[str, object]:
-        return await self._get_resource(
-            request,
-            request_cls=dataplex_v1.GetEntryLinkRequest,
-            service=self._catalog,
-            method_name="get_entry_link",
-            api="dataplex.projects.locations.entryGroups.entryLinks.get",
-        )
-
-    async def get_glossary(self, request: GetByNameRequest) -> dict[str, object]:
-        return await self._get_resource(
-            request,
-            request_cls=dataplex_v1.GetGlossaryRequest,
-            service=self._glossary,
-            method_name="get_glossary",
-            api="dataplex.projects.locations.glossaries.get",
-        )
-
-    async def list_glossaries(self, request: ListByParentRequest) -> ListResourcesPage:
-        return await self._list_resources(
-            request,
-            request_cls=dataplex_v1.ListGlossariesRequest,
-            service=self._glossary,
-            method_name="list_glossaries",
-            api="dataplex.projects.locations.glossaries.list",
-            items_attr="glossaries",
-        )
-
-    async def get_glossary_category(self, request: GetByNameRequest) -> dict[str, object]:
-        return await self._get_resource(
-            request,
-            request_cls=dataplex_v1.GetGlossaryCategoryRequest,
-            service=self._glossary,
-            method_name="get_glossary_category",
-            api="dataplex.projects.locations.glossaries.categories.get",
-        )
-
-    async def list_glossary_categories(self, request: ListByParentRequest) -> ListResourcesPage:
-        return await self._list_resources(
-            request,
-            request_cls=dataplex_v1.ListGlossaryCategoriesRequest,
-            service=self._glossary,
-            method_name="list_glossary_categories",
-            api="dataplex.projects.locations.glossaries.categories.list",
-            items_attr="categories",
-        )
-
-    async def get_glossary_term(self, request: GetByNameRequest) -> dict[str, object]:
-        return await self._get_resource(
-            request,
-            request_cls=dataplex_v1.GetGlossaryTermRequest,
-            service=self._glossary,
-            method_name="get_glossary_term",
-            api="dataplex.projects.locations.glossaries.terms.get",
-        )
-
-    async def list_glossary_terms(self, request: ListByParentRequest) -> ListResourcesPage:
-        return await self._list_resources(
-            request,
-            request_cls=dataplex_v1.ListGlossaryTermsRequest,
-            service=self._glossary,
-            method_name="list_glossary_terms",
-            api="dataplex.projects.locations.glossaries.terms.list",
-            items_attr="terms",
-        )
+_attach_sdk_methods()

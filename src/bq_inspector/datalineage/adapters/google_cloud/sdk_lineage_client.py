@@ -5,10 +5,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from google.cloud import datacatalog_lineage_v1
-from google.protobuf.json_format import MessageToDict
-from google.protobuf.message import Message
 
 from bq_inspector.core.shared.invoke_sync import invoke_sync
+from bq_inspector.core.shared.protobuf_dict import message_to_dict
 from bq_inspector.datalineage.defaults import (
     DEFAULT_LINEAGE_GRAPH_MAX_DEPTH,
     DEFAULT_LINEAGE_GRAPH_MAX_RESULTS,
@@ -29,18 +28,8 @@ if TYPE_CHECKING:
     )
 
 
-def _message_to_dict(message: object) -> dict[str, object]:
-    protobuf = getattr(message, "_pb", message)
-    if not isinstance(protobuf, Message):
-        raise TypeError("Expected protobuf message convertible to dict")
-    result = MessageToDict(protobuf, preserving_proto_field_name=False)
-    if isinstance(result, dict):
-        return result
-    raise TypeError("Expected protobuf message convertible to dict")
-
-
 def _links_to_dicts(links: Iterable[object]) -> list[dict[str, object]]:
-    return [_message_to_dict(link) for link in links]
+    return [message_to_dict(link, preserving_proto_field_name=False) for link in links]
 
 
 def _streaming_direction(

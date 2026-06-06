@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from bq_inspector.core.shared.types import JobRef
     from bq_inspector.datalineage.types.requests import LineageDirection
     from bq_inspector.input.parsed_input_types import (
-        ParsedCatalogInput,
+        ParsedDatasetTableInput,
         ParsedJobsListInput,
         ParsedJobsViewInput,
         ParsedLineageGraphInput,
@@ -86,9 +86,9 @@ def map_jobs_list_input(obj: dict[str, Any]) -> ParsedJobsListInput:
     return result
 
 
-def map_catalog_input(obj: dict[str, Any]) -> ParsedCatalogInput:
-    """Map catalog command params to domain input."""
-    result: ParsedCatalogInput = {
+def map_dataset_table_input(obj: dict[str, Any]) -> ParsedDatasetTableInput:
+    """Map dataset/table command params to domain input."""
+    result: ParsedDatasetTableInput = {
         "projectId": str(obj["projectId"]).strip(),
         "datasetId": str(obj["datasetId"]).strip(),
         **(_parse_impersonation_fields(obj)),

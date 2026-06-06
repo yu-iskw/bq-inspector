@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from bq_inspector.commands.command_shared import (
     InspectionCommandOptions,
@@ -11,7 +11,7 @@ from bq_inspector.commands.command_shared import (
     create_sdk_inspection_client_from_input,
 )
 from bq_inspector.core.jobs.get import InspectJobOptions, inspect_jobs
-from bq_inspector.core.shared.impersonation_fields import merge_impersonation_into
+from bq_inspector.core.jobs.request_build import build_inspect_job_request
 from bq_inspector.input.input_parsers import parse_jobs_view_input_for_command
 
 if TYPE_CHECKING:
@@ -29,16 +29,7 @@ async def _execute_jobs_view(
     if client is None:
         client = await create_sdk_inspection_client_from_input(input_data)
 
-    request = cast(
-        "Any",
-        merge_impersonation_into(
-            {
-                "jobs": input_data["jobs"],
-                "view": view,
-            },
-            input_data,
-        ),
-    )
+    request = build_inspect_job_request(input_data, view)
 
     return await inspect_jobs(
         request,

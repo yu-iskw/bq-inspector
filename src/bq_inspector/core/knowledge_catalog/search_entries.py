@@ -4,65 +4,17 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from bq_inspector.core.knowledge_catalog.parent import catalog_parent
+from bq_inspector.core.knowledge_catalog.request_build import (
+    build_search_request_echo,
+    build_search_sdk_request,
+)
 from bq_inspector.core.knowledge_catalog.search_runner import run_catalog_use_case
 from bq_inspector.core.knowledge_catalog.warnings import unreachable_search_warnings
-from bq_inspector.core.shared.impersonation_fields import merge_impersonation_into
-from bq_inspector.knowledge_catalog.defaults import (
-    CATALOG_SEARCH_LOCATION,
-    DEFAULT_CATALOG_SEARCH_PAGE_SIZE,
-)
 
 if TYPE_CHECKING:
     from bq_inspector.core.shared.types import BqInspectSchemaVersion, ToolBlock
     from bq_inspector.input.parsed_input_types import ParsedKnowledgeCatalogSearchInput
     from bq_inspector.knowledge_catalog.port.catalog_client import CatalogInspectionClient
-    from bq_inspector.knowledge_catalog.types.requests import SearchEntriesRequest
-
-
-def build_search_request_echo(params: ParsedKnowledgeCatalogSearchInput) -> dict[str, Any]:
-    """Build the request echo for catalog search."""
-    echo: dict[str, Any] = {
-        "projectId": params["projectId"],
-        "location": params.get("location", CATALOG_SEARCH_LOCATION),
-        "query": params["query"],
-        "pageSize": params.get("pageSize", DEFAULT_CATALOG_SEARCH_PAGE_SIZE),
-    }
-    scope = params.get("scope")
-    if scope is not None:
-        echo["scope"] = scope
-    semantic_search = params.get("semanticSearch")
-    if semantic_search is not None:
-        echo["semanticSearch"] = semantic_search
-    order_by = params.get("orderBy")
-    if order_by is not None:
-        echo["orderBy"] = order_by
-    page_token = params.get("pageToken")
-    if page_token is not None:
-        echo["pageToken"] = page_token
-    return merge_impersonation_into(echo, params)
-
-
-def _build_sdk_search_request(params: ParsedKnowledgeCatalogSearchInput) -> SearchEntriesRequest:
-    location = params.get("location", CATALOG_SEARCH_LOCATION)
-    sdk_request: SearchEntriesRequest = {
-        "name": catalog_parent(params["projectId"], location),
-        "query": params["query"],
-        "pageSize": params.get("pageSize", DEFAULT_CATALOG_SEARCH_PAGE_SIZE),
-    }
-    scope = params.get("scope")
-    if scope is not None:
-        sdk_request["scope"] = scope
-    semantic_search = params.get("semanticSearch")
-    if semantic_search is not None:
-        sdk_request["semanticSearch"] = semantic_search
-    order_by = params.get("orderBy")
-    if order_by is not None:
-        sdk_request["orderBy"] = order_by
-    page_token = params.get("pageToken")
-    if page_token is not None:
-        sdk_request["pageToken"] = page_token
-    return sdk_request
 
 
 async def search_catalog_entries(
@@ -73,7 +25,7 @@ async def search_catalog_entries(
 ) -> dict[str, Any]:
     """Search Knowledge Catalog entries and return a stable JSON envelope."""
     request_echo = build_search_request_echo(params)
-    sdk_request = _build_sdk_search_request(params)
+    sdk_request = build_search_sdk_request(params)
 
     async def execute(
         schema_version: BqInspectSchemaVersion,

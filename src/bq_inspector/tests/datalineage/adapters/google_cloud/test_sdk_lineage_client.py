@@ -111,7 +111,7 @@ async def test_search_lineage_graph_merges_stream_chunks(
     lineage_client_mock_fx.search_lineage_streaming.return_value = [chunk_one, chunk_two]
 
     with patch(
-        "bq_inspector.datalineage.adapters.google_cloud.sdk_lineage_client._message_to_dict",
+        "bq_inspector.datalineage.adapters.google_cloud.sdk_lineage_client.message_to_dict",
         return_value={"link": "stub"},
     ):
         result = await sdk_lineage_client_fx.search_lineage_graph(

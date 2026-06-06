@@ -32,8 +32,33 @@ class FixtureCatalogClient:
     """CatalogInspectionClient fake backed by canned responses."""
 
     def __init__(self, fixture: FixtureCatalogInput) -> None:
+        from bq_inspector.commands.catalog.resource_specs import (  # noqa: PLC0415
+            KNOWLEDGE_CATALOG_GET_COMMANDS,
+            KNOWLEDGE_CATALOG_LIST_COMMANDS,
+        )
+
         self._fixture = fixture
         self.calls: list[tuple[str, Any]] = []
+
+        for spec in KNOWLEDGE_CATALOG_GET_COMMANDS:
+            setattr(self, spec.client_method, self._make_get_handler(spec.client_method))
+
+        for spec in KNOWLEDGE_CATALOG_LIST_COMMANDS:
+            setattr(self, spec.client_method, self._make_list_handler(spec.client_method))
+
+    def _make_get_handler(self, method_name: str) -> Any:
+        async def handler(request: GetByNameRequest) -> dict[str, object]:
+            self.calls.append((method_name, request))
+            return self._fixture.get_by_name.get(request["name"], {"name": request["name"]})
+
+        return handler
+
+    def _make_list_handler(self, method_name: str) -> Any:
+        async def handler(request: ListByParentRequest) -> ListResourcesPage:
+            self.calls.append((method_name, request))
+            return self._fixture.list_by_parent.get(request["parent"], {"resources": []})
+
+        return handler
 
     async def search_entries(self, request: SearchEntriesRequest) -> SearchEntriesPage:
         self.calls.append(("search_entries", request))
@@ -46,63 +71,3 @@ class FixtureCatalogClient:
     async def lookup_entry(self, request: LookupEntryRequest) -> dict[str, object]:
         self.calls.append(("lookup_entry", request))
         return self._fixture.lookup_by_entry.get(request["entry"], {"name": request["entry"]})
-
-    async def get_entry(self, request: GetByNameRequest) -> dict[str, object]:
-        self.calls.append(("get_entry", request))
-        return self._fixture.get_by_name.get(request["name"], {"name": request["name"]})
-
-    async def list_entries(self, request: ListByParentRequest) -> ListResourcesPage:
-        self.calls.append(("list_entries", request))
-        return self._fixture.list_by_parent.get(request["parent"], {"resources": []})
-
-    async def get_entry_group(self, request: GetByNameRequest) -> dict[str, object]:
-        self.calls.append(("get_entry_group", request))
-        return self._fixture.get_by_name.get(request["name"], {"name": request["name"]})
-
-    async def list_entry_groups(self, request: ListByParentRequest) -> ListResourcesPage:
-        self.calls.append(("list_entry_groups", request))
-        return self._fixture.list_by_parent.get(request["parent"], {"resources": []})
-
-    async def get_entry_type(self, request: GetByNameRequest) -> dict[str, object]:
-        self.calls.append(("get_entry_type", request))
-        return self._fixture.get_by_name.get(request["name"], {"name": request["name"]})
-
-    async def list_entry_types(self, request: ListByParentRequest) -> ListResourcesPage:
-        self.calls.append(("list_entry_types", request))
-        return self._fixture.list_by_parent.get(request["parent"], {"resources": []})
-
-    async def get_aspect_type(self, request: GetByNameRequest) -> dict[str, object]:
-        self.calls.append(("get_aspect_type", request))
-        return self._fixture.get_by_name.get(request["name"], {"name": request["name"]})
-
-    async def list_aspect_types(self, request: ListByParentRequest) -> ListResourcesPage:
-        self.calls.append(("list_aspect_types", request))
-        return self._fixture.list_by_parent.get(request["parent"], {"resources": []})
-
-    async def get_entry_link(self, request: GetByNameRequest) -> dict[str, object]:
-        self.calls.append(("get_entry_link", request))
-        return self._fixture.get_by_name.get(request["name"], {"name": request["name"]})
-
-    async def get_glossary(self, request: GetByNameRequest) -> dict[str, object]:
-        self.calls.append(("get_glossary", request))
-        return self._fixture.get_by_name.get(request["name"], {"name": request["name"]})
-
-    async def list_glossaries(self, request: ListByParentRequest) -> ListResourcesPage:
-        self.calls.append(("list_glossaries", request))
-        return self._fixture.list_by_parent.get(request["parent"], {"resources": []})
-
-    async def get_glossary_category(self, request: GetByNameRequest) -> dict[str, object]:
-        self.calls.append(("get_glossary_category", request))
-        return self._fixture.get_by_name.get(request["name"], {"name": request["name"]})
-
-    async def list_glossary_categories(self, request: ListByParentRequest) -> ListResourcesPage:
-        self.calls.append(("list_glossary_categories", request))
-        return self._fixture.list_by_parent.get(request["parent"], {"resources": []})
-
-    async def get_glossary_term(self, request: GetByNameRequest) -> dict[str, object]:
-        self.calls.append(("get_glossary_term", request))
-        return self._fixture.get_by_name.get(request["name"], {"name": request["name"]})
-
-    async def list_glossary_terms(self, request: ListByParentRequest) -> ListResourcesPage:
-        self.calls.append(("list_glossary_terms", request))
-        return self._fixture.list_by_parent.get(request["parent"], {"resources": []})

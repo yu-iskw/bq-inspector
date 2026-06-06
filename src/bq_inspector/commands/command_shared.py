@@ -130,6 +130,3 @@ def create_run_params_command(
         return await run_operational(parse_operational_argv(argv), command_options)
 
     return ParamsCommandRunner(run_argv=run_argv, run_operational=run_operational)
-
-
-create_run_catalog_command = create_run_params_command

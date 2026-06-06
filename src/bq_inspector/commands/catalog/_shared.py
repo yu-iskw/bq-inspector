@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from bq_inspector.commands.command_shared import (
     InspectionCommandOptions,
@@ -42,7 +42,7 @@ async def _resolve_catalog_client(
     client = command_options.catalog_client
     if client is None:
         client = await create_sdk_catalog_client_from_input(input_data)
-    return client
+    return cast("CatalogInspectionClient", client)
 
 
 async def run_catalog_command(
