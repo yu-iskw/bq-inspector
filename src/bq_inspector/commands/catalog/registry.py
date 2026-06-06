@@ -19,7 +19,6 @@ from bq_inspector.commands.catalog.resource_specs import (
     CATALOG_LIST_EXAMPLE,
     KNOWLEDGE_CATALOG_GET_RESOURCES,
     KNOWLEDGE_CATALOG_LIST_RESOURCES,
-    knowledge_catalog_body_kind,
     knowledge_catalog_command_path,
     knowledge_catalog_export_name,
 )
@@ -34,6 +33,15 @@ _CATALOG_LOOKUP_EXAMPLE = (
     '{"projectId":"my-proj","location":"global",'
     '"entry":"projects/analytics-prod/locations/us/entryGroups/@bigquery/entries/example"}'
 )
+
+
+def knowledge_catalog_body_kind(verb: str) -> ParamsBodyKind:
+    """Return params body kind for a Knowledge Catalog verb."""
+    if verb == "get":
+        return ParamsBodyKind.CATALOG_GET
+    if verb == "list":
+        return ParamsBodyKind.CATALOG_LIST
+    raise ValueError(f"Unsupported Knowledge Catalog verb: {verb}")
 
 
 def build_knowledge_catalog_registrations() -> tuple[

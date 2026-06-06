@@ -21,6 +21,9 @@ from bq_inspector.schemas.input_schema import (
     TABLES_GET_INPUT_SCHEMA,
     TABLES_LIST_INPUT_SCHEMA,
 )
+from bq_inspector.schemas.knowledge_catalog_schemas import (
+    build_knowledge_catalog_command_schemas,
+)
 from bq_inspector.schemas.output_schema import (
     CATALOG_ENTRIES_LOOKUP_OUTPUT_SCHEMA,
     CATALOG_SEARCH_OUTPUT_SCHEMA,
@@ -114,10 +117,6 @@ _BASE_COMMAND_SCHEMAS: dict[str, Any] = {
 
 @lru_cache(maxsize=1)
 def _command_schemas() -> dict[str, Any]:
-    from bq_inspector.schemas.knowledge_catalog_schemas import (  # noqa: PLC0415
-        build_knowledge_catalog_command_schemas,
-    )
-
     return {
         **_BASE_COMMAND_SCHEMAS,
         **build_knowledge_catalog_command_schemas(),

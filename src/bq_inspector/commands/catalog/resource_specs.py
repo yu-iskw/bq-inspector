@@ -5,8 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-from bq_inspector.cli.usage_build import ParamsBodyKind
-
 CatalogServiceKind = Literal["catalog", "glossary"]
 
 
@@ -213,12 +211,3 @@ def knowledge_catalog_export_name(subgroup: str, verb: str) -> str:
     """Return the module-level command runner export name."""
     slug = subgroup.replace("-", "_")
     return f"catalog_{slug}_{verb}_command"
-
-
-def knowledge_catalog_body_kind(verb: str) -> ParamsBodyKind:
-    """Return params body kind for a Knowledge Catalog verb."""
-    if verb == "get":
-        return ParamsBodyKind.CATALOG_GET
-    if verb == "list":
-        return ParamsBodyKind.CATALOG_LIST
-    raise ValueError(f"Unsupported Knowledge Catalog verb: {verb}")
