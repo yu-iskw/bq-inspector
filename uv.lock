@@ -63,6 +63,7 @@ dependencies = [
     { name = "click" },
     { name = "google-auth" },
     { name = "google-cloud-bigquery" },
+    { name = "google-cloud-datacatalog-lineage" },
     { name = "jsonschema" },
     { name = "typing-extensions" },
 ]
@@ -86,6 +87,7 @@ requires-dist = [
     { name = "click" },
     { name = "google-auth" },
     { name = "google-cloud-bigquery" },
+    { name = "google-cloud-datacatalog-lineage", specifier = ">=0.7.0" },
     { name = "jsonschema" },
     { name = "typing-extensions" },
 ]
@@ -584,6 +586,22 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a8/dd/1eef226e470369b26824a505c34482c0b493bc35fe8e0c6b003b5feca21a/google_cloud_core-2.6.0.tar.gz", hash = "sha256:e76149739f90fac1fc6757c09f47eaccb3145b54adbd7759b0f7c4b235f46c83", size = 36001, upload-time = "2026-05-07T08:04:04.124Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/84/4a/98da8930ab109c73d9a5d13782a9ebb81ea8c111f6d534a567b71d23e52b/google_cloud_core-2.6.0-py3-none-any.whl", hash = "sha256:6d63ac8e5eca6d9e4319d0a1e2265fadcd7f1049904378caecfa01cf52dd869e", size = 29390, upload-time = "2026-05-07T08:02:34.672Z" },
+]
+
+[[package]]
+name = "google-cloud-datacatalog-lineage"
+version = "0.7.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "google-api-core", extra = ["grpc"] },
+    { name = "google-auth" },
+    { name = "grpcio" },
+    { name = "proto-plus" },
+    { name = "protobuf" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e7/e3/6dd6c47d3ebe70ad489983a6bd09d243192a4631b63d482819fd50edb421/google_cloud_datacatalog_lineage-0.7.0.tar.gz", hash = "sha256:e7709d8e8d6c2864885cddaa077a567525a7d0f1fb9a5512cddef1c13e3d6cff", size = 116654, upload-time = "2026-06-03T15:27:55.391Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/24/de/65a935b959692bc38f518ffd41a7e06a93aec212f6aebef8769d627a754d/google_cloud_datacatalog_lineage-0.7.0-py3-none-any.whl", hash = "sha256:be20622685a84ac45a2c974b370d36c71b898a1cd7c18428c87e9a202154313e", size = 89021, upload-time = "2026-06-03T15:27:02.635Z" },
 ]
 
 [[package]]

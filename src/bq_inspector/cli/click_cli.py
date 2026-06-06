@@ -20,7 +20,7 @@ from bq_inspector.cli.command_registry import (
     GROUP_COMMAND_SPECS,
     GroupCommandSpec,
 )
-from bq_inspector.cli.flat_jobs import flat_unknown_command_hint, normalize_flat_job_argv
+from bq_inspector.cli.flat_argv import flat_unknown_command_hint, normalize_flat_argv
 from bq_inspector.cli.help import resolve_help_text, strip_trailing_help_flags, write_help_text
 from bq_inspector.commands.command_shared import InspectionCommandOptions, ParamsCommandRunner
 from bq_inspector.core.shared.errors import create_input_failure
@@ -133,6 +133,6 @@ def invoke(argv: list[str] | None = None) -> None:
         write_help_text(resolve_help_text(argv_without_help, wants_help=True))
         return
 
-    normalized_argv = normalize_flat_job_argv(raw_argv)
+    normalized_argv = normalize_flat_argv(raw_argv)
     result = cli.main(args=normalized_argv, prog_name="bq-inspector", standalone_mode=False)
     _write_json_result(result)

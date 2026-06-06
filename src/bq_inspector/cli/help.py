@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 
 from bq_inspector.cli.command_registry import GLOBAL_USAGE, command_help_for_key
-from bq_inspector.cli.flat_jobs import flat_command_suggestion, flat_help_command_key
+from bq_inspector.cli.flat_argv import flat_command_suggestion, flat_help_command_key
 
 
 def strip_trailing_help_flags(argv: list[str]) -> tuple[list[str], bool]:
