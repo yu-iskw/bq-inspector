@@ -87,108 +87,77 @@ def parse_lineage_graph_input(raw: Any) -> ParsedLineageGraphInput:
     return map_lineage_graph_input(validate_input("lineage graph", raw))
 
 
-def _parse_knowledge_catalog_search(raw: Any) -> ParsedKnowledgeCatalogSearchInput:
+def parse_catalog_search_input(raw: Any) -> ParsedKnowledgeCatalogSearchInput:
     return map_knowledge_catalog_search_input(validate_input("catalog search", raw))
 
 
-def _parse_knowledge_catalog_lookup(raw: Any) -> ParsedKnowledgeCatalogLookupInput:
+def parse_catalog_entries_lookup_input(raw: Any) -> ParsedKnowledgeCatalogLookupInput:
     return map_knowledge_catalog_lookup_input(validate_input("catalog entries lookup", raw))
 
 
-def _parse_knowledge_catalog_get(
-    command_id: CommandId,
-    raw: Any,
-) -> ParsedKnowledgeCatalogGetInput:
+def _parse_catalog_get(command_id: CommandId, raw: Any) -> ParsedKnowledgeCatalogGetInput:
     return map_knowledge_catalog_get_input(validate_input(command_id, raw))
 
 
-def _parse_knowledge_catalog_list(
-    command_id: CommandId,
-    raw: Any,
-) -> ParsedKnowledgeCatalogListInput:
+def _parse_catalog_list(command_id: CommandId, raw: Any) -> ParsedKnowledgeCatalogListInput:
     return map_knowledge_catalog_list_input(validate_input(command_id, raw))
 
 
-def parse_catalog_search_input(raw: Any) -> ParsedKnowledgeCatalogSearchInput:
-    """Parse catalog search params."""
-    return _parse_knowledge_catalog_search(raw)
-
-
-def parse_catalog_entries_lookup_input(raw: Any) -> ParsedKnowledgeCatalogLookupInput:
-    """Parse catalog entries lookup params."""
-    return _parse_knowledge_catalog_lookup(raw)
-
-
 def parse_catalog_entries_get_input(raw: Any) -> ParsedKnowledgeCatalogGetInput:
-    """Parse catalog entries get params."""
-    return _parse_knowledge_catalog_get("catalog entries get", raw)
+    return _parse_catalog_get("catalog entries get", raw)
 
 
 def parse_catalog_entries_list_input(raw: Any) -> ParsedKnowledgeCatalogListInput:
-    """Parse catalog entries list params."""
-    return _parse_knowledge_catalog_list("catalog entries list", raw)
+    return _parse_catalog_list("catalog entries list", raw)
 
 
 def parse_catalog_entry_groups_get_input(raw: Any) -> ParsedKnowledgeCatalogGetInput:
-    """Parse catalog entry-groups get params."""
-    return _parse_knowledge_catalog_get("catalog entry-groups get", raw)
+    return _parse_catalog_get("catalog entry-groups get", raw)
 
 
 def parse_catalog_entry_groups_list_input(raw: Any) -> ParsedKnowledgeCatalogListInput:
-    """Parse catalog entry-groups list params."""
-    return _parse_knowledge_catalog_list("catalog entry-groups list", raw)
+    return _parse_catalog_list("catalog entry-groups list", raw)
 
 
 def parse_catalog_entry_types_get_input(raw: Any) -> ParsedKnowledgeCatalogGetInput:
-    """Parse catalog entry-types get params."""
-    return _parse_knowledge_catalog_get("catalog entry-types get", raw)
+    return _parse_catalog_get("catalog entry-types get", raw)
 
 
 def parse_catalog_entry_types_list_input(raw: Any) -> ParsedKnowledgeCatalogListInput:
-    """Parse catalog entry-types list params."""
-    return _parse_knowledge_catalog_list("catalog entry-types list", raw)
+    return _parse_catalog_list("catalog entry-types list", raw)
 
 
 def parse_catalog_aspect_types_get_input(raw: Any) -> ParsedKnowledgeCatalogGetInput:
-    """Parse catalog aspect-types get params."""
-    return _parse_knowledge_catalog_get("catalog aspect-types get", raw)
+    return _parse_catalog_get("catalog aspect-types get", raw)
 
 
 def parse_catalog_aspect_types_list_input(raw: Any) -> ParsedKnowledgeCatalogListInput:
-    """Parse catalog aspect-types list params."""
-    return _parse_knowledge_catalog_list("catalog aspect-types list", raw)
+    return _parse_catalog_list("catalog aspect-types list", raw)
 
 
 def parse_catalog_entry_links_get_input(raw: Any) -> ParsedKnowledgeCatalogGetInput:
-    """Parse catalog entry-links get params."""
-    return _parse_knowledge_catalog_get("catalog entry-links get", raw)
+    return _parse_catalog_get("catalog entry-links get", raw)
 
 
 def parse_catalog_glossaries_get_input(raw: Any) -> ParsedKnowledgeCatalogGetInput:
-    """Parse catalog glossaries get params."""
-    return _parse_knowledge_catalog_get("catalog glossaries get", raw)
+    return _parse_catalog_get("catalog glossaries get", raw)
 
 
 def parse_catalog_glossaries_list_input(raw: Any) -> ParsedKnowledgeCatalogListInput:
-    """Parse catalog glossaries list params."""
-    return _parse_knowledge_catalog_list("catalog glossaries list", raw)
+    return _parse_catalog_list("catalog glossaries list", raw)
 
 
 def parse_catalog_glossary_categories_get_input(raw: Any) -> ParsedKnowledgeCatalogGetInput:
-    """Parse catalog glossary-categories get params."""
-    return _parse_knowledge_catalog_get("catalog glossary-categories get", raw)
+    return _parse_catalog_get("catalog glossary-categories get", raw)
 
 
 def parse_catalog_glossary_categories_list_input(raw: Any) -> ParsedKnowledgeCatalogListInput:
-    """Parse catalog glossary-categories list params."""
-    return _parse_knowledge_catalog_list("catalog glossary-categories list", raw)
+    return _parse_catalog_list("catalog glossary-categories list", raw)
 
 
 def parse_catalog_glossary_terms_get_input(raw: Any) -> ParsedKnowledgeCatalogGetInput:
-    """Parse catalog glossary-terms get params."""
-    return _parse_knowledge_catalog_get("catalog glossary-terms get", raw)
+    return _parse_catalog_get("catalog glossary-terms get", raw)
 
 
 def parse_catalog_glossary_terms_list_input(raw: Any) -> ParsedKnowledgeCatalogListInput:
-    """Parse catalog glossary-terms list params."""
-    return _parse_knowledge_catalog_list("catalog glossary-terms list", raw)
+    return _parse_catalog_list("catalog glossary-terms list", raw)

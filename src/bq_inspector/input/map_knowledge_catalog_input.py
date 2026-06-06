@@ -10,9 +10,11 @@ from bq_inspector.knowledge_catalog.defaults import (
     CATALOG_SEARCH_LOCATION,
     DEFAULT_CATALOG_LIST_PAGE_SIZE,
     DEFAULT_CATALOG_SEARCH_PAGE_SIZE,
+    MAX_CATALOG_SEARCH_PAGE_SIZE,
 )
 
 if TYPE_CHECKING:
+    from bq_inspector.core.knowledge_catalog.entry_view_fields import EntryViewFields
     from bq_inspector.input.parsed_input_types import (
         ParsedKnowledgeCatalogGetInput,
         ParsedKnowledgeCatalogListInput,
@@ -29,10 +31,21 @@ def _parse_entry_view(raw: object) -> CatalogEntryView:
     raise create_input_failure('view must be "BASIC", "FULL", "CUSTOM", or "ALL".')
 
 
-def _parse_string_list(raw: object) -> list[str]:
-    if not isinstance(raw, list):
-        return []
-    return [str(item).strip() for item in raw if str(item).strip()]
+def _apply_optional_entry_view_fields(
+    obj: dict[str, Any],
+    result: EntryViewFields,
+) -> None:
+    view = obj.get("view")
+    if view is not None:
+        result["view"] = _parse_entry_view(view)
+
+    aspect_types = obj.get("aspectTypes")
+    if aspect_types is not None:
+        result["aspectTypes"] = [str(item).strip() for item in aspect_types if str(item).strip()]
+
+    paths = obj.get("paths")
+    if paths is not None:
+        result["paths"] = [str(item).strip() for item in paths if str(item).strip()]
 
 
 def _set_trimmed_string(
@@ -58,7 +71,7 @@ def _apply_optional_search_fields(
 
     page_size = obj.get("pageSize")
     if isinstance(page_size, int):
-        result["pageSize"] = page_size
+        result["pageSize"] = min(page_size, MAX_CATALOG_SEARCH_PAGE_SIZE)
 
 
 def map_knowledge_catalog_search_input(obj: dict[str, Any]) -> ParsedKnowledgeCatalogSearchInput:
@@ -86,18 +99,7 @@ def map_knowledge_catalog_lookup_input(
         **_parse_impersonation_fields(obj),
     }
 
-    view = obj.get("view")
-    if view is not None:
-        result["view"] = _parse_entry_view(view)
-
-    aspect_types = obj.get("aspectTypes")
-    if aspect_types is not None:
-        result["aspectTypes"] = _parse_string_list(aspect_types)
-
-    paths = obj.get("paths")
-    if paths is not None:
-        result["paths"] = _parse_string_list(paths)
-
+    _apply_optional_entry_view_fields(obj, result)
     return result
 
 
@@ -107,19 +109,7 @@ def map_knowledge_catalog_get_input(obj: dict[str, Any]) -> ParsedKnowledgeCatal
         "name": str(obj["name"]).strip(),
         **_parse_impersonation_fields(obj),
     }
-
-    view = obj.get("view")
-    if view is not None:
-        result["view"] = _parse_entry_view(view)
-
-    aspect_types = obj.get("aspectTypes")
-    if aspect_types is not None:
-        result["aspectTypes"] = _parse_string_list(aspect_types)
-
-    paths = obj.get("paths")
-    if paths is not None:
-        result["paths"] = _parse_string_list(paths)
-
+    _apply_optional_entry_view_fields(obj, result)
     return result
 
 

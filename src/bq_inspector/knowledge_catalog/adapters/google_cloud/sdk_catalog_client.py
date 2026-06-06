@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from google.cloud import dataplex_v1
 from google.protobuf.json_format import MessageToDict
@@ -133,6 +133,48 @@ class SdkCatalogClient:
         self._catalog = dataplex_v1.CatalogServiceClient(credentials=auth_client)
         self._glossary = dataplex_v1.BusinessGlossaryServiceClient(credentials=auth_client)
 
+    async def _get_resource(  # noqa: PLR0913
+        self,
+        request: GetByNameRequest,
+        *,
+        request_cls: type[Any],
+        service: object,
+        method_name: str,
+        api: str,
+        apply_entry_view: bool = False,
+    ) -> dict[str, object]:
+        sdk_request = request_cls(name=request["name"])
+        if apply_entry_view:
+            _apply_entry_view_fields(sdk_request, request)
+
+        method = getattr(service, method_name)
+
+        def _call() -> object:
+            return method(request=sdk_request)
+
+        resource = await invoke_sync(_call, api=api)
+        return _message_to_dict(resource)
+
+    async def _list_resources(  # noqa: PLR0913
+        self,
+        request: ListByParentRequest,
+        *,
+        request_cls: type[Any],
+        service: object,
+        method_name: str,
+        api: str,
+        items_attr: str,
+    ) -> ListResourcesPage:
+        sdk_request = request_cls(parent=request["parent"])
+        _apply_list_pagination(sdk_request, request)
+        method = getattr(service, method_name)
+
+        def _call() -> object:
+            return method(request=sdk_request)
+
+        pager = await invoke_sync(_call, api=api)
+        return _list_page_from_pager(pager, items_attr=items_attr)
+
     async def search_entries(self, request: SearchEntriesRequest) -> SearchEntriesPage:
         sdk_request = dataplex_v1.SearchEntriesRequest(
             name=request["name"],
@@ -170,189 +212,144 @@ class SdkCatalogClient:
         return _message_to_dict(entry)
 
     async def get_entry(self, request: GetByNameRequest) -> dict[str, object]:
-        sdk_request = dataplex_v1.GetEntryRequest(name=request["name"])
-        _apply_entry_view_fields(sdk_request, request)
-
-        def _call() -> object:
-            return self._catalog.get_entry(request=sdk_request)
-
-        entry = await invoke_sync(
-            _call,
+        return await self._get_resource(
+            request,
+            request_cls=dataplex_v1.GetEntryRequest,
+            service=self._catalog,
+            method_name="get_entry",
             api="dataplex.projects.locations.entryGroups.entries.get",
+            apply_entry_view=True,
         )
-        return _message_to_dict(entry)
 
     async def list_entries(self, request: ListByParentRequest) -> ListResourcesPage:
-        sdk_request = dataplex_v1.ListEntriesRequest(parent=request["parent"])
-        _apply_list_pagination(sdk_request, request)
-
-        def _call() -> object:
-            return self._catalog.list_entries(request=sdk_request)
-
-        pager = await invoke_sync(
-            _call,
+        return await self._list_resources(
+            request,
+            request_cls=dataplex_v1.ListEntriesRequest,
+            service=self._catalog,
+            method_name="list_entries",
             api="dataplex.projects.locations.entryGroups.entries.list",
+            items_attr="entries",
         )
-        return _list_page_from_pager(pager, items_attr="entries")
 
     async def get_entry_group(self, request: GetByNameRequest) -> dict[str, object]:
-        sdk_request = dataplex_v1.GetEntryGroupRequest(name=request["name"])
-
-        def _call() -> object:
-            return self._catalog.get_entry_group(request=sdk_request)
-
-        resource = await invoke_sync(
-            _call,
+        return await self._get_resource(
+            request,
+            request_cls=dataplex_v1.GetEntryGroupRequest,
+            service=self._catalog,
+            method_name="get_entry_group",
             api="dataplex.projects.locations.entryGroups.get",
         )
-        return _message_to_dict(resource)
 
     async def list_entry_groups(self, request: ListByParentRequest) -> ListResourcesPage:
-        sdk_request = dataplex_v1.ListEntryGroupsRequest(parent=request["parent"])
-        _apply_list_pagination(sdk_request, request)
-
-        def _call() -> object:
-            return self._catalog.list_entry_groups(request=sdk_request)
-
-        pager = await invoke_sync(
-            _call,
+        return await self._list_resources(
+            request,
+            request_cls=dataplex_v1.ListEntryGroupsRequest,
+            service=self._catalog,
+            method_name="list_entry_groups",
             api="dataplex.projects.locations.entryGroups.list",
+            items_attr="entry_groups",
         )
-        return _list_page_from_pager(pager, items_attr="entry_groups")
 
     async def get_entry_type(self, request: GetByNameRequest) -> dict[str, object]:
-        sdk_request = dataplex_v1.GetEntryTypeRequest(name=request["name"])
-
-        def _call() -> object:
-            return self._catalog.get_entry_type(request=sdk_request)
-
-        resource = await invoke_sync(
-            _call,
+        return await self._get_resource(
+            request,
+            request_cls=dataplex_v1.GetEntryTypeRequest,
+            service=self._catalog,
+            method_name="get_entry_type",
             api="dataplex.projects.locations.entryTypes.get",
         )
-        return _message_to_dict(resource)
 
     async def list_entry_types(self, request: ListByParentRequest) -> ListResourcesPage:
-        sdk_request = dataplex_v1.ListEntryTypesRequest(parent=request["parent"])
-        _apply_list_pagination(sdk_request, request)
-
-        def _call() -> object:
-            return self._catalog.list_entry_types(request=sdk_request)
-
-        pager = await invoke_sync(
-            _call,
+        return await self._list_resources(
+            request,
+            request_cls=dataplex_v1.ListEntryTypesRequest,
+            service=self._catalog,
+            method_name="list_entry_types",
             api="dataplex.projects.locations.entryTypes.list",
+            items_attr="entry_types",
         )
-        return _list_page_from_pager(pager, items_attr="entry_types")
 
     async def get_aspect_type(self, request: GetByNameRequest) -> dict[str, object]:
-        sdk_request = dataplex_v1.GetAspectTypeRequest(name=request["name"])
-
-        def _call() -> object:
-            return self._catalog.get_aspect_type(request=sdk_request)
-
-        resource = await invoke_sync(
-            _call,
+        return await self._get_resource(
+            request,
+            request_cls=dataplex_v1.GetAspectTypeRequest,
+            service=self._catalog,
+            method_name="get_aspect_type",
             api="dataplex.projects.locations.aspectTypes.get",
         )
-        return _message_to_dict(resource)
 
     async def list_aspect_types(self, request: ListByParentRequest) -> ListResourcesPage:
-        sdk_request = dataplex_v1.ListAspectTypesRequest(parent=request["parent"])
-        _apply_list_pagination(sdk_request, request)
-
-        def _call() -> object:
-            return self._catalog.list_aspect_types(request=sdk_request)
-
-        pager = await invoke_sync(
-            _call,
+        return await self._list_resources(
+            request,
+            request_cls=dataplex_v1.ListAspectTypesRequest,
+            service=self._catalog,
+            method_name="list_aspect_types",
             api="dataplex.projects.locations.aspectTypes.list",
+            items_attr="aspect_types",
         )
-        return _list_page_from_pager(pager, items_attr="aspect_types")
 
     async def get_entry_link(self, request: GetByNameRequest) -> dict[str, object]:
-        sdk_request = dataplex_v1.GetEntryLinkRequest(name=request["name"])
-
-        def _call() -> object:
-            return self._catalog.get_entry_link(request=sdk_request)
-
-        resource = await invoke_sync(
-            _call,
+        return await self._get_resource(
+            request,
+            request_cls=dataplex_v1.GetEntryLinkRequest,
+            service=self._catalog,
+            method_name="get_entry_link",
             api="dataplex.projects.locations.entryGroups.entryLinks.get",
         )
-        return _message_to_dict(resource)
 
     async def get_glossary(self, request: GetByNameRequest) -> dict[str, object]:
-        sdk_request = dataplex_v1.GetGlossaryRequest(name=request["name"])
-
-        def _call() -> object:
-            return self._glossary.get_glossary(request=sdk_request)
-
-        resource = await invoke_sync(
-            _call,
+        return await self._get_resource(
+            request,
+            request_cls=dataplex_v1.GetGlossaryRequest,
+            service=self._glossary,
+            method_name="get_glossary",
             api="dataplex.projects.locations.glossaries.get",
         )
-        return _message_to_dict(resource)
 
     async def list_glossaries(self, request: ListByParentRequest) -> ListResourcesPage:
-        sdk_request = dataplex_v1.ListGlossariesRequest(parent=request["parent"])
-        _apply_list_pagination(sdk_request, request)
-
-        def _call() -> object:
-            return self._glossary.list_glossaries(request=sdk_request)
-
-        pager = await invoke_sync(
-            _call,
+        return await self._list_resources(
+            request,
+            request_cls=dataplex_v1.ListGlossariesRequest,
+            service=self._glossary,
+            method_name="list_glossaries",
             api="dataplex.projects.locations.glossaries.list",
+            items_attr="glossaries",
         )
-        return _list_page_from_pager(pager, items_attr="glossaries")
 
     async def get_glossary_category(self, request: GetByNameRequest) -> dict[str, object]:
-        sdk_request = dataplex_v1.GetGlossaryCategoryRequest(name=request["name"])
-
-        def _call() -> object:
-            return self._glossary.get_glossary_category(request=sdk_request)
-
-        resource = await invoke_sync(
-            _call,
+        return await self._get_resource(
+            request,
+            request_cls=dataplex_v1.GetGlossaryCategoryRequest,
+            service=self._glossary,
+            method_name="get_glossary_category",
             api="dataplex.projects.locations.glossaries.categories.get",
         )
-        return _message_to_dict(resource)
 
     async def list_glossary_categories(self, request: ListByParentRequest) -> ListResourcesPage:
-        sdk_request = dataplex_v1.ListGlossaryCategoriesRequest(parent=request["parent"])
-        _apply_list_pagination(sdk_request, request)
-
-        def _call() -> object:
-            return self._glossary.list_glossary_categories(request=sdk_request)
-
-        pager = await invoke_sync(
-            _call,
+        return await self._list_resources(
+            request,
+            request_cls=dataplex_v1.ListGlossaryCategoriesRequest,
+            service=self._glossary,
+            method_name="list_glossary_categories",
             api="dataplex.projects.locations.glossaries.categories.list",
+            items_attr="categories",
         )
-        return _list_page_from_pager(pager, items_attr="categories")
 
     async def get_glossary_term(self, request: GetByNameRequest) -> dict[str, object]:
-        sdk_request = dataplex_v1.GetGlossaryTermRequest(name=request["name"])
-
-        def _call() -> object:
-            return self._glossary.get_glossary_term(request=sdk_request)
-
-        resource = await invoke_sync(
-            _call,
+        return await self._get_resource(
+            request,
+            request_cls=dataplex_v1.GetGlossaryTermRequest,
+            service=self._glossary,
+            method_name="get_glossary_term",
             api="dataplex.projects.locations.glossaries.terms.get",
         )
-        return _message_to_dict(resource)
 
     async def list_glossary_terms(self, request: ListByParentRequest) -> ListResourcesPage:
-        sdk_request = dataplex_v1.ListGlossaryTermsRequest(parent=request["parent"])
-        _apply_list_pagination(sdk_request, request)
-
-        def _call() -> object:
-            return self._glossary.list_glossary_terms(request=sdk_request)
-
-        pager = await invoke_sync(
-            _call,
+        return await self._list_resources(
+            request,
+            request_cls=dataplex_v1.ListGlossaryTermsRequest,
+            service=self._glossary,
+            method_name="list_glossary_terms",
             api="dataplex.projects.locations.glossaries.terms.list",
+            items_attr="terms",
         )
-        return _list_page_from_pager(pager, items_attr="terms")

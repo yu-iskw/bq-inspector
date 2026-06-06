@@ -4,15 +4,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from bq_inspector.core.knowledge_catalog.error_envelope import catalog_knowledge_error_envelope
-from bq_inspector.core.shared.envelope import build_tool_envelope
-from bq_inspector.core.shared.errors import BqInspectFailure
+from bq_inspector.core.knowledge_catalog.search_runner import run_catalog_use_case
 from bq_inspector.core.shared.impersonation_fields import merge_impersonation_into
 from bq_inspector.knowledge_catalog.defaults import DEFAULT_CATALOG_LIST_PAGE_SIZE
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from bq_inspector.core.shared.types import BqInspectSchemaVersion, ToolBlock
     from bq_inspector.input.parsed_input_types import ParsedKnowledgeCatalogListInput
     from bq_inspector.knowledge_catalog.port.catalog_client import CatalogInspectionClient
     from bq_inspector.knowledge_catalog.types.requests import ListByParentRequest
@@ -63,35 +62,31 @@ async def list_catalog_resources(
     fetch: Callable[[CatalogInspectionClient, ListByParentRequest], Any],
 ) -> dict[str, Any]:
     """List Knowledge Catalog resources and return a stable JSON envelope."""
-    envelope = build_tool_envelope(tool_version)
-    schema_version = envelope["schemaVersion"]
-    tool = envelope["tool"]
     request_echo = build_list_request_echo(params)
     sdk_request = _build_sdk_list_request(params)
 
-    try:
+    async def execute(
+        schema_version: BqInspectSchemaVersion,
+        tool: ToolBlock,
+    ) -> dict[str, Any]:
         page: ListResourcesPage = await fetch(client, sdk_request)
-        page_block: dict[str, Any] = {}
         next_page_token = page.get("nextPageToken")
-        page_block["nextPageToken"] = next_page_token or None
-
         return {
             "schemaVersion": schema_version,
             "tool": tool,
             "request": request_echo,
             collection_key: page.get("resources", []),
-            "page": page_block,
+            "page": {"nextPageToken": next_page_token or None},
             "warnings": [],
             "errors": [],
         }
-    except BqInspectFailure as error:
-        return catalog_knowledge_error_envelope(
-            schema_version,
-            tool,
-            request_echo,
-            error,
-            response_fields={
-                collection_key: [],
-                "page": {"nextPageToken": None},
-            },
-        )
+
+    return await run_catalog_use_case(
+        tool_version=tool_version,
+        request_echo=request_echo,
+        response_fields_on_error={
+            collection_key: [],
+            "page": {"nextPageToken": None},
+        },
+        execute=execute,
+    )

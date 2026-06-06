@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from bq_inspector.core.knowledge_catalog.parent import search_parent
-from bq_inspector.core.knowledge_catalog.search_runner import run_catalog_search
+from bq_inspector.core.knowledge_catalog.parent import catalog_parent
+from bq_inspector.core.knowledge_catalog.search_runner import run_catalog_use_case
 from bq_inspector.core.knowledge_catalog.warnings import unreachable_search_warnings
-from bq_inspector.core.shared.envelope import build_tool_envelope
 from bq_inspector.core.shared.impersonation_fields import merge_impersonation_into
 from bq_inspector.knowledge_catalog.defaults import (
     CATALOG_SEARCH_LOCATION,
@@ -15,6 +14,7 @@ from bq_inspector.knowledge_catalog.defaults import (
 )
 
 if TYPE_CHECKING:
+    from bq_inspector.core.shared.types import BqInspectSchemaVersion, ToolBlock
     from bq_inspector.input.parsed_input_types import ParsedKnowledgeCatalogSearchInput
     from bq_inspector.knowledge_catalog.port.catalog_client import CatalogInspectionClient
     from bq_inspector.knowledge_catalog.types.requests import SearchEntriesRequest
@@ -46,7 +46,7 @@ def build_search_request_echo(params: ParsedKnowledgeCatalogSearchInput) -> dict
 def _build_sdk_search_request(params: ParsedKnowledgeCatalogSearchInput) -> SearchEntriesRequest:
     location = params.get("location", CATALOG_SEARCH_LOCATION)
     sdk_request: SearchEntriesRequest = {
-        "name": search_parent(params["projectId"], location),
+        "name": catalog_parent(params["projectId"], location),
         "query": params["query"],
         "pageSize": params.get("pageSize", DEFAULT_CATALOG_SEARCH_PAGE_SIZE),
     }
@@ -75,22 +75,21 @@ async def search_catalog_entries(
     request_echo = build_search_request_echo(params)
     sdk_request = _build_sdk_search_request(params)
 
-    async def search() -> dict[str, Any]:
-        envelope = build_tool_envelope(tool_version)
+    async def execute(
+        schema_version: BqInspectSchemaVersion,
+        tool: ToolBlock,
+    ) -> dict[str, Any]:
         page = await client.search_entries(sdk_request)
         unreachable = list(page.get("unreachable", []))
-        page_block: dict[str, Any] = {
-            "unreachable": unreachable,
-        }
+        page_block: dict[str, Any] = {"unreachable": unreachable}
         total_size = page.get("totalSize")
         if total_size is not None:
             page_block["totalSize"] = total_size
-        next_page_token = page.get("nextPageToken")
-        page_block["nextPageToken"] = next_page_token or None
+        page_block["nextPageToken"] = page.get("nextPageToken") or None
 
         return {
-            "schemaVersion": envelope["schemaVersion"],
-            "tool": envelope["tool"],
+            "schemaVersion": schema_version,
+            "tool": tool,
             "request": request_echo,
             "entries": page.get("entries", []),
             "page": page_block,
@@ -98,8 +97,12 @@ async def search_catalog_entries(
             "errors": [],
         }
 
-    return await run_catalog_search(
+    return await run_catalog_use_case(
         tool_version=tool_version,
         request_echo=request_echo,
-        search=search,
+        response_fields_on_error={
+            "entries": [],
+            "page": {"nextPageToken": None, "unreachable": []},
+        },
+        execute=execute,
     )

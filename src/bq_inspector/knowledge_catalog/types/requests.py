@@ -7,11 +7,6 @@ from typing import Literal
 from typing_extensions import NotRequired, TypedDict
 
 CatalogEntryView = Literal["BASIC", "FULL", "CUSTOM", "ALL"]
-CatalogSearchOrderBy = Literal[
-    "relevance",
-    "last_modified_timestamp",
-    "last_modified_timestamp asc",
-]
 
 
 class SearchEntriesRequest(TypedDict):
