@@ -89,18 +89,8 @@ def parse_knowledge_catalog_search_input(raw: Any) -> ParsedKnowledgeCatalogSear
     return map_knowledge_catalog_search_input(validate_input("catalog search", raw))
 
 
-def parse_catalog_search_input(raw: Any) -> ParsedKnowledgeCatalogSearchInput:
-    """Alias for parse_knowledge_catalog_search_input."""
-    return parse_knowledge_catalog_search_input(raw)
-
-
 def parse_knowledge_catalog_lookup_input(raw: Any) -> ParsedKnowledgeCatalogLookupInput:
     return map_knowledge_catalog_lookup_input(validate_input("catalog entries lookup", raw))
-
-
-def parse_catalog_entries_lookup_input(raw: Any) -> ParsedKnowledgeCatalogLookupInput:
-    """Alias for parse_knowledge_catalog_lookup_input."""
-    return parse_knowledge_catalog_lookup_input(raw)
 
 
 def parse_knowledge_catalog_get_input(

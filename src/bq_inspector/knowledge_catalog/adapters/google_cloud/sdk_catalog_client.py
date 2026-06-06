@@ -2,16 +2,10 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from google.cloud import dataplex_v1
 
-from bq_inspector.commands.catalog.resource_specs import (
-    KNOWLEDGE_CATALOG_GET_RESOURCES,
-    KNOWLEDGE_CATALOG_LIST_RESOURCES,
-    KnowledgeCatalogGetResourceSpec,
-    KnowledgeCatalogListResourceSpec,
-)
 from bq_inspector.core.shared.invoke_sync import invoke_sync
 from bq_inspector.core.shared.pagination import read_next_page_token
 from bq_inspector.core.shared.protobuf_dict import message_to_dict
@@ -19,6 +13,10 @@ from bq_inspector.core.shared.protobuf_dict import message_to_dict
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
 
+    from bq_inspector.knowledge_catalog.resource_specs import (
+        KnowledgeCatalogGetResourceSpec,
+        KnowledgeCatalogListResourceSpec,
+    )
     from bq_inspector.knowledge_catalog.types.requests import (
         GetByNameRequest,
         ListByParentRequest,
@@ -139,47 +137,44 @@ class SdkCatalogClient:
             return self.catalog_service
         return self.glossary_service
 
-    async def get_named_resource(  # noqa: PLR0913
+    async def get_named_resource(
         self,
         request: GetByNameRequest,
         *,
-        request_cls: type[Any],
-        service: object,
-        method_name: str,
-        api: str,
-        apply_entry_view: bool = False,
+        spec: KnowledgeCatalogGetResourceSpec,
     ) -> dict[str, object]:
+        request_cls = getattr(dataplex_v1, spec.request_type_name)
         sdk_request = request_cls(name=request["name"])
-        if apply_entry_view:
+        if spec.apply_entry_view:
             _apply_entry_view_fields(sdk_request, request)
 
-        method = getattr(service, method_name)
+        service = self.service_for_kind(spec.service)
+        method = getattr(service, spec.sdk_method)
 
         def _call() -> object:
             return method(request=sdk_request)
 
-        resource = await invoke_sync(_call, api=api)
+        resource = await invoke_sync(_call, api=spec.api)
         return _catalog_dict(resource)
 
-    async def list_parent_resources(  # noqa: PLR0913
+    async def list_parent_resources(
         self,
         request: ListByParentRequest,
         *,
-        request_cls: type[Any],
-        service: object,
-        method_name: str,
-        api: str,
-        items_attr: str,
+        spec: KnowledgeCatalogListResourceSpec,
     ) -> ListResourcesPage:
+        request_cls = getattr(dataplex_v1, spec.request_type_name)
         sdk_request = request_cls(parent=request["parent"])
         _apply_list_pagination(sdk_request, request)
-        method = getattr(service, method_name)
+
+        service = self.service_for_kind(spec.service)
+        method = getattr(service, spec.sdk_method)
 
         def _call() -> object:
             return method(request=sdk_request)
 
-        pager = await invoke_sync(_call, api=api)
-        return _list_page_from_pager(pager, items_attr=items_attr)
+        pager = await invoke_sync(_call, api=spec.api)
+        return _list_page_from_pager(pager, items_attr=spec.items_attr)
 
     async def search_entries(self, request: SearchEntriesRequest) -> SearchEntriesPage:
         sdk_request = dataplex_v1.SearchEntriesRequest(
@@ -216,44 +211,3 @@ class SdkCatalogClient:
 
         entry = await invoke_sync(_call, api="dataplex.projects.locations.lookupEntry")
         return _catalog_dict(entry)
-
-    @staticmethod
-    def make_get_method(spec: KnowledgeCatalogGetResourceSpec) -> Any:
-        async def method(self: SdkCatalogClient, request: GetByNameRequest) -> dict[str, object]:
-            return await self.get_named_resource(
-                request,
-                request_cls=getattr(dataplex_v1, spec.request_type_name),
-                service=self.service_for_kind(spec.service),
-                method_name=spec.sdk_method,
-                api=spec.api,
-                apply_entry_view=spec.apply_entry_view,
-            )
-
-        method.__name__ = spec.client_method
-        return method
-
-    @staticmethod
-    def make_list_method(spec: KnowledgeCatalogListResourceSpec) -> Any:
-        async def method(self: SdkCatalogClient, request: ListByParentRequest) -> ListResourcesPage:
-            return await self.list_parent_resources(
-                request,
-                request_cls=getattr(dataplex_v1, spec.request_type_name),
-                service=self.service_for_kind(spec.service),
-                method_name=spec.sdk_method,
-                api=spec.api,
-                items_attr=spec.items_attr,
-            )
-
-        method.__name__ = spec.client_method
-        return method
-
-
-for _get_spec in KNOWLEDGE_CATALOG_GET_RESOURCES:
-    setattr(SdkCatalogClient, _get_spec.client_method, SdkCatalogClient.make_get_method(_get_spec))
-
-for _list_spec in KNOWLEDGE_CATALOG_LIST_RESOURCES:
-    setattr(
-        SdkCatalogClient,
-        _list_spec.client_method,
-        SdkCatalogClient.make_list_method(_list_spec),
-    )

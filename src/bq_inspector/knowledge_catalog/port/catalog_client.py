@@ -5,6 +5,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
+    from bq_inspector.knowledge_catalog.resource_specs import (
+        KnowledgeCatalogGetResourceSpec,
+        KnowledgeCatalogListResourceSpec,
+    )
     from bq_inspector.knowledge_catalog.types.requests import (
         GetByNameRequest,
         ListByParentRequest,
@@ -28,62 +32,20 @@ class CatalogInspectionClient(Protocol):
         """Resolve an entry by canonical name."""
         raise NotImplementedError
 
-    async def get_entry(self, request: GetByNameRequest) -> dict[str, object]:
-        """Retrieve an entry by canonical resource name."""
+    async def get_named_resource(
+        self,
+        request: GetByNameRequest,
+        *,
+        spec: KnowledgeCatalogGetResourceSpec,
+    ) -> dict[str, object]:
+        """Retrieve a catalog resource by canonical name."""
         raise NotImplementedError
 
-    async def list_entries(self, request: ListByParentRequest) -> ListResourcesPage:
-        """List entries under an entry group."""
-        raise NotImplementedError
-
-    async def get_entry_group(self, request: GetByNameRequest) -> dict[str, object]:
-        """Retrieve an entry group."""
-        raise NotImplementedError
-
-    async def list_entry_groups(self, request: ListByParentRequest) -> ListResourcesPage:
-        """List entry groups."""
-        raise NotImplementedError
-
-    async def get_entry_type(self, request: GetByNameRequest) -> dict[str, object]:
-        """Retrieve an entry type."""
-        raise NotImplementedError
-
-    async def list_entry_types(self, request: ListByParentRequest) -> ListResourcesPage:
-        """List entry types."""
-        raise NotImplementedError
-
-    async def get_aspect_type(self, request: GetByNameRequest) -> dict[str, object]:
-        """Retrieve an aspect type."""
-        raise NotImplementedError
-
-    async def list_aspect_types(self, request: ListByParentRequest) -> ListResourcesPage:
-        """List aspect types."""
-        raise NotImplementedError
-
-    async def get_entry_link(self, request: GetByNameRequest) -> dict[str, object]:
-        """Retrieve an entry link."""
-        raise NotImplementedError
-
-    async def get_glossary(self, request: GetByNameRequest) -> dict[str, object]:
-        """Retrieve a glossary."""
-        raise NotImplementedError
-
-    async def list_glossaries(self, request: ListByParentRequest) -> ListResourcesPage:
-        """List glossaries."""
-        raise NotImplementedError
-
-    async def get_glossary_category(self, request: GetByNameRequest) -> dict[str, object]:
-        """Retrieve a glossary category."""
-        raise NotImplementedError
-
-    async def list_glossary_categories(self, request: ListByParentRequest) -> ListResourcesPage:
-        """List glossary categories."""
-        raise NotImplementedError
-
-    async def get_glossary_term(self, request: GetByNameRequest) -> dict[str, object]:
-        """Retrieve a glossary term."""
-        raise NotImplementedError
-
-    async def list_glossary_terms(self, request: ListByParentRequest) -> ListResourcesPage:
-        """List glossary terms."""
+    async def list_parent_resources(
+        self,
+        request: ListByParentRequest,
+        *,
+        spec: KnowledgeCatalogListResourceSpec,
+    ) -> ListResourcesPage:
+        """List catalog resources under a parent."""
         raise NotImplementedError

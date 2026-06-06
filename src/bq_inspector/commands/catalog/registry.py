@@ -14,7 +14,7 @@ from bq_inspector.commands.catalog.commands import (
     catalog_entries_lookup_command,
     catalog_search_command,
 )
-from bq_inspector.commands.catalog.resource_specs import (
+from bq_inspector.knowledge_catalog.resource_specs import (
     CATALOG_GET_EXAMPLE,
     CATALOG_LIST_EXAMPLE,
     KNOWLEDGE_CATALOG_GET_RESOURCES,

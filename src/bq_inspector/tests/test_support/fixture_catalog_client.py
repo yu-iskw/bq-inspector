@@ -5,12 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from bq_inspector.commands.catalog.resource_specs import (
-    KNOWLEDGE_CATALOG_GET_RESOURCES,
-    KNOWLEDGE_CATALOG_LIST_RESOURCES,
-)
-
 if TYPE_CHECKING:
+    from bq_inspector.knowledge_catalog.resource_specs import (
+        KnowledgeCatalogGetResourceSpec,
+        KnowledgeCatalogListResourceSpec,
+    )
     from bq_inspector.knowledge_catalog.types.requests import (
         GetByNameRequest,
         ListByParentRequest,
@@ -36,29 +35,27 @@ class FixtureCatalogInput:
 class FixtureCatalogClient:
     """CatalogInspectionClient fake backed by canned responses."""
 
-    def _make_get_handler(self, method_name: str) -> Any:
-        async def handler(request: GetByNameRequest) -> dict[str, object]:
-            self.calls.append((method_name, request))
-            return self._fixture.get_by_name.get(request["name"], {"name": request["name"]})
-
-        return handler
-
-    def _make_list_handler(self, method_name: str) -> Any:
-        async def handler(request: ListByParentRequest) -> ListResourcesPage:
-            self.calls.append((method_name, request))
-            return self._fixture.list_by_parent.get(request["parent"], {"resources": []})
-
-        return handler
-
     def __init__(self, fixture: FixtureCatalogInput) -> None:
         self._fixture = fixture
         self.calls: list[tuple[str, Any]] = []
 
-        for spec in KNOWLEDGE_CATALOG_GET_RESOURCES:
-            setattr(self, spec.client_method, self._make_get_handler(spec.client_method))
+    async def get_named_resource(
+        self,
+        request: GetByNameRequest,
+        *,
+        spec: KnowledgeCatalogGetResourceSpec,
+    ) -> dict[str, object]:
+        self.calls.append((spec.client_method, request))
+        return self._fixture.get_by_name.get(request["name"], {"name": request["name"]})
 
-        for spec in KNOWLEDGE_CATALOG_LIST_RESOURCES:
-            setattr(self, spec.client_method, self._make_list_handler(spec.client_method))
+    async def list_parent_resources(
+        self,
+        request: ListByParentRequest,
+        *,
+        spec: KnowledgeCatalogListResourceSpec,
+    ) -> ListResourcesPage:
+        self.calls.append((spec.client_method, request))
+        return self._fixture.list_by_parent.get(request["parent"], {"resources": []})
 
     async def search_entries(self, request: SearchEntriesRequest) -> SearchEntriesPage:
         self.calls.append(("search_entries", request))

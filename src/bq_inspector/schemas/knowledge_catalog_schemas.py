@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from bq_inspector.commands.catalog.resource_specs import (
+from bq_inspector.knowledge_catalog.resource_specs import (
     KNOWLEDGE_CATALOG_GET_RESOURCES,
     KNOWLEDGE_CATALOG_LIST_RESOURCES,
 )

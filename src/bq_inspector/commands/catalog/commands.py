@@ -10,19 +10,19 @@ from bq_inspector.commands.catalog._shared import (
     create_catalog_lookup_command,
     create_catalog_search_command,
 )
-from bq_inspector.commands.catalog.resource_specs import (
+from bq_inspector.input.input_parsers import (
+    parse_knowledge_catalog_get_input,
+    parse_knowledge_catalog_list_input,
+    parse_knowledge_catalog_lookup_input,
+    parse_knowledge_catalog_search_input,
+)
+from bq_inspector.knowledge_catalog.resource_specs import (
     KNOWLEDGE_CATALOG_GET_RESOURCES,
     KNOWLEDGE_CATALOG_LIST_RESOURCES,
     KnowledgeCatalogGetResourceSpec,
     KnowledgeCatalogListResourceSpec,
     knowledge_catalog_command_id,
     knowledge_catalog_export_name,
-)
-from bq_inspector.input.input_parsers import (
-    parse_knowledge_catalog_get_input,
-    parse_knowledge_catalog_list_input,
-    parse_knowledge_catalog_lookup_input,
-    parse_knowledge_catalog_search_input,
 )
 
 if TYPE_CHECKING:
@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 
 
 def _client_get_fetch(
-    client_method: str,
+    spec: KnowledgeCatalogGetResourceSpec,
 ) -> Callable[
     [CatalogInspectionClient, GetByNameRequest],
     Awaitable[dict[str, object]],
@@ -49,14 +49,13 @@ def _client_get_fetch(
         client: CatalogInspectionClient,
         request: GetByNameRequest,
     ) -> dict[str, object]:
-        method = getattr(client, client_method)
-        return await method(request)
+        return await client.get_named_resource(request, spec=spec)
 
     return fetch
 
 
 def _client_list_fetch(
-    client_method: str,
+    spec: KnowledgeCatalogListResourceSpec,
 ) -> Callable[
     [CatalogInspectionClient, ListByParentRequest],
     Awaitable[ListResourcesPage],
@@ -65,8 +64,7 @@ def _client_list_fetch(
         client: CatalogInspectionClient,
         request: ListByParentRequest,
     ) -> ListResourcesPage:
-        method = getattr(client, client_method)
-        return await method(request)
+        return await client.list_parent_resources(request, spec=spec)
 
     return fetch
 
@@ -83,7 +81,7 @@ def _build_get_command(spec: KnowledgeCatalogGetResourceSpec) -> ParamsCommandRu
     return create_catalog_get_command(
         command_id,
         parse,
-        fetch=_client_get_fetch(spec.client_method),
+        fetch=_client_get_fetch(spec),
     )
 
 
@@ -100,7 +98,7 @@ def _build_list_command(spec: KnowledgeCatalogListResourceSpec) -> ParamsCommand
         command_id,
         parse,
         collection_key=spec.collection_key,
-        fetch=_client_list_fetch(spec.client_method),
+        fetch=_client_list_fetch(spec),
     )
 
 

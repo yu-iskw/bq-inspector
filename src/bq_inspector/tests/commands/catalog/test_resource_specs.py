@@ -5,12 +5,14 @@ from __future__ import annotations
 import inspect
 
 from bq_inspector.commands.catalog.commands import build_knowledge_catalog_command_runners
-from bq_inspector.commands.catalog.resource_specs import (
+from bq_inspector.knowledge_catalog.port.catalog_client import CatalogInspectionClient
+from bq_inspector.knowledge_catalog.resource_specs import (
     KNOWLEDGE_CATALOG_GET_RESOURCES,
     KNOWLEDGE_CATALOG_LIST_RESOURCES,
+    knowledge_catalog_command_id,
     knowledge_catalog_export_name,
 )
-from bq_inspector.knowledge_catalog.port.catalog_client import CatalogInspectionClient
+from bq_inspector.schemas.knowledge_catalog_schemas import build_knowledge_catalog_command_schemas
 
 
 def _unique_values(values: tuple[str, ...]) -> set[str]:
@@ -72,16 +74,29 @@ def test_command_runners_align_with_resource_specs() -> None:
     )
 
 
-def test_get_resources_cover_catalog_inspection_client_methods() -> None:
-    """Every CatalogInspectionClient get/list method is declared in resource specs."""
+def test_catalog_inspection_client_exposes_generic_resource_methods() -> None:
     protocol_methods = {
         name
         for name, member in inspect.getmembers(CatalogInspectionClient)
-        if not name.startswith("_")
-        and callable(member)
-        and name not in {"search_entries", "lookup_entry"}
+        if not name.startswith("_") and callable(member)
     }
-    spec_methods = {spec.client_method for spec in KNOWLEDGE_CATALOG_GET_RESOURCES} | {
-        spec.client_method for spec in KNOWLEDGE_CATALOG_LIST_RESOURCES
+    assert protocol_methods == {
+        "search_entries",
+        "lookup_entry",
+        "get_named_resource",
+        "list_parent_resources",
     }
-    assert protocol_methods == spec_methods
+
+
+def test_command_ids_align_with_derived_schemas() -> None:
+    expected_ids = {
+        knowledge_catalog_command_id(spec.subgroup, "get")
+        for spec in KNOWLEDGE_CATALOG_GET_RESOURCES
+    } | {
+        knowledge_catalog_command_id(spec.subgroup, "list")
+        for spec in KNOWLEDGE_CATALOG_LIST_RESOURCES
+    }
+    schema_command_ids = {
+        key.rsplit(":", 1)[0] for key in build_knowledge_catalog_command_schemas()
+    }
+    assert expected_ids == schema_command_ids

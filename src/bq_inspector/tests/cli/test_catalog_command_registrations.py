@@ -6,7 +6,7 @@ import pytest
 
 from bq_inspector.cli.command_registry import PARAMS_COMMAND_SPECS, command_path_key
 from bq_inspector.commands.catalog.registry import build_knowledge_catalog_registrations
-from bq_inspector.commands.catalog.resource_specs import (
+from bq_inspector.knowledge_catalog.resource_specs import (
     KNOWLEDGE_CATALOG_GET_RESOURCES,
     KNOWLEDGE_CATALOG_LIST_RESOURCES,
     knowledge_catalog_command_path,
