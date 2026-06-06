@@ -58,13 +58,6 @@ class SdkBigQueryClient:
             self._bq_by_project[project_id] = client
         return client
 
-    async def get_job(self, ref: JobRef) -> object:
-        return await invoke_sync(
-            lambda: self._get_job_sync(ref),
-            api="bigquery.jobs.get",
-            context=ApiErrorHintContext(job_ref=ref),
-        )
-
     def _get_job_sync(self, ref: JobRef) -> object:
         bq = self._get_bigquery(ref["projectId"])
         location = ref.get("location")
@@ -79,10 +72,11 @@ class SdkBigQueryClient:
             )
         return _resource_to_api_dict(job)
 
-    async def list_jobs(self, request: ListJobsRequest) -> ListJobsPage:
+    async def get_job(self, ref: JobRef) -> object:
         return await invoke_sync(
-            lambda: self._list_jobs_sync(request),
-            api="bigquery.jobs.list",
+            lambda: self._get_job_sync(ref),
+            api="bigquery.jobs.get",
+            context=ApiErrorHintContext(job_ref=ref),
         )
 
     def _list_jobs_sync(self, request: ListJobsRequest) -> ListJobsPage:
@@ -101,10 +95,10 @@ class SdkBigQueryClient:
             result["nextPageToken"] = next_page_token
         return result
 
-    async def get_dataset(self, ref: DatasetRef) -> object:
+    async def list_jobs(self, request: ListJobsRequest) -> ListJobsPage:
         return await invoke_sync(
-            lambda: self._get_dataset_sync(ref),
-            api="bigquery.datasets.get",
+            lambda: self._list_jobs_sync(request),
+            api="bigquery.jobs.list",
         )
 
     def _get_dataset_sync(self, ref: DatasetRef) -> object:
@@ -114,10 +108,10 @@ class SdkBigQueryClient:
         dataset = bq.get_dataset(f"{project_id}.{dataset_id}")
         return _resource_to_api_dict(dataset)
 
-    async def list_tables(self, ref: DatasetRef) -> list[object]:
+    async def get_dataset(self, ref: DatasetRef) -> object:
         return await invoke_sync(
-            lambda: self._list_tables_sync(ref),
-            api="bigquery.tables.list",
+            lambda: self._get_dataset_sync(ref),
+            api="bigquery.datasets.get",
         )
 
     def _list_tables_sync(self, ref: DatasetRef) -> list[object]:
@@ -127,10 +121,10 @@ class SdkBigQueryClient:
         tables = list(bq.list_tables(f"{project_id}.{dataset_id}"))
         return [_resource_to_api_dict(table) for table in tables]
 
-    async def get_table(self, ref: TableRef) -> object:
+    async def list_tables(self, ref: DatasetRef) -> list[object]:
         return await invoke_sync(
-            lambda: self._get_table_sync(ref),
-            api="bigquery.tables.get",
+            lambda: self._list_tables_sync(ref),
+            api="bigquery.tables.list",
         )
 
     def _get_table_sync(self, ref: TableRef) -> object:
@@ -140,3 +134,9 @@ class SdkBigQueryClient:
         table_id = ref["tableId"]
         table = bq.get_table(f"{project_id}.{dataset_id}.{table_id}")
         return _resource_to_api_dict(table)
+
+    async def get_table(self, ref: TableRef) -> object:
+        return await invoke_sync(
+            lambda: self._get_table_sync(ref),
+            api="bigquery.tables.get",
+        )

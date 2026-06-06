@@ -31,6 +31,20 @@ class FixtureCatalogInput:
 class FixtureCatalogClient:
     """CatalogInspectionClient fake backed by canned responses."""
 
+    def _make_get_handler(self, method_name: str) -> Any:
+        async def handler(request: GetByNameRequest) -> dict[str, object]:
+            self.calls.append((method_name, request))
+            return self._fixture.get_by_name.get(request["name"], {"name": request["name"]})
+
+        return handler
+
+    def _make_list_handler(self, method_name: str) -> Any:
+        async def handler(request: ListByParentRequest) -> ListResourcesPage:
+            self.calls.append((method_name, request))
+            return self._fixture.list_by_parent.get(request["parent"], {"resources": []})
+
+        return handler
+
     def __init__(self, fixture: FixtureCatalogInput) -> None:
         from bq_inspector.commands.catalog.resource_specs import (  # noqa: PLC0415
             KNOWLEDGE_CATALOG_GET_COMMANDS,
@@ -45,20 +59,6 @@ class FixtureCatalogClient:
 
         for spec in KNOWLEDGE_CATALOG_LIST_COMMANDS:
             setattr(self, spec.client_method, self._make_list_handler(spec.client_method))
-
-    def _make_get_handler(self, method_name: str) -> Any:
-        async def handler(request: GetByNameRequest) -> dict[str, object]:
-            self.calls.append((method_name, request))
-            return self._fixture.get_by_name.get(request["name"], {"name": request["name"]})
-
-        return handler
-
-    def _make_list_handler(self, method_name: str) -> Any:
-        async def handler(request: ListByParentRequest) -> ListResourcesPage:
-            self.calls.append((method_name, request))
-            return self._fixture.list_by_parent.get(request["parent"], {"resources": []})
-
-        return handler
 
     async def search_entries(self, request: SearchEntriesRequest) -> SearchEntriesPage:
         self.calls.append(("search_entries", request))

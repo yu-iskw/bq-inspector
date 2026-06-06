@@ -45,12 +45,6 @@ class BqInspectGroup(click.Group):
         self._group_path = group_path
         super().__init__(*args, **kwargs)
 
-    def get_command(self, ctx: click.Context, cmd_name: str) -> click.Command | None:
-        command = super().get_command(ctx, cmd_name)
-        if command is None:
-            raise create_input_failure(self._unknown_command_message(cmd_name))
-        return command
-
     def _unknown_command_message(self, cmd_name: str) -> str:
         if not self._group_path:
             hint = flat_unknown_command_hint(cmd_name)
@@ -59,6 +53,12 @@ class BqInspectGroup(click.Group):
         if self._group_path:
             return f"Unknown command: {' '.join((*self._group_path, cmd_name))}"
         return f"Unknown command: {cmd_name}"
+
+    def get_command(self, ctx: click.Context, cmd_name: str) -> click.Command | None:
+        command = super().get_command(ctx, cmd_name)
+        if command is None:
+            raise create_input_failure(self._unknown_command_message(cmd_name))
+        return command
 
 
 def _register_params_command(

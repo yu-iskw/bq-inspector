@@ -27,16 +27,6 @@ class JobFilters:
 JobFilterPredicate = Callable[[object, JobFilters], bool]
 
 
-def _read_big_int_path(input_value: object, path: list[str]) -> int | None:
-    current: object = input_value
-    for key in path:
-        if not isinstance(current, dict) or key not in current:
-            return None
-        current = current[key]
-
-    return _coerce_big_int(current)
-
-
 def _coerce_big_int(value: object) -> int | None:
     if isinstance(value, int):
         return value
@@ -46,6 +36,16 @@ def _coerce_big_int(value: object) -> int | None:
         except ValueError:
             pass
     return None
+
+
+def _read_big_int_path(input_value: object, path: list[str]) -> int | None:
+    current: object = input_value
+    for key in path:
+        if not isinstance(current, dict) or key not in current:
+            return None
+        current = current[key]
+
+    return _coerce_big_int(current)
 
 
 def _normalize_labels_dict(labels: object) -> dict[str, str] | None:
@@ -115,16 +115,16 @@ _JOB_FILTER_PREDICATES: tuple[JobFilterPredicate, ...] = (
 )
 
 
+def _matches_filters(job: object, filters: JobFilters) -> bool:
+    return all(predicate(job, filters) for predicate in _JOB_FILTER_PREDICATES)
+
+
 def filter_job_summaries(jobs: list[object], filters: JobFilters) -> list[object]:
     """Apply post-list filters to job summaries."""
     if not _has_active_job_filters(filters):
         return jobs
 
     return [job for job in jobs if _matches_filters(job, filters)]
-
-
-def _matches_filters(job: object, filters: JobFilters) -> bool:
-    return all(predicate(job, filters) for predicate in _JOB_FILTER_PREDICATES)
 
 
 def filters_to_echo(filters: JobFilters) -> JobListFiltersEcho:

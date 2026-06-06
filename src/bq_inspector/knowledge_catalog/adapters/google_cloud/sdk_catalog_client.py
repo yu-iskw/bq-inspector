@@ -119,63 +119,6 @@ def _list_page_from_pager(
     return page
 
 
-def _service_for_spec(client: SdkCatalogClient, service: str) -> object:
-    if service == "catalog":
-        return client._catalog
-    return client._glossary
-
-
-def _make_get_method(spec: Any) -> Any:
-    async def method(self: SdkCatalogClient, request: GetByNameRequest) -> dict[str, object]:
-        return await self._get_resource(
-            request,
-            request_cls=getattr(dataplex_v1, spec.request_type_name),
-            service=_service_for_spec(self, spec.service),
-            method_name=spec.sdk_method,
-            api=spec.api,
-            apply_entry_view=spec.apply_entry_view,
-        )
-
-    method.__name__ = spec.client_method
-    return method
-
-
-def _make_list_method(spec: Any) -> Any:
-    async def method(self: SdkCatalogClient, request: ListByParentRequest) -> ListResourcesPage:
-        return await self._list_resources(
-            request,
-            request_cls=getattr(dataplex_v1, spec.request_type_name),
-            service=_service_for_spec(self, spec.service),
-            method_name=spec.sdk_method,
-            api=spec.api,
-            items_attr=spec.items_attr,
-        )
-
-    method.__name__ = spec.client_method
-    return method
-
-
-_SDK_METHODS_ATTACHED = False
-
-
-def _attach_sdk_methods() -> None:
-    global _SDK_METHODS_ATTACHED  # noqa: PLW0603
-    if _SDK_METHODS_ATTACHED:
-        return
-    from bq_inspector.commands.catalog.resource_specs import (  # noqa: PLC0415
-        KNOWLEDGE_CATALOG_GET_SDK_SPECS,
-        KNOWLEDGE_CATALOG_LIST_SDK_SPECS,
-    )
-
-    for get_spec in KNOWLEDGE_CATALOG_GET_SDK_SPECS:
-        setattr(SdkCatalogClient, get_spec.client_method, _make_get_method(get_spec))
-
-    for list_spec in KNOWLEDGE_CATALOG_LIST_SDK_SPECS:
-        setattr(SdkCatalogClient, list_spec.client_method, _make_list_method(list_spec))
-
-    _SDK_METHODS_ATTACHED = True
-
-
 class SdkCatalogClient:
     """Read-only Knowledge Catalog client backed by google-cloud-dataplex."""
 
@@ -260,6 +203,63 @@ class SdkCatalogClient:
 
         entry = await invoke_sync(_call, api="dataplex.projects.locations.lookupEntry")
         return _catalog_dict(entry)
+
+
+def _service_for_spec(client: SdkCatalogClient, service: str) -> object:
+    if service == "catalog":
+        return client._catalog
+    return client._glossary
+
+
+def _make_get_method(spec: Any) -> Any:
+    async def method(self: SdkCatalogClient, request: GetByNameRequest) -> dict[str, object]:
+        return await self._get_resource(
+            request,
+            request_cls=getattr(dataplex_v1, spec.request_type_name),
+            service=_service_for_spec(self, spec.service),
+            method_name=spec.sdk_method,
+            api=spec.api,
+            apply_entry_view=spec.apply_entry_view,
+        )
+
+    method.__name__ = spec.client_method
+    return method
+
+
+def _make_list_method(spec: Any) -> Any:
+    async def method(self: SdkCatalogClient, request: ListByParentRequest) -> ListResourcesPage:
+        return await self._list_resources(
+            request,
+            request_cls=getattr(dataplex_v1, spec.request_type_name),
+            service=_service_for_spec(self, spec.service),
+            method_name=spec.sdk_method,
+            api=spec.api,
+            items_attr=spec.items_attr,
+        )
+
+    method.__name__ = spec.client_method
+    return method
+
+
+_SDK_METHODS_ATTACHED = False
+
+
+def _attach_sdk_methods() -> None:
+    global _SDK_METHODS_ATTACHED  # noqa: PLW0603
+    if _SDK_METHODS_ATTACHED:
+        return
+    from bq_inspector.commands.catalog.resource_specs import (  # noqa: PLC0415
+        KNOWLEDGE_CATALOG_GET_SDK_SPECS,
+        KNOWLEDGE_CATALOG_LIST_SDK_SPECS,
+    )
+
+    for get_spec in KNOWLEDGE_CATALOG_GET_SDK_SPECS:
+        setattr(SdkCatalogClient, get_spec.client_method, _make_get_method(get_spec))
+
+    for list_spec in KNOWLEDGE_CATALOG_LIST_SDK_SPECS:
+        setattr(SdkCatalogClient, list_spec.client_method, _make_list_method(list_spec))
+
+    _SDK_METHODS_ATTACHED = True
 
 
 _attach_sdk_methods()

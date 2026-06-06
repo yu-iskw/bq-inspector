@@ -27,6 +27,10 @@ _EXIT_CODE_CASES: list[tuple[BqInspectErrorCode, int]] = [
 ]
 
 
+def _error_with_code(code: BqInspectErrorCode) -> BqInspectError:
+    return {"code": code, "message": code, "retriable": False}
+
+
 @pytest.mark.parametrize(("code", "exit_code"), _EXIT_CODE_CASES)
 def test_get_exit_code(code: BqInspectErrorCode, exit_code: int) -> None:
     assert get_exit_code(_error_with_code(code)) == exit_code
@@ -72,7 +76,3 @@ def test_create_retriable_api_availability_errors_by_default() -> None:
         "message": "BigQuery is unavailable.",
         "retriable": True,
     }
-
-
-def _error_with_code(code: BqInspectErrorCode) -> BqInspectError:
-    return {"code": code, "message": code, "retriable": False}

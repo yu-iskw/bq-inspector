@@ -39,21 +39,21 @@ GLOBAL_USAGE = build_global_usage()
 
 
 @dataclass(frozen=True)
-class GroupCommandSpec:
-    """Top-level CLI group with help text and nested params commands."""
-
-    name: str
-    usage: str
-    commands: tuple[ParamsCommandSpec, ...]
-
-
-@dataclass(frozen=True)
 class ParamsCommandSpec:
     """Params-based CLI command."""
 
     path: tuple[str, ...]
     usage: str
     runner: ParamsCommandRunner
+
+
+@dataclass(frozen=True)
+class GroupCommandSpec:
+    """Top-level CLI group with help text and nested params commands."""
+
+    name: str
+    usage: str
+    commands: tuple[ParamsCommandSpec, ...]
 
 
 @dataclass(frozen=True)

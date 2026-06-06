@@ -34,17 +34,12 @@ _STATUS_CODE_RULES: tuple[tuple[Callable[[int], bool], BqInspectErrorCode], ...]
 )
 
 
-@dataclass(frozen=True)
-class GoogleApiErrorView:
-    """Normalized HTTP status and message from a Google API failure."""
-
-    status: int | None
-    message: str
-
-    @classmethod
-    def from_error(cls, error: object) -> GoogleApiErrorView:
-        """Build a view from a Google API or dict-shaped error."""
-        return cls(status=_extract_http_status(error), message=_extract_message(error))
+def _parse_http_status_string(value: str) -> int | None:
+    try:
+        parsed = int(value, 10)
+    except ValueError:
+        return None
+    return parsed if _HTTP_STATUS_MIN <= parsed < _HTTP_STATUS_MAX else None
 
 
 def parse_http_status(value: object) -> int | None:
@@ -56,12 +51,89 @@ def parse_http_status(value: object) -> int | None:
     return None
 
 
-def _parse_http_status_string(value: str) -> int | None:
-    try:
-        parsed = int(value, 10)
-    except ValueError:
-        return None
-    return parsed if _HTTP_STATUS_MIN <= parsed < _HTTP_STATUS_MAX else None
+def _extract_http_status_from_mapping(error: dict[str, object]) -> int | None:
+    parsed_code = parse_http_status(error.get("code"))
+    if parsed_code is not None:
+        return parsed_code
+
+    response = error.get("response")
+    if isinstance(response, dict):
+        return parse_http_status(response.get("status"))
+
+    return None
+
+
+def _extract_http_status_from_object(error: object) -> int | None:
+    code = getattr(error, "code", None)
+    if code is not None:
+        parsed = parse_http_status(code)
+        if parsed is not None:
+            return parsed
+
+    response = getattr(error, "response", None)
+    if isinstance(response, dict):
+        return parse_http_status(response.get("status"))
+
+    return None
+
+
+def _extract_http_status(error: object) -> int | None:
+    if isinstance(error, GoogleAPICallError):
+        return parse_http_status(error.code)
+
+    if isinstance(error, dict):
+        return _extract_http_status_from_mapping(error)
+
+    return _extract_http_status_from_object(error)
+
+
+def _message_from_exception(error: object) -> str | None:
+    if isinstance(error, BaseException):
+        message = str(error).strip()
+        if len(message) > 0:
+            return message
+    return None
+
+
+def _message_from_dict(error: object) -> str | None:
+    if isinstance(error, dict):
+        dict_message = error.get("message")
+        if isinstance(dict_message, str) and dict_message.strip():
+            return dict_message
+    return None
+
+
+def _message_from_object_attr(error: object) -> str | None:
+    object_message = getattr(error, "message", None)
+    if isinstance(object_message, str) and object_message.strip():
+        return object_message
+    return None
+
+
+def _extract_message(error: object) -> str:
+    message = _message_from_exception(error)
+    if message is not None:
+        return message
+
+    message = _message_from_dict(error)
+    if message is not None:
+        return message
+
+    message = _message_from_object_attr(error)
+    return message if message is not None else "BigQuery request failed."
+
+
+@dataclass(frozen=True)
+class GoogleApiErrorView:
+    """Normalized HTTP status and message from a Google API failure."""
+
+    status: int | None
+    message: str
+
+    @classmethod
+    def from_error(cls, error: object) -> GoogleApiErrorView:
+        """Build a view from a Google API or dict-shaped error."""
+        return cls(status=_extract_http_status(error), message=_extract_message(error))
 
 
 def resolve_http_status(error: object) -> int | None:
@@ -110,75 +182,3 @@ def map_google_error_to_bq_inspector_failure(
         error_details["hint"] = hint
 
     return BqInspectFailure(error_details)
-
-
-def _extract_http_status(error: object) -> int | None:
-    if isinstance(error, GoogleAPICallError):
-        return parse_http_status(error.code)
-
-    if isinstance(error, dict):
-        return _extract_http_status_from_mapping(error)
-
-    return _extract_http_status_from_object(error)
-
-
-def _extract_http_status_from_mapping(error: dict[str, object]) -> int | None:
-    parsed_code = parse_http_status(error.get("code"))
-    if parsed_code is not None:
-        return parsed_code
-
-    response = error.get("response")
-    if isinstance(response, dict):
-        return parse_http_status(response.get("status"))
-
-    return None
-
-
-def _extract_http_status_from_object(error: object) -> int | None:
-    code = getattr(error, "code", None)
-    if code is not None:
-        parsed = parse_http_status(code)
-        if parsed is not None:
-            return parsed
-
-    response = getattr(error, "response", None)
-    if isinstance(response, dict):
-        return parse_http_status(response.get("status"))
-
-    return None
-
-
-def _extract_message(error: object) -> str:
-    message = _message_from_exception(error)
-    if message is not None:
-        return message
-
-    message = _message_from_dict(error)
-    if message is not None:
-        return message
-
-    message = _message_from_object_attr(error)
-    return message if message is not None else "BigQuery request failed."
-
-
-def _message_from_exception(error: object) -> str | None:
-    if isinstance(error, BaseException):
-        message = str(error).strip()
-        if len(message) > 0:
-            return message
-    return None
-
-
-def _message_from_dict(error: object) -> str | None:
-    if isinstance(error, dict):
-        dict_message = error.get("message")
-        if isinstance(dict_message, str) and dict_message.strip():
-            return dict_message
-    return None
-
-
-def _message_from_object_attr(error: object) -> str | None:
-    object_message = getattr(error, "message", None)
-    if isinstance(object_message, str) and object_message.strip():
-        return object_message
-    return None

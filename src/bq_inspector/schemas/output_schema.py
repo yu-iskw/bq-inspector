@@ -221,6 +221,7 @@ LINEAGE_LINKS_OUTPUT_SCHEMA: dict[str, Any] = {
     },
 }
 
+
 def make_catalog_resource_output_schema(title: str) -> dict[str, Any]:
     """Build a Knowledge Catalog get/lookup output schema."""
     return {
