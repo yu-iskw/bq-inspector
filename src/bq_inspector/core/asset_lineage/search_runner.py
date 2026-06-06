@@ -35,7 +35,8 @@ async def run_asset_lineage_search(
         [BqInspectSchemaVersion, ToolBlock],
         Awaitable[LineageLinksResponse],
     ],
-) -> LineageLinksResponse: ...
+) -> LineageLinksResponse:
+    """Overload stub for links search."""
 
 
 @overload
@@ -48,7 +49,8 @@ async def run_asset_lineage_search(
         [BqInspectSchemaVersion, ToolBlock],
         Awaitable[LineageGraphResponse],
     ],
-) -> LineageGraphResponse: ...
+) -> LineageGraphResponse:
+    """Overload stub for graph search."""
 
 
 async def run_asset_lineage_search(
