@@ -70,7 +70,7 @@ async def test_run_catalog_search_with_fixture_client() -> None:
                 }
             ),
         ],
-        InspectionCommandOptions(catalog_client=client, tool_version="0.1.0"),
+        InspectionCommandOptions(catalog_client=client, tool_version="0.2.0"),
     )
 
     assert response["schemaVersion"] == "bq-inspector.v1"
@@ -104,7 +104,7 @@ async def test_run_catalog_entries_get_with_fixture_client() -> None:
 
     response = await entries_get.run_argv(
         ["--params", json.dumps({"name": _ENTRY_NAME})],
-        InspectionCommandOptions(catalog_client=client, tool_version="0.1.0"),
+        InspectionCommandOptions(catalog_client=client, tool_version="0.2.0"),
     )
 
     assert response["resource"]["fullyQualifiedName"] == "bigquery:analytics-prod.sales.orders"

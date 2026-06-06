@@ -31,7 +31,7 @@ async def test_list_catalog_resources_returns_fixture_page() -> None:
     response = await list_catalog_resources(
         {"parent": _PARENT, "pageSize": 50},
         client=client,
-        tool_version="0.1.0",
+        tool_version="0.2.0",
         collection_key=spec.collection_key,
         dispatch=spec.dispatch,
     )

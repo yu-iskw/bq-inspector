@@ -23,7 +23,7 @@ async def test_returns_table_metadata_on_success() -> None:
     response = await get_table_metadata(
         {"projectId": "p", "datasetId": "d1", "tableId": "t1"},
         client=client,
-        tool_version="0.1.0",
+        tool_version="0.2.0",
     )
 
     assert response["errors"] == []
@@ -65,7 +65,7 @@ async def test_returns_errors_for_table_metadata_failures() -> None:
     response = await get_table_metadata(
         {"projectId": "p", "datasetId": "d1", "tableId": "t1"},
         client=DenyClient(),
-        tool_version="0.1.0",
+        tool_version="0.2.0",
     )
 
     assert "resource" not in response

@@ -9,7 +9,7 @@ from bq_inspector.core.shared.errors import BqInspectFailure, create_bq_inspecto
 
 
 def test_maps_bq_inspector_failure_to_errors_array() -> None:
-    tool = {"name": "bq-inspector", "version": "0.1.0", "readOnly": True}
+    tool = {"name": "bq-inspector", "version": "0.2.0", "readOnly": True}
     failure = BqInspectFailure(
         create_bq_inspector_error(
             code="BQINSPECTOR_PERMISSION_DENIED",
@@ -30,7 +30,7 @@ def test_maps_bq_inspector_failure_to_errors_array() -> None:
 
 
 def test_includes_table_id_in_request_when_provided() -> None:
-    tool = {"name": "bq-inspector", "version": "0.1.0", "readOnly": True}
+    tool = {"name": "bq-inspector", "version": "0.2.0", "readOnly": True}
     failure = BqInspectFailure(
         create_bq_inspector_error(
             code="BQINSPECTOR_JOB_NOT_FOUND",
@@ -48,7 +48,7 @@ def test_includes_table_id_in_request_when_provided() -> None:
 
 
 def test_rethrows_non_bq_inspector_failure_errors() -> None:
-    tool = {"name": "bq-inspector", "version": "0.1.0", "readOnly": True}
+    tool = {"name": "bq-inspector", "version": "0.2.0", "readOnly": True}
     with pytest.raises(RuntimeError, match="boom"):
         dataset_table_error_envelope(
             "bq-inspector.v1",

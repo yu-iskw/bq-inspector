@@ -23,7 +23,7 @@ packages = ["src/bq_inspector"]
 
 [project]
 name = "bq-inspector"
-version = "0.1.0"
+version = "0.2.0"
 authors = [{ name = "yu-iskw" }]
 readme = "README.md"
 license = { file = "LICENSE" }

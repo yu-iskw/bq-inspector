@@ -26,18 +26,18 @@ async def test_create_run_params_command_runs_schema_and_execute_paths() -> None
     )
 
     input_schema = await runner.run_argv(
-        ["--input-schema"], InspectionCommandOptions(tool_version="0.1.0")
+        ["--input-schema"], InspectionCommandOptions(tool_version="0.2.0")
     )
     assert input_schema["title"] == "bq-inspector datasets get input"
 
     output_schema = await runner.run_argv(
-        ["--output-schema"], InspectionCommandOptions(tool_version="0.1.0")
+        ["--output-schema"], InspectionCommandOptions(tool_version="0.2.0")
     )
     assert output_schema["title"] == "bq-inspector dataset/table resource output"
 
     result = await runner.run_argv(
         ["--params", '{"projectId":"p","datasetId":"d"}'],
-        InspectionCommandOptions(tool_version="0.1.0"),
+        InspectionCommandOptions(tool_version="0.2.0"),
     )
     assert result == {"ok": "true"}
     assert executed == ["run"]

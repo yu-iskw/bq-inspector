@@ -63,11 +63,11 @@ async def test_run_jobs_summary_with_fixture_client() -> None:
                 }
             ),
         ],
-        InspectionCommandOptions(client=client, tool_version="0.1.0"),
+        InspectionCommandOptions(client=client, tool_version="0.2.0"),
     )
 
     assert response["schemaVersion"] == "bq-inspector.v1"
-    assert response["tool"] == {"name": "bq-inspector", "version": "0.1.0", "readOnly": True}
+    assert response["tool"] == {"name": "bq-inspector", "version": "0.2.0", "readOnly": True}
     assert len(response["jobs"]) == 1
     assert response["jobs"][0]["jobRef"]["jobId"] == "job_123"
     assert response["errors"] == []
@@ -91,7 +91,7 @@ async def test_run_jobs_list_with_fixture_client() -> None:
                 }
             ),
         ],
-        InspectionCommandOptions(client=client, tool_version="0.1.0"),
+        InspectionCommandOptions(client=client, tool_version="0.2.0"),
     )
 
     assert response["schemaVersion"] == "bq-inspector.v1"
@@ -109,7 +109,7 @@ async def test_run_jobs_lineage_includes_referenced_tables() -> None:
 
     response = await run_jobs_lineage(
         ["--params", _LINEAGE_JOB_PARAMS],
-        InspectionCommandOptions(client=client, tool_version="0.1.0"),
+        InspectionCommandOptions(client=client, tool_version="0.2.0"),
     )
 
     query_stats = response["jobs"][0]["job"]["statistics"]["query"]
@@ -126,7 +126,7 @@ async def test_run_jobs_impact_includes_dml_stats() -> None:
 
     response = await run_jobs_impact(
         ["--params", _LINEAGE_JOB_PARAMS],
-        InspectionCommandOptions(client=client, tool_version="0.1.0"),
+        InspectionCommandOptions(client=client, tool_version="0.2.0"),
     )
 
     stats = response["jobs"][0]["job"]["statistics"]
@@ -146,7 +146,7 @@ async def test_inspect_jobs_fixture_matches_command_path() -> None:
 
     direct = await inspect_jobs(
         {"jobs": [{"projectId": "analytics-prod", "location": "US", "jobId": "job_123"}]},
-        InspectJobOptions(client=client, tool_version="0.1.0", now=fixed_now),
+        InspectJobOptions(client=client, tool_version="0.2.0", now=fixed_now),
     )
 
     via_command = await run_jobs_summary(
@@ -164,7 +164,7 @@ async def test_inspect_jobs_fixture_matches_command_path() -> None:
                 }
             ),
         ],
-        InspectionCommandOptions(client=client, tool_version="0.1.0"),
+        InspectionCommandOptions(client=client, tool_version="0.2.0"),
     )
 
     assert via_command["schemaVersion"] == direct["schemaVersion"]

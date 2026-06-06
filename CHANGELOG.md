@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.0 — 2026-06-06
+
 ### Removed
 
 - **`bq-inspector schema` subcommand** — use per-command `--input-schema` and `--output-schema`.

@@ -33,7 +33,7 @@ async def test_get_catalog_resource_returns_fixture_payload() -> None:
     response = await get_catalog_resource(
         {"name": _ENTRY_NAME},
         client=client,
-        tool_version="0.1.0",
+        tool_version="0.2.0",
         dispatch=dispatch,
     )
 

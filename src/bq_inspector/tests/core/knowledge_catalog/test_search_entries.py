@@ -24,7 +24,7 @@ async def test_search_catalog_entries_empty_results_succeed() -> None:
             "pageSize": 50,
         },
         client=client,
-        tool_version="0.1.0",
+        tool_version="0.2.0",
     )
 
     assert response["entries"] == []
@@ -46,7 +46,7 @@ async def test_search_catalog_entries_request_echo() -> None:
             "pageSize": 25,
         },
         client=client,
-        tool_version="0.1.0",
+        tool_version="0.2.0",
     )
 
     assert response["request"]["projectId"] == "agent-tools-prod"

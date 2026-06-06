@@ -30,11 +30,11 @@ async def test_produces_envelope_shape_for_single_job_summary_view() -> None:
 
     response = await inspect_jobs(
         {"jobs": [{"projectId": "analytics-prod", "location": "US", "jobId": "job_123"}]},
-        InspectJobOptions(client=client, tool_version="0.1.0", now=fixed_now),
+        InspectJobOptions(client=client, tool_version="0.2.0", now=fixed_now),
     )
 
     assert response["schemaVersion"] == "bq-inspector.v1"
-    assert response["tool"] == {"name": "bq-inspector", "version": "0.1.0", "readOnly": True}
+    assert response["tool"] == {"name": "bq-inspector", "version": "0.2.0", "readOnly": True}
     assert response["request"] == {
         "jobs": [{"projectId": "analytics-prod", "location": "US", "jobId": "job_123"}],
         "view": "summary",
@@ -75,7 +75,7 @@ async def test_supports_multiple_job_ids() -> None:
         },
         InspectJobOptions(
             client=client,
-            tool_version="0.1.0",
+            tool_version="0.2.0",
             now=lambda: datetime(2020, 1, 1, tzinfo=timezone.utc),
         ),
     )
@@ -110,7 +110,7 @@ async def test_parallel_fetch_records_per_job_errors_without_aborting_siblings()
         },
         InspectJobOptions(
             client=MixedOutcomeClient(),
-            tool_version="0.1.0",
+            tool_version="0.2.0",
             now=lambda: datetime(2020, 1, 1, tzinfo=timezone.utc),
         ),
     )
@@ -134,7 +134,7 @@ async def test_returns_full_job_payload_when_view_is_full() -> None:
         },
         InspectJobOptions(
             client=client,
-            tool_version="0.1.0",
+            tool_version="0.2.0",
             now=lambda: datetime(2020, 1, 1, tzinfo=timezone.utc),
         ),
     )
@@ -154,7 +154,7 @@ async def test_records_validation_errors_for_invalid_job_references() -> None:
         {"jobs": [{"projectId": " ", "jobId": "job_123"}]},
         InspectJobOptions(
             client=client,
-            tool_version="0.1.0",
+            tool_version="0.2.0",
             now=lambda: datetime(2020, 1, 1, tzinfo=timezone.utc),
         ),
     )
@@ -171,7 +171,7 @@ async def test_uses_fallback_job_ref_with_location_when_validation_fails() -> No
         {"jobs": [{"projectId": " ", "location": " US ", "jobId": " job_123 "}]},
         InspectJobOptions(
             client=client,
-            tool_version="0.1.0",
+            tool_version="0.2.0",
             now=lambda: datetime(2020, 1, 1, tzinfo=timezone.utc),
         ),
     )
@@ -202,7 +202,7 @@ async def test_records_bq_inspector_failure_from_get_job() -> None:
         {"jobs": [{"projectId": "p", "jobId": "missing"}]},
         InspectJobOptions(
             client=DenyClient(),
-            tool_version="0.1.0",
+            tool_version="0.2.0",
             now=lambda: datetime(2020, 1, 1, tzinfo=timezone.utc),
         ),
     )
@@ -221,7 +221,7 @@ async def test_maps_unexpected_get_job_errors_to_internal_errors() -> None:
         {"jobs": [{"projectId": "p", "jobId": "j1"}]},
         InspectJobOptions(
             client=NetworkClient(),
-            tool_version="0.1.0",
+            tool_version="0.2.0",
             now=lambda: datetime(2020, 1, 1, tzinfo=timezone.utc),
         ),
     )
@@ -243,7 +243,7 @@ async def test_includes_impersonation_fields_in_request_echo() -> None:
         },
         InspectJobOptions(
             client=client,
-            tool_version="0.1.0",
+            tool_version="0.2.0",
             now=lambda: datetime(2020, 1, 1, tzinfo=timezone.utc),
         ),
     )
