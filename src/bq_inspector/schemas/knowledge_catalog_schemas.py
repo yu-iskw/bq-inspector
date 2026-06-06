@@ -59,11 +59,7 @@ def make_knowledge_catalog_list_input_schema(
     if supports_order_by:
         return schema
 
-    properties = {
-        key: value
-        for key, value in schema["properties"].items()
-        if key != "orderBy"
-    }
+    properties = {key: value for key, value in schema["properties"].items() if key != "orderBy"}
     return {**schema, "properties": properties}
 
 
