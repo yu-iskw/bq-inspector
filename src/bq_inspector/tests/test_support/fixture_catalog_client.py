@@ -5,6 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
+from bq_inspector.commands.catalog.resource_specs import (
+    KNOWLEDGE_CATALOG_GET_COMMANDS,
+    KNOWLEDGE_CATALOG_LIST_COMMANDS,
+)
+
 if TYPE_CHECKING:
     from bq_inspector.knowledge_catalog.types.requests import (
         GetByNameRequest,
@@ -46,11 +51,6 @@ class FixtureCatalogClient:
         return handler
 
     def __init__(self, fixture: FixtureCatalogInput) -> None:
-        from bq_inspector.commands.catalog.resource_specs import (  # noqa: PLC0415
-            KNOWLEDGE_CATALOG_GET_COMMANDS,
-            KNOWLEDGE_CATALOG_LIST_COMMANDS,
-        )
-
         self._fixture = fixture
         self.calls: list[tuple[str, Any]] = []
 

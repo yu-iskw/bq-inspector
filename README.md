@@ -94,13 +94,13 @@ Unknown commands print global usage plus `Unknown command: <argv>`.
 
 **Knowledge Catalog (governed metadata via Dataplex API):**
 
-| Goal | Command |
-| ---- | ------- |
-| Discover catalog entries (keyword or semantic search) | `catalog search` |
-| Resolve a discovered entry canonically | `catalog entries lookup` |
-| Retrieve entry, type, or glossary resources | `catalog entries get`, `catalog entry-types get`, … |
-| List entries, types, glossaries (one page per call) | `catalog entries list`, `catalog glossaries list`, … |
-| Retrieve a known entry link | `catalog entry-links get` |
+| Goal                                                  | Command                                              |
+| ----------------------------------------------------- | ---------------------------------------------------- |
+| Discover catalog entries (keyword or semantic search) | `catalog search`                                     |
+| Resolve a discovered entry canonically                | `catalog entries lookup`                             |
+| Retrieve entry, type, or glossary resources           | `catalog entries get`, `catalog entry-types get`, …  |
+| List entries, types, glossaries (one page per call)   | `catalog entries list`, `catalog glossaries list`, … |
+| Retrieve a known entry link                           | `catalog entry-links get`                            |
 
 There is **no** `catalog entry-links list` command—the Dataplex API does not expose a general list method for entry links.
 
@@ -271,7 +271,7 @@ bq-inspector catalog entries lookup --output-schema
 
 ## Knowledge Catalog commands
 
-Read-only [Knowledge Catalog](https://cloud.google.com/dataplex/docs/universal-catalog) inspection via the Dataplex API. CLI command group: `catalog`. Internal package: `knowledge_catalog`.
+Read-only [Knowledge Catalog](https://docs.cloud.google.com/dataplex/docs/introduction) inspection via the Dataplex API. CLI command group: `catalog`. Internal package: `knowledge_catalog`.
 
 ```bash
 bq-inspector catalog search --params '{"projectId":"YOUR_SEARCH_PROJECT","query":"YOUR_TERM","pageSize":50}'

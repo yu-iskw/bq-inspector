@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Literal, cast
+from typing import Literal, cast
 
+from bq_inspector.cli.usage_build import ParamsBodyKind
 from bq_inspector.schemas.command_schemas import CommandId  # noqa: TC001
-
-if TYPE_CHECKING:
-    from bq_inspector.cli.usage_build import ParamsBodyKind
 
 CatalogServiceKind = Literal["catalog", "glossary"]
 
@@ -266,8 +264,6 @@ def knowledge_catalog_export_name(subgroup: str, verb: str) -> str:
 
 def knowledge_catalog_body_kind(verb: str) -> ParamsBodyKind:
     """Return params body kind for a Knowledge Catalog verb."""
-    from bq_inspector.cli.usage_build import ParamsBodyKind  # noqa: PLC0415
-
     if verb == "get":
         return ParamsBodyKind.CATALOG_GET
     if verb == "list":

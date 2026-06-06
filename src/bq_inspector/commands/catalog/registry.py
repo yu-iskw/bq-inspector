@@ -9,6 +9,7 @@ from bq_inspector.cli.usage_build import (
     ParamsCommandUsageMeta,
     build_params_command_usage,
 )
+from bq_inspector.commands.catalog import commands as catalog_commands
 from bq_inspector.commands.catalog.resource_specs import (
     CATALOG_GET_EXAMPLE,
     CATALOG_LIST_EXAMPLE,
@@ -36,8 +37,6 @@ def build_knowledge_catalog_registrations() -> tuple[
     ...,
 ]:
     """Build registry entries for all Knowledge Catalog commands."""
-    from bq_inspector.commands.catalog import commands as catalog_commands  # noqa: PLC0415
-
     registrations: list[tuple[ParamsCommandUsageMeta, ParamsCommandRunner]] = [
         (
             ParamsCommandUsageMeta(

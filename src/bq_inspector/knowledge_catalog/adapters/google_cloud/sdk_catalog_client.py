@@ -6,6 +6,10 @@ from typing import TYPE_CHECKING, Any
 
 from google.cloud import dataplex_v1
 
+from bq_inspector.commands.catalog.resource_specs import (
+    KNOWLEDGE_CATALOG_GET_SDK_SPECS,
+    KNOWLEDGE_CATALOG_LIST_SDK_SPECS,
+)
 from bq_inspector.core.shared.invoke_sync import invoke_sync
 from bq_inspector.core.shared.protobuf_dict import message_to_dict
 
@@ -126,7 +130,20 @@ class SdkCatalogClient:
         self._catalog = dataplex_v1.CatalogServiceClient(credentials=auth_client)
         self._glossary = dataplex_v1.BusinessGlossaryServiceClient(credentials=auth_client)
 
-    async def _get_resource(  # noqa: PLR0913
+    @property
+    def catalog_service(self) -> dataplex_v1.CatalogServiceClient:
+        return self._catalog
+
+    @property
+    def glossary_service(self) -> dataplex_v1.BusinessGlossaryServiceClient:
+        return self._glossary
+
+    def service_for_kind(self, service: str) -> object:
+        if service == "catalog":
+            return self.catalog_service
+        return self.glossary_service
+
+    async def get_named_resource(  # noqa: PLR0913
         self,
         request: GetByNameRequest,
         *,
@@ -148,7 +165,7 @@ class SdkCatalogClient:
         resource = await invoke_sync(_call, api=api)
         return _catalog_dict(resource)
 
-    async def _list_resources(  # noqa: PLR0913
+    async def list_parent_resources(  # noqa: PLR0913
         self,
         request: ListByParentRequest,
         *,
@@ -204,62 +221,43 @@ class SdkCatalogClient:
         entry = await invoke_sync(_call, api="dataplex.projects.locations.lookupEntry")
         return _catalog_dict(entry)
 
+    @staticmethod
+    def make_get_method(spec: Any) -> Any:
+        async def method(self: SdkCatalogClient, request: GetByNameRequest) -> dict[str, object]:
+            return await self.get_named_resource(
+                request,
+                request_cls=getattr(dataplex_v1, spec.request_type_name),
+                service=self.service_for_kind(spec.service),
+                method_name=spec.sdk_method,
+                api=spec.api,
+                apply_entry_view=spec.apply_entry_view,
+            )
 
-def _service_for_spec(client: SdkCatalogClient, service: str) -> object:
-    if service == "catalog":
-        return client._catalog
-    return client._glossary
+        method.__name__ = spec.client_method
+        return method
 
+    @staticmethod
+    def make_list_method(spec: Any) -> Any:
+        async def method(self: SdkCatalogClient, request: ListByParentRequest) -> ListResourcesPage:
+            return await self.list_parent_resources(
+                request,
+                request_cls=getattr(dataplex_v1, spec.request_type_name),
+                service=self.service_for_kind(spec.service),
+                method_name=spec.sdk_method,
+                api=spec.api,
+                items_attr=spec.items_attr,
+            )
 
-def _make_get_method(spec: Any) -> Any:
-    async def method(self: SdkCatalogClient, request: GetByNameRequest) -> dict[str, object]:
-        return await self._get_resource(
-            request,
-            request_cls=getattr(dataplex_v1, spec.request_type_name),
-            service=_service_for_spec(self, spec.service),
-            method_name=spec.sdk_method,
-            api=spec.api,
-            apply_entry_view=spec.apply_entry_view,
-        )
-
-    method.__name__ = spec.client_method
-    return method
-
-
-def _make_list_method(spec: Any) -> Any:
-    async def method(self: SdkCatalogClient, request: ListByParentRequest) -> ListResourcesPage:
-        return await self._list_resources(
-            request,
-            request_cls=getattr(dataplex_v1, spec.request_type_name),
-            service=_service_for_spec(self, spec.service),
-            method_name=spec.sdk_method,
-            api=spec.api,
-            items_attr=spec.items_attr,
-        )
-
-    method.__name__ = spec.client_method
-    return method
+        method.__name__ = spec.client_method
+        return method
 
 
-_SDK_METHODS_ATTACHED = False
+for _get_spec in KNOWLEDGE_CATALOG_GET_SDK_SPECS:
+    setattr(SdkCatalogClient, _get_spec.client_method, SdkCatalogClient.make_get_method(_get_spec))
 
-
-def _attach_sdk_methods() -> None:
-    global _SDK_METHODS_ATTACHED  # noqa: PLW0603
-    if _SDK_METHODS_ATTACHED:
-        return
-    from bq_inspector.commands.catalog.resource_specs import (  # noqa: PLC0415
-        KNOWLEDGE_CATALOG_GET_SDK_SPECS,
-        KNOWLEDGE_CATALOG_LIST_SDK_SPECS,
+for _list_spec in KNOWLEDGE_CATALOG_LIST_SDK_SPECS:
+    setattr(
+        SdkCatalogClient,
+        _list_spec.client_method,
+        SdkCatalogClient.make_list_method(_list_spec),
     )
-
-    for get_spec in KNOWLEDGE_CATALOG_GET_SDK_SPECS:
-        setattr(SdkCatalogClient, get_spec.client_method, _make_get_method(get_spec))
-
-    for list_spec in KNOWLEDGE_CATALOG_LIST_SDK_SPECS:
-        setattr(SdkCatalogClient, list_spec.client_method, _make_list_method(list_spec))
-
-    _SDK_METHODS_ATTACHED = True
-
-
-_attach_sdk_methods()
