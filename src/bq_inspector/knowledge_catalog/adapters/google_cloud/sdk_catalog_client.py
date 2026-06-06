@@ -7,10 +7,13 @@ from typing import TYPE_CHECKING, Any
 from google.cloud import dataplex_v1
 
 from bq_inspector.commands.catalog.resource_specs import (
-    KNOWLEDGE_CATALOG_GET_SDK_SPECS,
-    KNOWLEDGE_CATALOG_LIST_SDK_SPECS,
+    KNOWLEDGE_CATALOG_GET_RESOURCES,
+    KNOWLEDGE_CATALOG_LIST_RESOURCES,
+    KnowledgeCatalogGetResourceSpec,
+    KnowledgeCatalogListResourceSpec,
 )
 from bq_inspector.core.shared.invoke_sync import invoke_sync
+from bq_inspector.core.shared.pagination import read_next_page_token
 from bq_inspector.core.shared.protobuf_dict import message_to_dict
 
 if TYPE_CHECKING:
@@ -37,13 +40,6 @@ _ENTRY_VIEW_MAP: dict[str, dataplex_v1.EntryView] = {
 
 def _catalog_dict(message: object) -> dict[str, object]:
     return message_to_dict(message, preserving_proto_field_name=False)
-
-
-def _read_next_page_token(pager: object) -> str | None:
-    token = getattr(pager, "next_page_token", None)
-    if isinstance(token, str) and len(token) > 0:
-        return token
-    return None
 
 
 def _resolve_entry_view(view: str | None) -> dataplex_v1.EntryView | None:
@@ -118,7 +114,7 @@ def _list_page_from_pager(
     page: ListResourcesPage = {
         "resources": [_catalog_dict(item) for item in items],
     }
-    if token := _read_next_page_token(pager):
+    if token := read_next_page_token(pager):
         page["nextPageToken"] = token
     return page
 
@@ -204,7 +200,7 @@ class SdkCatalogClient:
             "totalSize": pager.total_size,  # type: ignore[attr-defined]
             "unreachable": list(pager.unreachable),  # type: ignore[attr-defined]
         }
-        if token := _read_next_page_token(pager):
+        if token := read_next_page_token(pager):
             page["nextPageToken"] = token
         return page
 
@@ -222,7 +218,7 @@ class SdkCatalogClient:
         return _catalog_dict(entry)
 
     @staticmethod
-    def make_get_method(spec: Any) -> Any:
+    def make_get_method(spec: KnowledgeCatalogGetResourceSpec) -> Any:
         async def method(self: SdkCatalogClient, request: GetByNameRequest) -> dict[str, object]:
             return await self.get_named_resource(
                 request,
@@ -237,7 +233,7 @@ class SdkCatalogClient:
         return method
 
     @staticmethod
-    def make_list_method(spec: Any) -> Any:
+    def make_list_method(spec: KnowledgeCatalogListResourceSpec) -> Any:
         async def method(self: SdkCatalogClient, request: ListByParentRequest) -> ListResourcesPage:
             return await self.list_parent_resources(
                 request,
@@ -252,10 +248,10 @@ class SdkCatalogClient:
         return method
 
 
-for _get_spec in KNOWLEDGE_CATALOG_GET_SDK_SPECS:
+for _get_spec in KNOWLEDGE_CATALOG_GET_RESOURCES:
     setattr(SdkCatalogClient, _get_spec.client_method, SdkCatalogClient.make_get_method(_get_spec))
 
-for _list_spec in KNOWLEDGE_CATALOG_LIST_SDK_SPECS:
+for _list_spec in KNOWLEDGE_CATALOG_LIST_RESOURCES:
     setattr(
         SdkCatalogClient,
         _list_spec.client_method,

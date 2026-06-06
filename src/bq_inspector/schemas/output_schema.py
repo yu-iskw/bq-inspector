@@ -129,8 +129,8 @@ JOBS_LIST_OUTPUT_SCHEMA: dict[str, Any] = {
     },
 }
 
-CATALOG_RESOURCE_OUTPUT_SCHEMA: dict[str, Any] = {
-    "title": "bq-inspector catalog resource output",
+DATASET_TABLE_RESOURCE_OUTPUT_SCHEMA: dict[str, Any] = {
+    "title": "bq-inspector dataset/table resource output",
     "type": "object",
     "required": ["schemaVersion", "tool", "request", "warnings", "errors"],
     "additionalProperties": False,
@@ -307,58 +307,6 @@ CATALOG_SEARCH_OUTPUT_SCHEMA: dict[str, Any] = {
 
 CATALOG_ENTRIES_LOOKUP_OUTPUT_SCHEMA = make_catalog_resource_output_schema(
     "bq-inspector catalog entries lookup output"
-)
-CATALOG_ENTRIES_GET_OUTPUT_SCHEMA = make_catalog_resource_output_schema(
-    "bq-inspector catalog entries get output"
-)
-CATALOG_ENTRIES_LIST_OUTPUT_SCHEMA = make_catalog_list_output_schema(
-    "bq-inspector catalog entries list output",
-    "entries",
-)
-CATALOG_ENTRY_GROUPS_GET_OUTPUT_SCHEMA = make_catalog_resource_output_schema(
-    "bq-inspector catalog entry-groups get output"
-)
-CATALOG_ENTRY_GROUPS_LIST_OUTPUT_SCHEMA = make_catalog_list_output_schema(
-    "bq-inspector catalog entry-groups list output",
-    "entryGroups",
-)
-CATALOG_ENTRY_TYPES_GET_OUTPUT_SCHEMA = make_catalog_resource_output_schema(
-    "bq-inspector catalog entry-types get output"
-)
-CATALOG_ENTRY_TYPES_LIST_OUTPUT_SCHEMA = make_catalog_list_output_schema(
-    "bq-inspector catalog entry-types list output",
-    "entryTypes",
-)
-CATALOG_ASPECT_TYPES_GET_OUTPUT_SCHEMA = make_catalog_resource_output_schema(
-    "bq-inspector catalog aspect-types get output"
-)
-CATALOG_ASPECT_TYPES_LIST_OUTPUT_SCHEMA = make_catalog_list_output_schema(
-    "bq-inspector catalog aspect-types list output",
-    "aspectTypes",
-)
-CATALOG_ENTRY_LINKS_GET_OUTPUT_SCHEMA = make_catalog_resource_output_schema(
-    "bq-inspector catalog entry-links get output"
-)
-CATALOG_GLOSSARIES_GET_OUTPUT_SCHEMA = make_catalog_resource_output_schema(
-    "bq-inspector catalog glossaries get output"
-)
-CATALOG_GLOSSARIES_LIST_OUTPUT_SCHEMA = make_catalog_list_output_schema(
-    "bq-inspector catalog glossaries list output",
-    "glossaries",
-)
-CATALOG_GLOSSARY_CATEGORIES_GET_OUTPUT_SCHEMA = make_catalog_resource_output_schema(
-    "bq-inspector catalog glossary-categories get output"
-)
-CATALOG_GLOSSARY_CATEGORIES_LIST_OUTPUT_SCHEMA = make_catalog_list_output_schema(
-    "bq-inspector catalog glossary-categories list output",
-    "categories",
-)
-CATALOG_GLOSSARY_TERMS_GET_OUTPUT_SCHEMA = make_catalog_resource_output_schema(
-    "bq-inspector catalog glossary-terms get output"
-)
-CATALOG_GLOSSARY_TERMS_LIST_OUTPUT_SCHEMA = make_catalog_list_output_schema(
-    "bq-inspector catalog glossary-terms list output",
-    "terms",
 )
 
 LINEAGE_GRAPH_OUTPUT_SCHEMA: dict[str, Any] = {

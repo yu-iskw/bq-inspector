@@ -6,8 +6,8 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from bq_inspector.commands.catalog.resource_specs import (
-    KNOWLEDGE_CATALOG_GET_COMMANDS,
-    KNOWLEDGE_CATALOG_LIST_COMMANDS,
+    KNOWLEDGE_CATALOG_GET_RESOURCES,
+    KNOWLEDGE_CATALOG_LIST_RESOURCES,
 )
 
 if TYPE_CHECKING:
@@ -54,10 +54,10 @@ class FixtureCatalogClient:
         self._fixture = fixture
         self.calls: list[tuple[str, Any]] = []
 
-        for spec in KNOWLEDGE_CATALOG_GET_COMMANDS:
+        for spec in KNOWLEDGE_CATALOG_GET_RESOURCES:
             setattr(self, spec.client_method, self._make_get_handler(spec.client_method))
 
-        for spec in KNOWLEDGE_CATALOG_LIST_COMMANDS:
+        for spec in KNOWLEDGE_CATALOG_LIST_RESOURCES:
             setattr(self, spec.client_method, self._make_list_handler(spec.client_method))
 
     async def search_entries(self, request: SearchEntriesRequest) -> SearchEntriesPage:

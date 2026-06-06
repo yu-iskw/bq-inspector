@@ -2,25 +2,11 @@
 
 from __future__ import annotations
 
+from functools import lru_cache
 from typing import Any, Literal
 
 from bq_inspector.schemas.input_schema import (
-    CATALOG_ASPECT_TYPES_GET_INPUT_SCHEMA,
-    CATALOG_ASPECT_TYPES_LIST_INPUT_SCHEMA,
-    CATALOG_ENTRIES_GET_INPUT_SCHEMA,
-    CATALOG_ENTRIES_LIST_INPUT_SCHEMA,
     CATALOG_ENTRIES_LOOKUP_INPUT_SCHEMA,
-    CATALOG_ENTRY_GROUPS_GET_INPUT_SCHEMA,
-    CATALOG_ENTRY_GROUPS_LIST_INPUT_SCHEMA,
-    CATALOG_ENTRY_LINKS_GET_INPUT_SCHEMA,
-    CATALOG_ENTRY_TYPES_GET_INPUT_SCHEMA,
-    CATALOG_ENTRY_TYPES_LIST_INPUT_SCHEMA,
-    CATALOG_GLOSSARIES_GET_INPUT_SCHEMA,
-    CATALOG_GLOSSARIES_LIST_INPUT_SCHEMA,
-    CATALOG_GLOSSARY_CATEGORIES_GET_INPUT_SCHEMA,
-    CATALOG_GLOSSARY_CATEGORIES_LIST_INPUT_SCHEMA,
-    CATALOG_GLOSSARY_TERMS_GET_INPUT_SCHEMA,
-    CATALOG_GLOSSARY_TERMS_LIST_INPUT_SCHEMA,
     CATALOG_SEARCH_INPUT_SCHEMA,
     DATASETS_GET_INPUT_SCHEMA,
     JOBS_GET_INPUT_SCHEMA,
@@ -36,24 +22,9 @@ from bq_inspector.schemas.input_schema import (
     TABLES_LIST_INPUT_SCHEMA,
 )
 from bq_inspector.schemas.output_schema import (
-    CATALOG_ASPECT_TYPES_GET_OUTPUT_SCHEMA,
-    CATALOG_ASPECT_TYPES_LIST_OUTPUT_SCHEMA,
-    CATALOG_ENTRIES_GET_OUTPUT_SCHEMA,
-    CATALOG_ENTRIES_LIST_OUTPUT_SCHEMA,
     CATALOG_ENTRIES_LOOKUP_OUTPUT_SCHEMA,
-    CATALOG_ENTRY_GROUPS_GET_OUTPUT_SCHEMA,
-    CATALOG_ENTRY_GROUPS_LIST_OUTPUT_SCHEMA,
-    CATALOG_ENTRY_LINKS_GET_OUTPUT_SCHEMA,
-    CATALOG_ENTRY_TYPES_GET_OUTPUT_SCHEMA,
-    CATALOG_ENTRY_TYPES_LIST_OUTPUT_SCHEMA,
-    CATALOG_GLOSSARIES_GET_OUTPUT_SCHEMA,
-    CATALOG_GLOSSARIES_LIST_OUTPUT_SCHEMA,
-    CATALOG_GLOSSARY_CATEGORIES_GET_OUTPUT_SCHEMA,
-    CATALOG_GLOSSARY_CATEGORIES_LIST_OUTPUT_SCHEMA,
-    CATALOG_GLOSSARY_TERMS_GET_OUTPUT_SCHEMA,
-    CATALOG_GLOSSARY_TERMS_LIST_OUTPUT_SCHEMA,
-    CATALOG_RESOURCE_OUTPUT_SCHEMA,
     CATALOG_SEARCH_OUTPUT_SCHEMA,
+    DATASET_TABLE_RESOURCE_OUTPUT_SCHEMA,
     JOBS_GET_OUTPUT_SCHEMA,
     JOBS_IMPACT_OUTPUT_SCHEMA,
     JOBS_LINEAGE_OUTPUT_SCHEMA,
@@ -109,7 +80,7 @@ JobsViewCommandId = Literal[
 
 SchemaKind = Literal["input", "output"]
 
-_COMMAND_SCHEMAS: dict[str, Any] = {
+_BASE_COMMAND_SCHEMAS: dict[str, Any] = {
     "jobs get:input": JOBS_GET_INPUT_SCHEMA,
     "jobs get:output": JOBS_GET_OUTPUT_SCHEMA,
     "jobs summary:input": JOBS_SUMMARY_INPUT_SCHEMA,
@@ -125,11 +96,11 @@ _COMMAND_SCHEMAS: dict[str, Any] = {
     "jobs list:input": JOBS_LIST_INPUT_SCHEMA,
     "jobs list:output": JOBS_LIST_OUTPUT_SCHEMA,
     "datasets get:input": DATASETS_GET_INPUT_SCHEMA,
-    "datasets get:output": CATALOG_RESOURCE_OUTPUT_SCHEMA,
+    "datasets get:output": DATASET_TABLE_RESOURCE_OUTPUT_SCHEMA,
     "tables list:input": TABLES_LIST_INPUT_SCHEMA,
     "tables list:output": TABLES_LIST_OUTPUT_SCHEMA,
     "tables get:input": TABLES_GET_INPUT_SCHEMA,
-    "tables get:output": CATALOG_RESOURCE_OUTPUT_SCHEMA,
+    "tables get:output": DATASET_TABLE_RESOURCE_OUTPUT_SCHEMA,
     "lineage links:input": LINEAGE_LINKS_INPUT_SCHEMA,
     "lineage links:output": LINEAGE_LINKS_OUTPUT_SCHEMA,
     "lineage graph:input": LINEAGE_GRAPH_INPUT_SCHEMA,
@@ -138,43 +109,25 @@ _COMMAND_SCHEMAS: dict[str, Any] = {
     "catalog search:output": CATALOG_SEARCH_OUTPUT_SCHEMA,
     "catalog entries lookup:input": CATALOG_ENTRIES_LOOKUP_INPUT_SCHEMA,
     "catalog entries lookup:output": CATALOG_ENTRIES_LOOKUP_OUTPUT_SCHEMA,
-    "catalog entries get:input": CATALOG_ENTRIES_GET_INPUT_SCHEMA,
-    "catalog entries get:output": CATALOG_ENTRIES_GET_OUTPUT_SCHEMA,
-    "catalog entries list:input": CATALOG_ENTRIES_LIST_INPUT_SCHEMA,
-    "catalog entries list:output": CATALOG_ENTRIES_LIST_OUTPUT_SCHEMA,
-    "catalog entry-groups get:input": CATALOG_ENTRY_GROUPS_GET_INPUT_SCHEMA,
-    "catalog entry-groups get:output": CATALOG_ENTRY_GROUPS_GET_OUTPUT_SCHEMA,
-    "catalog entry-groups list:input": CATALOG_ENTRY_GROUPS_LIST_INPUT_SCHEMA,
-    "catalog entry-groups list:output": CATALOG_ENTRY_GROUPS_LIST_OUTPUT_SCHEMA,
-    "catalog entry-types get:input": CATALOG_ENTRY_TYPES_GET_INPUT_SCHEMA,
-    "catalog entry-types get:output": CATALOG_ENTRY_TYPES_GET_OUTPUT_SCHEMA,
-    "catalog entry-types list:input": CATALOG_ENTRY_TYPES_LIST_INPUT_SCHEMA,
-    "catalog entry-types list:output": CATALOG_ENTRY_TYPES_LIST_OUTPUT_SCHEMA,
-    "catalog aspect-types get:input": CATALOG_ASPECT_TYPES_GET_INPUT_SCHEMA,
-    "catalog aspect-types get:output": CATALOG_ASPECT_TYPES_GET_OUTPUT_SCHEMA,
-    "catalog aspect-types list:input": CATALOG_ASPECT_TYPES_LIST_INPUT_SCHEMA,
-    "catalog aspect-types list:output": CATALOG_ASPECT_TYPES_LIST_OUTPUT_SCHEMA,
-    "catalog entry-links get:input": CATALOG_ENTRY_LINKS_GET_INPUT_SCHEMA,
-    "catalog entry-links get:output": CATALOG_ENTRY_LINKS_GET_OUTPUT_SCHEMA,
-    "catalog glossaries get:input": CATALOG_GLOSSARIES_GET_INPUT_SCHEMA,
-    "catalog glossaries get:output": CATALOG_GLOSSARIES_GET_OUTPUT_SCHEMA,
-    "catalog glossaries list:input": CATALOG_GLOSSARIES_LIST_INPUT_SCHEMA,
-    "catalog glossaries list:output": CATALOG_GLOSSARIES_LIST_OUTPUT_SCHEMA,
-    "catalog glossary-categories get:input": CATALOG_GLOSSARY_CATEGORIES_GET_INPUT_SCHEMA,
-    "catalog glossary-categories get:output": CATALOG_GLOSSARY_CATEGORIES_GET_OUTPUT_SCHEMA,
-    "catalog glossary-categories list:input": CATALOG_GLOSSARY_CATEGORIES_LIST_INPUT_SCHEMA,
-    "catalog glossary-categories list:output": CATALOG_GLOSSARY_CATEGORIES_LIST_OUTPUT_SCHEMA,
-    "catalog glossary-terms get:input": CATALOG_GLOSSARY_TERMS_GET_INPUT_SCHEMA,
-    "catalog glossary-terms get:output": CATALOG_GLOSSARY_TERMS_GET_OUTPUT_SCHEMA,
-    "catalog glossary-terms list:input": CATALOG_GLOSSARY_TERMS_LIST_INPUT_SCHEMA,
-    "catalog glossary-terms list:output": CATALOG_GLOSSARY_TERMS_LIST_OUTPUT_SCHEMA,
 }
+
+
+@lru_cache(maxsize=1)
+def _command_schemas() -> dict[str, Any]:
+    from bq_inspector.schemas.knowledge_catalog_schemas import (  # noqa: PLC0415
+        build_knowledge_catalog_command_schemas,
+    )
+
+    return {
+        **_BASE_COMMAND_SCHEMAS,
+        **build_knowledge_catalog_command_schemas(),
+    }
 
 
 def get_command_schema(command: CommandId, kind: SchemaKind) -> Any:
     """Return the input or output JSON Schema for a command."""
     key = f"{command}:{kind}"
-    schema = _COMMAND_SCHEMAS.get(key)
+    schema = _command_schemas().get(key)
     if schema is None:
         raise ValueError(f"Unhandled schema key: {key}")
     return schema

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from bq_inspector.core.knowledge_catalog.error_envelope import catalog_knowledge_error_envelope
 from bq_inspector.core.shared.envelope import build_tool_envelope
 from bq_inspector.core.shared.errors import BqInspectFailure
+from bq_inspector.core.shared.inspection_error_envelope import inspection_error_envelope
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -31,7 +31,7 @@ async def run_catalog_use_case(
     try:
         return await execute(schema_version, tool)
     except BqInspectFailure as error:
-        return catalog_knowledge_error_envelope(
+        return inspection_error_envelope(
             schema_version,
             tool,
             request_echo,

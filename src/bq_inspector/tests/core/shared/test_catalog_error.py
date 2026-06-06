@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from bq_inspector.core.shared.catalog_error import catalog_error_envelope
+from bq_inspector.core.shared.dataset_table_error import dataset_table_error_envelope
 from bq_inspector.core.shared.errors import BqInspectFailure, create_bq_inspector_error
 
 
@@ -17,7 +17,7 @@ def test_maps_bq_inspector_failure_to_errors_array() -> None:
             source={"api": "bigquery.datasets.get", "status": 403},
         )
     )
-    envelope = catalog_error_envelope(
+    envelope = dataset_table_error_envelope(
         "bq-inspector.v1",
         tool,
         {"projectId": "p", "datasetId": "d1"},
@@ -38,7 +38,7 @@ def test_includes_table_id_in_request_when_provided() -> None:
             source={"api": "bigquery.tables.get", "status": 404},
         )
     )
-    envelope = catalog_error_envelope(
+    envelope = dataset_table_error_envelope(
         "bq-inspector.v1",
         tool,
         {"projectId": "p", "datasetId": "d1", "tableId": "t1"},
@@ -50,7 +50,7 @@ def test_includes_table_id_in_request_when_provided() -> None:
 def test_rethrows_non_bq_inspector_failure_errors() -> None:
     tool = {"name": "bq-inspector", "version": "0.1.0", "readOnly": True}
     with pytest.raises(RuntimeError, match="boom"):
-        catalog_error_envelope(
+        dataset_table_error_envelope(
             "bq-inspector.v1",
             tool,
             {"projectId": "p", "datasetId": "d1"},

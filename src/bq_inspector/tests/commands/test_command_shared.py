@@ -33,7 +33,7 @@ async def test_create_run_params_command_runs_schema_and_execute_paths() -> None
     output_schema = await runner.run_argv(
         ["--output-schema"], InspectionCommandOptions(tool_version="0.1.0")
     )
-    assert output_schema["title"] == "bq-inspector catalog resource output"
+    assert output_schema["title"] == "bq-inspector dataset/table resource output"
 
     result = await runner.run_argv(
         ["--params", '{"projectId":"p","datasetId":"d"}'],

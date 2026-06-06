@@ -14,6 +14,7 @@ from google.cloud import bigquery
 from bq_inspector.core.jobs.list_request_fields import list_request_to_sdk_kwargs
 from bq_inspector.core.shared.api_error_hints import ApiErrorHintContext
 from bq_inspector.core.shared.invoke_sync import invoke_sync
+from bq_inspector.core.shared.pagination import read_next_page_token
 
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
@@ -22,13 +23,6 @@ if TYPE_CHECKING:
     from bq_inspector.bigquery.types.list_jobs import ListJobsPage, ListJobsRequest
     from bq_inspector.bigquery.types.refs import DatasetRef, TableRef
     from bq_inspector.core.shared.types import JobRef
-
-
-def _read_next_page_token(iterator: object) -> str | None:
-    token = getattr(iterator, "next_page_token", None)
-    if isinstance(token, str) and len(token) > 0:
-        return token
-    return None
 
 
 def _resource_to_api_dict(resource: object) -> dict[str, object]:
@@ -88,7 +82,7 @@ class SdkBigQueryClient:
         jobs: list[object] = (
             [_resource_to_api_dict(job) for job in page] if page is not None else []
         )
-        next_page_token = _read_next_page_token(iterator)
+        next_page_token = read_next_page_token(iterator)
 
         result: ListJobsPage = {"jobs": jobs}
         if next_page_token is not None:

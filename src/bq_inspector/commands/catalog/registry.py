@@ -9,12 +9,16 @@ from bq_inspector.cli.usage_build import (
     ParamsCommandUsageMeta,
     build_params_command_usage,
 )
-from bq_inspector.commands.catalog import commands as catalog_commands
+from bq_inspector.commands.catalog.commands import (
+    build_knowledge_catalog_command_runners,
+    catalog_entries_lookup_command,
+    catalog_search_command,
+)
 from bq_inspector.commands.catalog.resource_specs import (
     CATALOG_GET_EXAMPLE,
     CATALOG_LIST_EXAMPLE,
-    KNOWLEDGE_CATALOG_GET_COMMANDS,
-    KNOWLEDGE_CATALOG_LIST_COMMANDS,
+    KNOWLEDGE_CATALOG_GET_RESOURCES,
+    KNOWLEDGE_CATALOG_LIST_RESOURCES,
     knowledge_catalog_body_kind,
     knowledge_catalog_command_path,
     knowledge_catalog_export_name,
@@ -37,6 +41,8 @@ def build_knowledge_catalog_registrations() -> tuple[
     ...,
 ]:
     """Build registry entries for all Knowledge Catalog commands."""
+    runners = build_knowledge_catalog_command_runners()
+
     registrations: list[tuple[ParamsCommandUsageMeta, ParamsCommandRunner]] = [
         (
             ParamsCommandUsageMeta(
@@ -45,7 +51,7 @@ def build_knowledge_catalog_registrations() -> tuple[
                 _CATALOG_SEARCH_EXAMPLE,
                 "./catalog-search.json",
             ),
-            catalog_commands.catalog_search_command,
+            catalog_search_command,
         ),
         (
             ParamsCommandUsageMeta(
@@ -54,13 +60,13 @@ def build_knowledge_catalog_registrations() -> tuple[
                 _CATALOG_LOOKUP_EXAMPLE,
                 "./catalog-entries-lookup.json",
             ),
-            catalog_commands.catalog_entries_lookup_command,
+            catalog_entries_lookup_command,
         ),
     ]
 
-    for spec in KNOWLEDGE_CATALOG_GET_COMMANDS:
+    for spec in KNOWLEDGE_CATALOG_GET_RESOURCES:
         path = knowledge_catalog_command_path(spec.subgroup, "get")
-        runner = getattr(catalog_commands, knowledge_catalog_export_name(spec.subgroup, "get"))
+        runner = runners[knowledge_catalog_export_name(spec.subgroup, "get")]
         registrations.append(
             (
                 ParamsCommandUsageMeta(
@@ -73,9 +79,9 @@ def build_knowledge_catalog_registrations() -> tuple[
             )
         )
 
-    for spec in KNOWLEDGE_CATALOG_LIST_COMMANDS:
+    for spec in KNOWLEDGE_CATALOG_LIST_RESOURCES:
         path = knowledge_catalog_command_path(spec.subgroup, "list")
-        runner = getattr(catalog_commands, knowledge_catalog_export_name(spec.subgroup, "list"))
+        runner = runners[knowledge_catalog_export_name(spec.subgroup, "list")]
         registrations.append(
             (
                 ParamsCommandUsageMeta(
