@@ -21,7 +21,9 @@ from bq_inspector.knowledge_catalog.resource_specs import (
 
 
 def _entries_get_dispatch() -> KnowledgeCatalogGetDispatch:
-    return next(spec.dispatch for spec in KNOWLEDGE_CATALOG_GET_RESOURCES if spec.subgroup == "entries")
+    return next(
+        spec.dispatch for spec in KNOWLEDGE_CATALOG_GET_RESOURCES if spec.subgroup == "entries"
+    )
 
 
 def _entries_list_dispatch() -> KnowledgeCatalogListDispatch:

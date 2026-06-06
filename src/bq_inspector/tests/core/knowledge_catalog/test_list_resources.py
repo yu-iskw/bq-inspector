@@ -16,9 +16,7 @@ _PARENT = "projects/analytics-prod/locations/us/entryGroups/g"
 
 @pytest.mark.asyncio
 async def test_list_catalog_resources_returns_fixture_page() -> None:
-    spec = next(
-        spec for spec in KNOWLEDGE_CATALOG_LIST_RESOURCES if spec.subgroup == "entries"
-    )
+    spec = next(spec for spec in KNOWLEDGE_CATALOG_LIST_RESOURCES if spec.subgroup == "entries")
     client = FixtureCatalogClient(
         FixtureCatalogInput(
             list_by_parent={
