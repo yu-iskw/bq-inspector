@@ -15,12 +15,6 @@ class ImpersonationFields(TypedDict, total=False):
     impersonateDelegates: list[str]
 
 
-def merge_impersonation_into(request: RequestT, fields: ImpersonationFields) -> RequestT:
-    """Merge impersonation echo fields into a request mapping."""
-    request.update(impersonation_request_fields(fields))
-    return request
-
-
 def impersonation_request_fields(
     fields: ImpersonationFields,
 ) -> dict[str, str | list[str]]:
@@ -33,6 +27,12 @@ def impersonation_request_fields(
     if delegates is not None and delegates:
         output["impersonateDelegates"] = delegates
     return output
+
+
+def merge_impersonation_into(request: RequestT, fields: ImpersonationFields) -> RequestT:
+    """Merge impersonation echo fields into a request mapping."""
+    request.update(impersonation_request_fields(fields))
+    return request
 
 
 def auth_client_options_from_impersonation(fields: ImpersonationFields) -> AuthClientOptions:

@@ -129,8 +129,8 @@ JOBS_LIST_OUTPUT_SCHEMA: dict[str, Any] = {
     },
 }
 
-CATALOG_RESOURCE_OUTPUT_SCHEMA: dict[str, Any] = {
-    "title": "bq-inspector catalog resource output",
+DATASET_TABLE_RESOURCE_OUTPUT_SCHEMA: dict[str, Any] = {
+    "title": "bq-inspector dataset/table resource output",
     "type": "object",
     "required": ["schemaVersion", "tool", "request", "warnings", "errors"],
     "additionalProperties": False,
@@ -220,6 +220,94 @@ LINEAGE_LINKS_OUTPUT_SCHEMA: dict[str, Any] = {
         "errors": {"type": "array"},
     },
 }
+
+
+def make_catalog_resource_output_schema(title: str) -> dict[str, Any]:
+    """Build a Knowledge Catalog get/lookup output schema."""
+    return {
+        "title": title,
+        "type": "object",
+        "required": ["schemaVersion", "tool", "request", "resource", "warnings", "errors"],
+        "additionalProperties": False,
+        "properties": {
+            "schemaVersion": SCHEMA_VERSION_FIELD,
+            "tool": TOOL_BLOCK,
+            "request": {"type": "object", "additionalProperties": True},
+            "resource": True,
+            "warnings": {"type": "array"},
+            "errors": {"type": "array"},
+        },
+    }
+
+
+def make_catalog_list_output_schema(title: str, collection_key: str) -> dict[str, Any]:
+    """Build a Knowledge Catalog list output schema."""
+    return {
+        "title": title,
+        "type": "object",
+        "required": [
+            "schemaVersion",
+            "tool",
+            "request",
+            collection_key,
+            "page",
+            "warnings",
+            "errors",
+        ],
+        "additionalProperties": False,
+        "properties": {
+            "schemaVersion": SCHEMA_VERSION_FIELD,
+            "tool": TOOL_BLOCK,
+            "request": {"type": "object", "additionalProperties": True},
+            collection_key: {"type": "array"},
+            "page": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "nextPageToken": {"type": "string"},
+                    "totalSize": {"type": "integer"},
+                    "unreachable": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                    },
+                },
+            },
+            "warnings": {"type": "array"},
+            "errors": {"type": "array"},
+        },
+    }
+
+
+CATALOG_SEARCH_OUTPUT_SCHEMA: dict[str, Any] = {
+    "title": "bq-inspector catalog search output",
+    "type": "object",
+    "required": ["schemaVersion", "tool", "request", "entries", "page", "warnings", "errors"],
+    "additionalProperties": False,
+    "properties": {
+        "schemaVersion": SCHEMA_VERSION_FIELD,
+        "tool": TOOL_BLOCK,
+        "request": {"type": "object", "additionalProperties": True},
+        "entries": {"type": "array"},
+        "page": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "totalSize": {"type": "integer"},
+                "nextPageToken": {"type": "string"},
+                "unreachable": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+            },
+        },
+        "warnings": {"type": "array"},
+        "errors": {"type": "array"},
+    },
+}
+
+CATALOG_ENTRIES_LOOKUP_OUTPUT_SCHEMA = make_catalog_resource_output_schema(
+    "bq-inspector catalog entries lookup output"
+)
 
 LINEAGE_GRAPH_OUTPUT_SCHEMA: dict[str, Any] = {
     "title": "bq-inspector lineage graph output",

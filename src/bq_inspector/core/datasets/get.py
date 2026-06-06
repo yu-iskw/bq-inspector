@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from bq_inspector.core.shared.catalog_error import catalog_error_envelope
+from bq_inspector.core.shared.dataset_table_error import dataset_table_error_envelope
 from bq_inspector.core.shared.envelope import build_tool_envelope
 from bq_inspector.core.shared.errors import BqInspectFailure
 
@@ -39,7 +39,7 @@ async def get_dataset_metadata(
             "errors": [],
         }
     except BqInspectFailure as error:
-        return catalog_error_envelope(
+        return dataset_table_error_envelope(
             schema_version,
             tool,
             {

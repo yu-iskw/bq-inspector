@@ -1,4 +1,4 @@
-"""Catalog resource error envelope builder."""
+"""Dataset and table resource error envelope builder."""
 
 from __future__ import annotations
 
@@ -25,13 +25,13 @@ class CatalogResourceRequest(TypedDict):
     tableId: NotRequired[str]
 
 
-def catalog_error_envelope(
+def dataset_table_error_envelope(
     schema_version: BqInspectSchemaVersion,
     tool: ToolBlock,
     request: CatalogResourceRequest,
     error: BaseException,
 ) -> CatalogResourceResponse:
-    """Build a catalog response envelope from a BqInspectFailure."""
+    """Build a dataset/table response envelope from a BqInspectFailure."""
     errors: list[BqInspectError] = []
 
     if isinstance(error, BqInspectFailure):

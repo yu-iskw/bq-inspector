@@ -23,7 +23,8 @@ def lineage_error_envelope(
     error: BaseException,
     *,
     response_kind: Literal["links"],
-) -> LineageLinksResponse: ...
+) -> LineageLinksResponse:
+    """Overload stub for links responses."""
 
 
 @overload
@@ -34,7 +35,8 @@ def lineage_error_envelope(
     error: BaseException,
     *,
     response_kind: Literal["graph"],
-) -> LineageGraphResponse: ...
+) -> LineageGraphResponse:
+    """Overload stub for graph responses."""
 
 
 def lineage_error_envelope(

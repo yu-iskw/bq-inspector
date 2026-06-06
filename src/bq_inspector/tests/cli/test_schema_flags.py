@@ -87,7 +87,7 @@ async def test_datasets_get_output_schema() -> None:
         ["--output-schema"],
         InspectionCommandOptions(tool_version="0.1.0"),
     )
-    assert schema["title"] == "bq-inspector catalog resource output"
+    assert schema["title"] == "bq-inspector dataset/table resource output"
 
 
 @pytest.mark.asyncio

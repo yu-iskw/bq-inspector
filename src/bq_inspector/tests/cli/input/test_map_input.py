@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from bq_inspector.core.jobs.list_request_fields import parse_iso_timestamp_to_millis
 from bq_inspector.input.map_input import (
-    map_catalog_input,
+    map_dataset_table_input,
     map_jobs_list_input,
     map_jobs_view_input,
 )
@@ -73,8 +73,8 @@ def test_map_jobs_list_input_maps_optional_list_request_and_filter_fields() -> N
     assert result["filters"].min_bytes_billed == 1000
 
 
-def test_map_catalog_input_trims_catalog_identifiers_and_optional_table_id() -> None:
-    result = map_catalog_input({"projectId": " p ", "datasetId": " d ", "tableId": " t "})
+def test_map_dataset_table_input_trims_identifiers_and_optional_table_id() -> None:
+    result = map_dataset_table_input({"projectId": " p ", "datasetId": " d ", "tableId": " t "})
 
     assert result == {
         "projectId": "p",

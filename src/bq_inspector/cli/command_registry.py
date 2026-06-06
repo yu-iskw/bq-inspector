@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from bq_inspector.cli.usage_build import (
     ParamsBodyKind,
     ParamsCommandUsageMeta,
+    build_catalog_group_usage,
     build_datasets_group_usage,
     build_global_usage,
     build_jobs_group_usage,
@@ -15,6 +16,7 @@ from bq_inspector.cli.usage_build import (
     build_params_command_usage,
     build_tables_group_usage,
 )
+from bq_inspector.commands.catalog.registry import build_knowledge_catalog_registrations
 from bq_inspector.commands.datasets.get import datasets_get_command
 from bq_inspector.commands.jobs.list import run_jobs_list_command
 from bq_inspector.commands.jobs.run_jobs_view import (
@@ -37,21 +39,21 @@ GLOBAL_USAGE = build_global_usage()
 
 
 @dataclass(frozen=True)
-class GroupCommandSpec:
-    """Top-level CLI group with help text and nested params commands."""
-
-    name: str
-    usage: str
-    commands: tuple[ParamsCommandSpec, ...]
-
-
-@dataclass(frozen=True)
 class ParamsCommandSpec:
     """Params-based CLI command."""
 
     path: tuple[str, ...]
     usage: str
     runner: ParamsCommandRunner
+
+
+@dataclass(frozen=True)
+class GroupCommandSpec:
+    """Top-level CLI group with help text and nested params commands."""
+
+    name: str
+    usage: str
+    commands: tuple[ParamsCommandSpec, ...]
 
 
 @dataclass(frozen=True)
@@ -73,8 +75,7 @@ _LINEAGE_TABLE_EXAMPLE = (
 _LINEAGE_LINKS_EXAMPLE = "{" + _LINEAGE_TABLE_EXAMPLE + ',"direction":"UPSTREAM"}'
 _LINEAGE_GRAPH_EXAMPLE = "{" + _LINEAGE_TABLE_EXAMPLE + ',"direction":"DOWNSTREAM"}'
 
-
-_PARAMS_COMMAND_REGISTRATIONS: tuple[ParamsCommandRegistration, ...] = (
+_CORE_PARAMS_COMMAND_REGISTRATIONS: tuple[ParamsCommandRegistration, ...] = (
     ParamsCommandRegistration(
         ParamsCommandUsageMeta(
             ("jobs", "summary"),
@@ -185,13 +186,22 @@ _PARAMS_COMMAND_REGISTRATIONS: tuple[ParamsCommandRegistration, ...] = (
     ),
 )
 
+_CATALOG_PARAMS_COMMAND_REGISTRATIONS: tuple[ParamsCommandRegistration, ...] = tuple(
+    ParamsCommandRegistration(meta, runner)
+    for meta, runner in build_knowledge_catalog_registrations()
+)
+
+PARAMS_COMMAND_REGISTRATIONS: tuple[ParamsCommandRegistration, ...] = (
+    _CORE_PARAMS_COMMAND_REGISTRATIONS + _CATALOG_PARAMS_COMMAND_REGISTRATIONS
+)
+
 PARAMS_COMMAND_SPECS: tuple[ParamsCommandSpec, ...] = tuple(
     ParamsCommandSpec(
         registration.meta.path,
         build_params_command_usage(registration.meta),
         registration.runner,
     )
-    for registration in _PARAMS_COMMAND_REGISTRATIONS
+    for registration in PARAMS_COMMAND_REGISTRATIONS
 )
 
 GROUP_COMMAND_SPECS: tuple[GroupCommandSpec, ...] = (
@@ -215,18 +225,19 @@ GROUP_COMMAND_SPECS: tuple[GroupCommandSpec, ...] = (
         build_lineage_group_usage(),
         tuple(spec for spec in PARAMS_COMMAND_SPECS if spec.path[0] == "lineage"),
     ),
+    GroupCommandSpec(
+        "catalog",
+        build_catalog_group_usage(),
+        tuple(spec for spec in PARAMS_COMMAND_SPECS if spec.path[0] == "catalog"),
+    ),
 )
 
-
-def _build_help_lookup() -> dict[str, str]:
-    lookup = {command_path_key(spec.path): spec.usage for spec in PARAMS_COMMAND_SPECS}
-    for group in GROUP_COMMAND_SPECS:
-        lookup[group.name] = group.usage
-    lookup[""] = GLOBAL_USAGE
-    return lookup
-
-
-_HELP_BY_KEY = _build_help_lookup()
+_HELP_BY_KEY: dict[str, str] = {
+    command_path_key(spec.path): spec.usage for spec in PARAMS_COMMAND_SPECS
+}
+for _group in GROUP_COMMAND_SPECS:
+    _HELP_BY_KEY[_group.name] = _group.usage
+_HELP_BY_KEY[""] = GLOBAL_USAGE
 
 
 def command_help_for_key(key: str) -> str | None:

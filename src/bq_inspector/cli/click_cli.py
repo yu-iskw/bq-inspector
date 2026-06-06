@@ -19,6 +19,7 @@ from bq_inspector.cli.command_registry import (
     GLOBAL_USAGE,
     GROUP_COMMAND_SPECS,
     GroupCommandSpec,
+    ParamsCommandSpec,
 )
 from bq_inspector.cli.flat_argv import flat_unknown_command_hint, normalize_flat_argv
 from bq_inspector.cli.help import resolve_help_text, strip_trailing_help_flags, write_help_text
@@ -44,12 +45,6 @@ class BqInspectGroup(click.Group):
         self._group_path = group_path
         super().__init__(*args, **kwargs)
 
-    def get_command(self, ctx: click.Context, cmd_name: str) -> click.Command | None:
-        command = super().get_command(ctx, cmd_name)
-        if command is None:
-            raise create_input_failure(self._unknown_command_message(cmd_name))
-        return command
-
     def _unknown_command_message(self, cmd_name: str) -> str:
         if not self._group_path:
             hint = flat_unknown_command_hint(cmd_name)
@@ -58,6 +53,12 @@ class BqInspectGroup(click.Group):
         if self._group_path:
             return f"Unknown command: {' '.join((*self._group_path, cmd_name))}"
         return f"Unknown command: {cmd_name}"
+
+    def get_command(self, ctx: click.Context, cmd_name: str) -> click.Command | None:
+        command = super().get_command(ctx, cmd_name)
+        if command is None:
+            raise create_input_failure(self._unknown_command_message(cmd_name))
+        return command
 
 
 def _register_params_command(
@@ -79,6 +80,31 @@ def _register_params_command(
     params_command.__name__ = name.replace(" ", "_")  # pyright: ignore[reportAttributeAccessIssue]
 
 
+def _build_nested_subgroup(
+    name: str,
+    *,
+    parent_path: tuple[str, ...],
+    commands: tuple[ParamsCommandSpec, ...],
+) -> click.Group:
+    @click.group(
+        name,
+        cls=BqInspectGroup,
+        group_path=(*parent_path, name),
+        invoke_without_command=True,
+        add_help_option=False,
+    )
+    @click.pass_context
+    def subgroup(ctx: click.Context) -> None:
+        if ctx.invoked_subcommand is None:
+            raise create_input_failure(f"Unknown command: {' '.join((*parent_path, name))}")
+
+    for command_spec in commands:
+        _register_params_command(subgroup, command_spec.path[-1], command_spec.runner)
+
+    subgroup.__doc__ = name
+    return subgroup
+
+
 def _build_params_group(spec: GroupCommandSpec) -> click.Group:
     @click.group(
         spec.name,
@@ -92,8 +118,30 @@ def _build_params_group(spec: GroupCommandSpec) -> click.Group:
         if ctx.invoked_subcommand is None:
             raise create_input_failure(f"Unknown command: {spec.name}")
 
-    for command_spec in spec.commands:
+    # Catalog (and future groups) nest resources as group -> subgroup -> verb (depth 3).
+    top_level_command_depth = 2
+    direct_commands = [
+        command for command in spec.commands if len(command.path) == top_level_command_depth
+    ]
+    nested_commands = [
+        command for command in spec.commands if len(command.path) > top_level_command_depth
+    ]
+
+    for command_spec in direct_commands:
         _register_params_command(group, command_spec.path[-1], command_spec.runner)
+
+    subgroup_names = sorted({command.path[1] for command in nested_commands})
+    for subgroup_name in subgroup_names:
+        subgroup_specs = tuple(
+            command for command in nested_commands if command.path[1] == subgroup_name
+        )
+        group.add_command(
+            _build_nested_subgroup(
+                subgroup_name,
+                parent_path=(spec.name,),
+                commands=subgroup_specs,
+            )
+        )
 
     group.__doc__ = spec.name
     return group

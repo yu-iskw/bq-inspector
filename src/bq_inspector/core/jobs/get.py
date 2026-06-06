@@ -61,40 +61,47 @@ def _build_request_echo(
     )
 
 
-async def inspect_jobs(
-    request: InspectJobRequest,
-    options: InspectJobOptions,
-) -> InspectJobResponse:
-    """Fetch and project jobs according to the requested view."""
-    view: JobView = request.get("view", "summary")
-    inspected_jobs = await asyncio.gather(
-        *[
-            _inspect_one_job(
-                input_ref=input_ref,
-                client=options.client,
-                now=options.now,
-                view=view,
+def _build_failed_inspection(  # noqa: PLR0913
+    *,
+    error: BaseException,
+    job_ref: JobRef,
+    fetched_at: str,
+    warnings: list[BqInspectWarning],
+    errors: list[BqInspectError],
+    fallback_message: str,
+) -> InspectedJob:
+    if isinstance(error, BqInspectFailure):
+        errors.append(error.details)
+    else:
+        message = error.args[0] if isinstance(error, Exception) and error.args else fallback_message
+        resolved_message = message if isinstance(message, str) else fallback_message
+        errors.append(
+            create_bq_inspector_error(
+                code="BQINSPECTOR_INTERNAL",
+                message=resolved_message,
             )
-            for input_ref in request["jobs"]
-        ]
-    )
-
-    global_warnings = [warning for job in inspected_jobs for warning in job.get("warnings", [])]
-
-    errors: list[BqInspectError] = [
-        error for job in inspected_jobs for error in job.get("errors", [])
-    ]
-
-    envelope = build_tool_envelope(options.tool_version)
+        )
 
     return {
-        "schemaVersion": envelope["schemaVersion"],
-        "tool": envelope["tool"],
-        "request": _build_request_echo(request, view),
-        "jobs": inspected_jobs,
-        "warnings": global_warnings,
+        "jobRef": job_ref,
+        "source": {
+            "api": _JOBS_GET_API,
+            "fetchedAt": fetched_at,
+        },
+        "warnings": warnings,
         "errors": errors,
     }
+
+
+def _fallback_job_ref(job: JobRef) -> JobRef:
+    project_id = job["projectId"].strip()
+    job_id = job["jobId"].strip()
+    location = job.get("location")
+    trimmed_location = location.strip() if location is not None else None
+
+    if trimmed_location is None or len(trimmed_location) == 0:
+        return {"projectId": project_id, "jobId": job_id}
+    return {"projectId": project_id, "location": trimmed_location, "jobId": job_id}
 
 
 async def _inspect_one_job(
@@ -148,44 +155,37 @@ async def _inspect_one_job(
     }
 
 
-def _build_failed_inspection(  # noqa: PLR0913
-    *,
-    error: BaseException,
-    job_ref: JobRef,
-    fetched_at: str,
-    warnings: list[BqInspectWarning],
-    errors: list[BqInspectError],
-    fallback_message: str,
-) -> InspectedJob:
-    if isinstance(error, BqInspectFailure):
-        errors.append(error.details)
-    else:
-        message = error.args[0] if isinstance(error, Exception) and error.args else fallback_message
-        resolved_message = message if isinstance(message, str) else fallback_message
-        errors.append(
-            create_bq_inspector_error(
-                code="BQINSPECTOR_INTERNAL",
-                message=resolved_message,
+async def inspect_jobs(
+    request: InspectJobRequest,
+    options: InspectJobOptions,
+) -> InspectJobResponse:
+    """Fetch and project jobs according to the requested view."""
+    view: JobView = request.get("view", "summary")
+    inspected_jobs = await asyncio.gather(
+        *[
+            _inspect_one_job(
+                input_ref=input_ref,
+                client=options.client,
+                now=options.now,
+                view=view,
             )
-        )
+            for input_ref in request["jobs"]
+        ]
+    )
+
+    global_warnings = [warning for job in inspected_jobs for warning in job.get("warnings", [])]
+
+    errors: list[BqInspectError] = [
+        error for job in inspected_jobs for error in job.get("errors", [])
+    ]
+
+    envelope = build_tool_envelope(options.tool_version)
 
     return {
-        "jobRef": job_ref,
-        "source": {
-            "api": _JOBS_GET_API,
-            "fetchedAt": fetched_at,
-        },
-        "warnings": warnings,
+        "schemaVersion": envelope["schemaVersion"],
+        "tool": envelope["tool"],
+        "request": _build_request_echo(request, view),
+        "jobs": inspected_jobs,
+        "warnings": global_warnings,
         "errors": errors,
     }
-
-
-def _fallback_job_ref(job: JobRef) -> JobRef:
-    project_id = job["projectId"].strip()
-    job_id = job["jobId"].strip()
-    location = job.get("location")
-    trimmed_location = location.strip() if location is not None else None
-
-    if trimmed_location is None or len(trimmed_location) == 0:
-        return {"projectId": project_id, "jobId": job_id}
-    return {"projectId": project_id, "location": trimmed_location, "jobId": job_id}

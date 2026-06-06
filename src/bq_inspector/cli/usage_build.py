@@ -17,6 +17,10 @@ class ParamsBodyKind(Enum):
     TABLES_LIST = "tables_list"
     TABLES_GET = "tables_get"
     LINEAGE = "lineage"
+    CATALOG_SEARCH = "catalog_search"
+    CATALOG_LOOKUP = "catalog_lookup"
+    CATALOG_GET = "catalog_get"
+    CATALOG_LIST = "catalog_list"
 
 
 @dataclass(frozen=True)
@@ -81,6 +85,34 @@ Params (see --input-schema):
   lineage graph only: maxDepth, maxResults
   impersonateServiceAccount, impersonateDelegates
 """.strip(),
+    ParamsBodyKind.CATALOG_SEARCH: """
+Params (see --input-schema):
+  projectId            Search request project (billing, quota, dataplex.projects.search)
+  query                Knowledge Catalog search query
+  location             global (default; P0 supports global search only)
+  scope                Optional project or organization scope
+  semanticSearch       false by default; set true for semantic search
+  orderBy, pageSize, pageToken
+  impersonateServiceAccount, impersonateDelegates
+""".strip(),
+    ParamsBodyKind.CATALOG_LOOKUP: """
+Params (see --input-schema):
+  projectId, location, entry
+  view, aspectTypes, paths (optional entry view controls)
+  impersonateServiceAccount, impersonateDelegates
+""".strip(),
+    ParamsBodyKind.CATALOG_GET: """
+Params (see --input-schema):
+  name                 Canonical Dataplex resource name
+  view, aspectTypes, paths (entries get only)
+  impersonateServiceAccount, impersonateDelegates
+""".strip(),
+    ParamsBodyKind.CATALOG_LIST: """
+Params (see --input-schema):
+  parent               Canonical parent resource (projects/.../locations/...)
+  pageSize, pageToken, filter, orderBy
+  impersonateServiceAccount, impersonateDelegates
+""".strip(),
 }
 
 
@@ -100,6 +132,10 @@ Commands (each supports --input-schema / --output-schema for JSON Schema on stdo
   tables get       Table metadata
   lineage links    Immediate upstream/downstream table lineage (1 hop)
   lineage graph    Multi-hop table lineage graph
+  catalog search   Search Knowledge Catalog entries
+  catalog entries  Lookup, get, or list catalog entries
+  catalog entry-groups, entry-types, aspect-types, entry-links
+  catalog glossaries, glossary-categories, glossary-terms
 
 Global:
   bq-inspector --help | -h
@@ -107,6 +143,7 @@ Global:
 
 Agent workflow: jobs list → jobs summary | jobs query | jobs performance | jobs lineage | jobs impact | jobs get
   Catalog/lineage: tables get → lineage links → lineage graph
+  Knowledge Catalog: catalog search → catalog entries lookup → catalog aspect-types get
   (job subcommands also work without the jobs prefix, e.g. bq-inspector summary)
 
 Errors are JSON on stderr; success is JSON on stdout (except plain-text --help).
@@ -183,4 +220,27 @@ Subcommands:
   graph        Multi-hop lineage graph for a table
 
 Run bq-inspector lineage <subcommand> --help for params and examples.
+""".strip()
+
+
+def build_catalog_group_usage() -> str:
+    """Usage for the catalog command group."""
+    return """
+Usage:
+  bq-inspector catalog <subcommand> --params '<json>' | --params @file.json [options]
+
+Subcommands:
+  search               Search Knowledge Catalog entries
+  entries lookup       Resolve an entry by canonical name
+  entries get          Retrieve an entry by resource name
+  entries list         List entries under an entry group
+  entry-groups get|list
+  entry-types get|list
+  aspect-types get|list
+  entry-links get      Retrieve a known entry link (no list command)
+  glossaries get|list
+  glossary-categories get|list
+  glossary-terms get|list
+
+Run bq-inspector catalog <subcommand> --help for params and examples.
 """.strip()
