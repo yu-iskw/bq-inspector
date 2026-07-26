@@ -54,10 +54,12 @@ dependencies = [
   "typing_extensions",
   "google-cloud-datacatalog-lineage>=0.7.0",
   "google-cloud-dataplex>=2.20.0",
+  "mcp>=1.28,<2",
 ]
 
 [project.scripts]
 bq-inspector = "bq_inspector.cli:main"
+bq-inspector-mcp = "bq_inspector.mcp_server:main"
 
 [tool.pytest.ini_options]
 testpaths = ["src/bq_inspector/tests"]
