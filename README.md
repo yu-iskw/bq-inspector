@@ -1,6 +1,6 @@
 # bq-inspector
 
-**bq-inspector** is a read-only CLI for BigQuery: it fetches job metadata (`jobs.get` / `jobs.list`) and dataset or table metadata (`datasets.get`, `tables.list`, `tables.get`). It prints **one JSON document on stdout** on success. Errors are **JSON on stderr** with a non-zero exit code (except plain-text `--help`).
+**bq-inspector** is a read-only CLI and MCP server for BigQuery: it fetches job metadata (`jobs.get` / `jobs.list`) and dataset or table metadata (`datasets.get`, `tables.list`, `tables.get`). The CLI prints **one JSON document on stdout** on success. Errors are **JSON on stderr** with a non-zero exit code (except plain-text `--help`).
 
 Operational commands take a single **`--params`** JSON object (or `@path` to a file). Field names match the command’s **`--input-schema`** output. For flags and options, **`bq-inspector --help`** and **`bq-inspector <command> --help`** are authoritative; this README may summarize and can lag behind the CLI.
 
@@ -13,6 +13,29 @@ bq-inspector <command> --params '<json>' | --params @file.json [options]
 ```
 
 Every operational command also supports `--input-schema` and `--output-schema` (JSON Schema on stdout, no BigQuery call).
+
+## MCP server
+
+The package includes a read-only MCP server built with the stable MCP Python SDK (`mcp>=1.28,<2`). It uses the standard stdio transport and generates its tools from the same command registry and JSON Schemas as the CLI.
+
+```bash
+bq-inspector-mcp
+```
+
+Example client configuration:
+
+```json
+{
+  "mcpServers": {
+    "bq-inspector": {
+      "command": "uvx",
+      "args": ["--from", "bq-inspector", "bq-inspector-mcp"]
+    }
+  }
+}
+```
+
+The MCP server inherits the CLI's Application Default Credentials and optional service-account impersonation parameters. It does not open a network listener. Each CLI command is exposed as a namespaced tool such as `bq_inspector_jobs_summary` or `bq_inspector_catalog_search`, with both `inputSchema` and `outputSchema` advertised during tool discovery.
 
 ## Install
 
@@ -191,7 +214,7 @@ bq-inspector lineage graph --params '{"location":"us","projectId":"YOUR_PROJECT"
 | `jobs summary`     | Job status, timing, bytes/slots (default inspection) | `jobs.get`               | `roles/bigquery.resourceViewer`                                |
 | `jobs query`       | SQL, configuration, light lineage stats              | `jobs.get`               | `roles/bigquery.resourceViewer`                                |
 | `jobs performance` | Query plan, timeline, performanceInsights            | `jobs.get`               | `roles/bigquery.resourceViewer`                                |
-| `jobs lineage`     | Referenced tables, routines, datasets, destinations  | `jobs.get`               | `roles/bigquery.resourceViewer`                                |
+| `jobs lineage`     | Tables, routines, datasets touched                   | `jobs.get`               | `roles/bigquery.resourceViewer`                                |
 | `jobs impact`      | DML/load/ML/search/export/spark side-effect stats    | `jobs.get`               | `roles/bigquery.resourceViewer`                                |
 | `jobs get`         | Full BigQuery Job JSON                               | `jobs.get`               | `roles/bigquery.resourceViewer`                                |
 | `jobs list`        | List jobs (optional client-side filters in params)   | `jobs.list`              | `roles/bigquery.resourceViewer`                                |
@@ -218,169 +241,3 @@ Summaries from per-command `--help`; full types and constraints: `bq-inspector <
 **All commands:** optional `impersonateServiceAccount`, `impersonateDelegates`.
 
 **Job view commands** (`jobs summary`, `jobs query`, `jobs performance`, `jobs lineage`, `jobs impact`, `jobs get`):
-
-- `jobs`: non-empty array of `{ projectId, jobId, location? }` — include `location` from `jobs.list` output when jobs are not in the default region
-
-**`jobs list`:**
-
-- `projectId` (required)
-- **Forwarded to `jobs.list` (API):** `minCreationTime`, `maxCreationTime`, `pageToken`, `maxResults`, `allUsers`, `state`, `parentJobId` (`allUsers: true` is often needed in shared sandboxes)
-- **Post-list (current page only):** `minSlotMs`, `minBytesBilled`, `labels` — paginate with `pageToken` if you need more matches. The Python port matches labels under `configuration.labels` (typical BigQuery shape); the TypeScript port only checks top-level `labels`.
-- Regional jobs: read `jobReference.location` from list output; pass `location` on job view commands, not on `jobs list` (BigQuery does not support a location query param on `jobs.list`)
-
-**Catalog** (`datasets get`, `tables list`, `tables get`):
-
-- `projectId`, `datasetId` (`tableId` required for `tables get`)
-- `tables list` returns all tables in the dataset (the SDK auto-paginates `tables.list`). Unlike `jobs list`, there is no `pageToken` on this command.
-
-**Lineage** (`lineage links`, `lineage graph`):
-
-- `location` (required) — Data Lineage API location (`us`, `eu`, `global`, …)
-- `projectId`, `datasetId`, `tableId` (required) — table to search from
-- `direction` (required) — `UPSTREAM` or `DOWNSTREAM`
-- `clientProjectId` (optional) — API billing/quota project; defaults to `projectId`
-- `lineage links` only: `pageSize`, `pageToken`
-- `lineage graph` only: `maxDepth` (default 5), `maxResults` (default 1000)
-
-**Knowledge Catalog** (`catalog search`, `catalog entries lookup`, …):
-
-- `catalog search`: `projectId`, `query` (required); `location` defaults to `global`; optional `scope`, `semanticSearch` (default `false`), `orderBy`, `pageSize` (default 50), `pageToken`
-- `catalog entries lookup`: `projectId`, `location`, `entry` (required); optional `view`, `aspectTypes`, `paths`
-- Get commands: canonical Dataplex `name` (required); entries get also supports `view`, `aspectTypes`, `paths`
-- List commands: `parent` (required); optional `pageSize` (default 100), `pageToken`, `filter`, `orderBy`
-- List and search commands return **one upstream API page** per invocation (no hidden auto-pagination)
-
-## JSON Schema discovery
-
-- **Discovery:** `--input-schema` or `--output-schema` (use one at a time; prints JSON Schema on stdout and exits without calling BigQuery).
-- **Required for runs:** `--params` as JSON or `@path` to a JSON file.
-
-Examples:
-
-```bash
-bq-inspector jobs summary --input-schema
-bq-inspector jobs summary --output-schema
-bq-inspector jobs get --input-schema
-bq-inspector jobs list --input-schema
-bq-inspector datasets get --output-schema
-bq-inspector lineage links --input-schema
-bq-inspector lineage graph --output-schema
-bq-inspector catalog search --input-schema
-bq-inspector catalog entries lookup --output-schema
-```
-
-## Knowledge Catalog commands
-
-Read-only [Knowledge Catalog](https://docs.cloud.google.com/dataplex/docs/introduction) inspection via the Dataplex API. CLI command group: `catalog`. Internal package: `knowledge_catalog`.
-
-```bash
-bq-inspector catalog search --params '{"projectId":"YOUR_SEARCH_PROJECT","query":"YOUR_TERM","pageSize":50}'
-bq-inspector catalog entries lookup --params @lookup.json
-bq-inspector catalog entry-types list --params '{"parent":"projects/YOUR_PROJECT/locations/global","pageSize":5}'
-bq-inspector catalog glossaries list --params '{"parent":"projects/YOUR_PROJECT/locations/YOUR_LOCATION","pageSize":5}'
-```
-
-**IAM (least privilege):**
-
-- **Search request project:** `roles/dataplex.catalogViewer` (includes `dataplex.projects.search`)
-- **BigQuery-backed search results:** also requires `roles/bigquery.metadataViewer` on relevant datasets/projects
-- **Impersonation:** `roles/iam.serviceAccountTokenCreator` on the target service account
-
-Catalog commands use OAuth scope `https://www.googleapis.com/auth/cloud-platform` (required by Dataplex Universal Catalog REST methods such as `lookupEntry` and `searchEntries`).
-
-**Empty search results** are successful (not an error). They may indicate no matches, narrow scope, missing source-system metadata visibility, or VPC Service Controls boundaries.
-
-**Metadata sensitivity:** catalog output may include schemas, descriptions, ownership, classifications, and glossary terms. Treat stdout as potentially sensitive in CI and agent environments.
-
-## Error codes
-
-Errors are JSON on stderr with a `code` field. Schema validation failures include `schemaErrors` with JSON Pointer paths.
-
-| Code                            | Typical cause                                                                                                   |
-| ------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `BQINSPECTOR_INPUT_INVALID`     | Bad `--params` or flags; schema validation; HTTP 4xx (except 401/403/404/429).                                  |
-| `BQINSPECTOR_PERMISSION_DENIED` | IAM or ADC; on `jobs.get`, often missing `location` or wrong job ref (see [Troubleshooting](#troubleshooting)). |
-| `BQINSPECTOR_JOB_NOT_FOUND`     | HTTP 404 from BigQuery (job or catalog). Read `source.api` and `hint` for the resource type.                    |
-| `BQINSPECTOR_LOCATION_REQUIRED` | Reserved; prefer `location` on job refs (see hints on 403).                                                     |
-| `BQINSPECTOR_API_RATE_LIMITED`  | HTTP 429; retryable.                                                                                            |
-| `BQINSPECTOR_API_UNAVAILABLE`   | Transient API / 5xx.                                                                                            |
-| `BQINSPECTOR_INTERNAL`          | Unexpected CLI failure.                                                                                         |
-
-## Troubleshooting
-
-Symptom-first checks when JSON looks wrong but the CLI is working:
-
-**`jobs list` returns `"jobs": []`**
-
-- In shared sandboxes, set `"allUsers": true` in `--params` (default list is only your user’s jobs).
-- With impersonation: the caller needs **Service Account Token Creator** on the target; the impersonated identity needs **BigQuery job list** access (`roles/bigquery.resourceViewer` or equivalent).
-
-**Job view commands return per-job `BQINSPECTOR_PERMISSION_DENIED` (403)**
-
-- **`location` omitted:** copy `jobReference.location` from `jobs list` into each job ref (required for many regional jobs).
-- **`location` set:** BigQuery may still return **403 Access Denied** for a wrong `jobId`, wrong region, or IAM—not only missing `location`. Confirm `projectId` and `jobId` from `jobs list`; do not assume the code will be `BQINSPECTOR_JOB_NOT_FOUND`.
-
-**`BQINSPECTOR_JOB_NOT_FOUND`**
-
-- Typical for a wrong **project** on a job ref, a missing **dataset** or **table**, or catalog APIs returning HTTP 404.
-- The error code matches the TypeScript port for all 404 responses. Use **`source.api`** (`bigquery.jobs.get` vs `bigquery.datasets.get`, etc.) and the stderr **`hint`** to tell jobs from catalog resources apart.
-
-**Post-filters on `jobs list`** (`minSlotMs`, `minBytesBilled`, `labels`)
-
-- Applied to the **current API page only**. If results are empty, increase `maxResults` or follow `pageToken` until matches appear.
-
-**Multi-job `--params`**
-
-- The process can exit **0** while individual entries in `jobs[]` include `errors`. Inspect each job element.
-
-## Authentication
-
-The CLI uses the official **BigQuery** client with **Application Default Credentials** from `google-auth`.
-
-- **Default:** credentials are scoped to `https://www.googleapis.com/auth/bigquery.readonly` for BigQuery job and catalog commands.
-- **Lineage commands** (`lineage links`, `lineage graph`) use `https://www.googleapis.com/auth/cloud-platform` (required by the Data Lineage `searchLinks` API; requested only when those commands run).
-- **Knowledge Catalog commands** (`catalog …`) use `https://www.googleapis.com/auth/cloud-platform` (required by Dataplex Universal Catalog REST APIs).
-- **Impersonation:** set `impersonateServiceAccount` (and optional `impersonateDelegates`) in `--params`. The source principal must have **Service Account Token Creator** on the target (and on each delegate). While impersonating, access is still requested with `bigquery.readonly` on the **target** identity. The source ADC client uses `https://www.googleapis.com/auth/cloud-platform` only for the token exchange path.
-
-Example params fragment:
-
-```json
-{
-  "impersonateServiceAccount": "TARGET@PROJECT_ID.iam.gserviceaccount.com",
-  "impersonateDelegates": ["FIRST_DELEGATE@PROJECT_ID.iam.gserviceaccount.com"]
-}
-```
-
-Service account **JSON key files** are not a dedicated CLI option; ADC may still resolve a key via environment if your platform configures it that way.
-
-## IAM guidance
-
-Prefer narrow read access:
-
-- **Job commands / `jobs list`:** `roles/bigquery.resourceViewer` (or a custom role with `bigquery.jobs.get` / `bigquery.jobs.list`) on the **identity that calls BigQuery** (the impersonated service account when using impersonation).
-- **`datasets get` / `tables list` / `tables get`:** `roles/bigquery.metadataViewer` on the dataset or project (or a custom metadata-only role with `datasets.get`, `tables.list`, `tables.get`).
-- **`lineage links` / `lineage graph`:** `roles/datalineage.viewer` on `clientProjectId`; enable the Data Lineage API in that project.
-- **`catalog search`:** `roles/dataplex.catalogViewer` on the search request project; BigQuery-backed results also need `roles/bigquery.metadataViewer` on source datasets/projects.
-- **Other `catalog` commands:** `roles/dataplex.catalogViewer` on the relevant catalog resources.
-- Grant the calling principal `roles/iam.serviceAccountTokenCreator` on the target service account (and delegates, if any) when using impersonation.
-- Avoid `roles/bigquery.dataViewer` and `roles/bigquery.jobUser` for inspection-only workflows.
-
-## Programmatic use (Python)
-
-The primary surface is the **`bq-inspector` CLI**. For in-process use, import from the `bq_inspector` package (for example core use cases under `bq_inspector.core`, ports under `bq_inspector.bigquery.port`, and JSON Schema helpers under `bq_inspector.schemas`). The package does not yet expose a stable public API beyond what the CLI uses internally; prefer subprocess invocation or the TypeScript library in [google-cloud-tools](https://github.com/yu-iskw/google-cloud-tools/tree/main/packages/bq-inspect) if you need a documented library entrypoint today.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for architecture and test patterns when extending the Python implementation.
-
-## Security notes
-
-**Read-only metadata:** job resources and dataset/table metadata only. No table row reads and no arbitrary query execution. Job output may include SQL, user emails, and other fields from the BigQuery API; the caller is responsible for where JSON is stored or logged.
-
-## Development
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md) for setup, lint, and test commands.
-
-```bash
-make setup
-make lint
-make test
-```
